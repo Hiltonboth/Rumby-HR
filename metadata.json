@@ -1,0 +1,8 @@
+{
+  "name": "Rumby HR",
+  "description": "An Apple-style minimalist HR SaaS platform for modern teams, featuring refined design, AI-powered automation, and multi-tenant infrastructure.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}

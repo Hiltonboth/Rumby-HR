@@ -1,0 +1,61 @@
+{
+  "entities": {
+    "Tenant": {
+      "title": "Tenant",
+      "description": "Represents a company or workspace in the HR platform.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "The name of the company." },
+        "ownerUid": { "type": "string", "description": "The UID of the company owner." },
+        "accentColor": { "type": "string", "description": "The primary brand color for the tenant." },
+        "logo": { "type": "string", "description": "The logo URL or character for the tenant." },
+        "plan": { "type": "string", "enum": ["Free", "Pro", "Enterprise"], "description": "The subscription plan." },
+        "status": { "type": "string", "enum": ["Active", "Inactive"], "description": "The current status of the tenant." },
+        "employeeCount": { "type": "number", "description": "The number of employees in the tenant." }
+      },
+      "required": ["name", "ownerUid", "accentColor", "plan", "status"]
+    },
+    "Profile": {
+      "title": "Profile",
+      "description": "Represents a user's profile and role within a tenant.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "The Firebase Auth UID." },
+        "email": { "type": "string", "format": "email", "description": "The user's email address." },
+        "fullName": { "type": "string", "description": "The user's full name." },
+        "role": { "type": "string", "enum": ["admin", "employee", "platform_owner"], "description": "The user's role." },
+        "tenantId": { "type": "string", "description": "The ID of the tenant the user belongs to." }
+      },
+      "required": ["uid", "email", "fullName", "role", "tenantId"]
+    },
+    "Employee": {
+      "title": "Employee",
+      "description": "Represents an employee record within a tenant.",
+      "type": "object",
+      "properties": {
+        "fullName": { "type": "string", "description": "The employee's full name." },
+        "email": { "type": "string", "format": "email", "description": "The employee's email address." },
+        "role": { "type": "string", "description": "The employee's job title." },
+        "department": { "type": "string", "description": "The employee's department." },
+        "status": { "type": "string", "enum": ["Active", "Onboarding", "Offboarding"], "description": "The employee's current status." },
+        "startDate": { "type": "string", "format": "date", "description": "The employee's start date." },
+        "photoUrl": { "type": "string", "description": "The employee's photo URL." }
+      },
+      "required": ["fullName", "email", "role", "department", "status", "startDate"]
+    }
+  },
+  "firestore": {
+    "/tenants/{tenantId}": {
+      "schema": "Tenant",
+      "description": "Stores company-level configuration and metadata."
+    },
+    "/profiles/{uid}": {
+      "schema": "Profile",
+      "description": "Stores user profile and role information."
+    },
+    "/tenants/{tenantId}/employees/{employeeId}": {
+      "schema": "Employee",
+      "description": "Stores employee records for a specific tenant."
+    }
+  }
+}

@@ -38,8 +38,7 @@ const RESOURCES: Resource[] = [
     desc: 'The primary legislation governing employment in Zimbabwe, updated to 2019.',
     type: 'PDF',
     category: 'Legislation',
-    link: 'https://www.veritaszim.net/sites/veritas_d/files/Labour%20Act%20updated%20to%202019.pdf',
-    content: 'THE LABOUR ACT [CHAPTER 28:01]\n\nAn Act to declare and define the fundamental rights of employees; to give effect to the international obligations of the Republic of Zimbabwe as a member state of the International Labour Organisation...'
+    content: 'THE LABOUR ACT [CHAPTER 28:01]\n\nAn Act to declare and define the fundamental rights of employees; to give effect to the international obligations of the Republic of Zimbabwe as a member state of the International Labour Organisation...\n\nPART II: FUNDAMENTAL RIGHTS OF EMPLOYEES\n4. Employees\' entitlement to membership of trade unions and workers committees...\n5. Protection of employees against discrimination...\n6. Protection of employees\' right to fair labour standards...\n7. Protection of employees\' right to democracy in the work place...'
   },
   {
     id: 'contract-perm',

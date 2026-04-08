@@ -37,6 +37,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
 import { GoogleGenAI } from '@google/genai';
 import SignaturePad from './SignaturePad';
+import CVBuilder from './CVBuilder';
 
 interface Comment {
   id: string;
@@ -158,6 +159,7 @@ export default function Community() {
   const [showCreatePost, setShowCreatePost] = useState(false);
   const [activeTab, setActiveTab] = useState<'feed' | 'activity'>('feed');
   const [searchTerm, setSearchTerm] = useState('');
+  const [showCVBuilder, setShowCVBuilder] = useState(false);
 
   const displayedJobs = showAllJobs ? ALL_JOBS : JOBS;
 
@@ -529,7 +531,7 @@ export default function Community() {
                           Cover Letter
                         </button>
                         <button 
-                          onClick={() => generateAIContent('cv')}
+                          onClick={() => setShowCVBuilder(true)}
                           disabled={isGenerating || !userData.name}
                           className="btn-secondary py-3 text-xs flex items-center justify-center gap-2"
                         >
@@ -602,6 +604,26 @@ export default function Community() {
           </div>
         )}
       </AnimatePresence>
+
+      {/* CV Builder Modal */}
+      <AnimatePresence>
+        {showCVBuilder && (
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[400] flex items-center justify-center p-0 sm:p-6">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white w-full h-full sm:h-[90vh] sm:rounded-[2.5rem] shadow-2xl overflow-hidden"
+            >
+              <CVBuilder 
+                initialData={userData} 
+                onCancel={() => setShowCVBuilder(false)} 
+              />
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* Post Thread Modal (Discord Style) */}
       <AnimatePresence>
         {selectedPost && (

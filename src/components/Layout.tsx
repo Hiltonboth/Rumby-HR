@@ -10,9 +10,10 @@ interface LayoutProps {
   setActiveTab: (tab: string) => void;
   currentCompany: Company;
   onBack?: () => void;
+  onGoHome?: () => void;
 }
 
-export default function Layout({ children, activeTab, setActiveTab, currentCompany, onBack }: LayoutProps) {
+export default function Layout({ children, activeTab, setActiveTab, currentCompany, onBack, onGoHome }: LayoutProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -72,6 +73,16 @@ export default function Layout({ children, activeTab, setActiveTab, currentCompa
               {item.label}
             </button>
           ))}
+          
+          <div className="pt-4 mt-4 border-t border-black/[0.05]">
+            <button
+              onClick={onGoHome}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-gray-500 hover:text-accent hover:bg-accent/5 transition-all"
+            >
+              <LayoutDashboard className="w-5 h-5" />
+              Landing Page
+            </button>
+          </div>
         </nav>
         
         <div className="p-4 border-t border-black/[0.05] bg-apple-gray/10">

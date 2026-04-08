@@ -255,6 +255,7 @@ export default function App() {
           setActiveTab={navigateTo}
           currentCompany={currentCompany || { id: 'temp', name: 'Rumby HR', logo: 'R', accentColor: '#007AFF', plan: 'Pro', employeeCount: 0, status: 'Active', ownerUid: '' }}
           onBack={viewHistory.length > 1 || selectedEmployee ? goBack : undefined}
+          onGoHome={() => setView('landing')}
         >
           {userProfile?.role === 'platform_owner' && (
             <button 

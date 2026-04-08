@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Bell, Command, LayoutDashboard, Users, Briefcase, TrendingUp, CreditCard, Heart, Settings, Zap, ChevronRight, Menu, X, Calendar, Clock, CheckCircle2, ArrowLeft, PartyPopper } from 'lucide-react';
+import { Search, Bell, Command, LayoutDashboard, Users, Briefcase, TrendingUp, CreditCard, Heart, Settings, Zap, ChevronRight, Menu, X, Calendar, Clock, CheckCircle2, ArrowLeft, PartyPopper, ShieldCheck } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
 import { Company } from '../types';
@@ -9,11 +9,12 @@ interface LayoutProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
   currentCompany: Company;
+  userProfile?: any;
   onBack?: () => void;
   onGoHome?: () => void;
 }
 
-export default function Layout({ children, activeTab, setActiveTab, currentCompany, onBack, onGoHome }: LayoutProps) {
+export default function Layout({ children, activeTab, setActiveTab, currentCompany, userProfile, onBack, onGoHome }: LayoutProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -40,6 +41,11 @@ export default function Layout({ children, activeTab, setActiveTab, currentCompa
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
 
+  const displayMenuItems = [...menuItems];
+  if (userProfile?.role === 'platform_owner') {
+    displayMenuItems.push({ id: 'owner_kpis', label: 'Owner Dashboard', icon: ShieldCheck });
+  }
+
   return (
     <div className="min-h-screen bg-apple-gray/20 flex">
       {/* Sidebar */}
@@ -58,14 +64,14 @@ export default function Layout({ children, activeTab, setActiveTab, currentCompa
         </div>
 
         <nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto">
-          {menuItems.map((item) => (
+          {displayMenuItems.map((item) => (
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
               className={cn(
                 "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all duration-200",
                 activeTab === item.id 
-                  ? "bg-accent text-white shadow-md shadow-accent/20" 
+                  ? (item.id === 'owner_kpis' ? "bg-[#F44336] text-white shadow-md shadow-red-500/20" : "bg-accent text-white shadow-md shadow-accent/20")
                   : "text-gray-500 hover:text-space-gray hover:bg-apple-gray/50"
               )}
             >
@@ -219,7 +225,7 @@ export default function Layout({ children, activeTab, setActiveTab, currentCompa
                 </button>
               </div>
               <nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto">
-                {menuItems.map((item) => (
+                {displayMenuItems.map((item) => (
                   <button
                     key={item.id}
                     onClick={() => {
@@ -229,7 +235,7 @@ export default function Layout({ children, activeTab, setActiveTab, currentCompa
                     className={cn(
                       "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all duration-200",
                       activeTab === item.id 
-                        ? "bg-accent text-white shadow-md shadow-accent/20" 
+                        ? (item.id === 'owner_kpis' ? "bg-[#F44336] text-white shadow-md shadow-red-500/20" : "bg-accent text-white shadow-md shadow-accent/20")
                         : "text-gray-500 hover:text-space-gray hover:bg-apple-gray/50"
                     )}
                   >

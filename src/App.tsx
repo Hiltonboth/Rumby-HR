@@ -112,23 +112,49 @@ export default function App() {
       return (
         <div className="space-y-8">
           <div className="flex items-center gap-4">
-            <button onClick={goBack} className="p-2 hover:bg-apple-gray rounded-xl transition-all">
-              <ArrowLeft className="w-5 h-5 text-gray-500" />
+            <button onClick={goBack} className="p-2 hover:bg-red-50 rounded-xl transition-all">
+              <ArrowLeft className="w-5 h-5 text-[#F44336]" />
             </button>
-            <h1 className="text-3xl font-bold tracking-tight text-space-gray">Platform Owner Dashboard</h1>
+            <h1 className="text-3xl font-bold tracking-tight text-[#F44336]">Platform Owner Dashboard</h1>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="card-aura p-8">
+            <div className="bg-white p-8 rounded-3xl border border-[#FFCA28]/20 shadow-sm hover:shadow-md transition-all">
               <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Total Signups</p>
               <p className="text-4xl font-bold text-space-gray">1,248</p>
+              <div className="mt-4 h-1 w-full bg-[#FFCA28]/10 rounded-full overflow-hidden">
+                <div className="h-full bg-[#FFCA28] w-3/4" />
+              </div>
             </div>
-            <div className="card-aura p-8">
+            <div className="bg-white p-8 rounded-3xl border border-[#F44336]/20 shadow-sm hover:shadow-md transition-all">
               <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Active Tenants</p>
               <p className="text-4xl font-bold text-space-gray">84</p>
+              <div className="mt-4 h-1 w-full bg-[#F44336]/10 rounded-full overflow-hidden">
+                <div className="h-full bg-[#F44336] w-1/2" />
+              </div>
             </div>
-            <div className="card-aura p-8">
+            <div className="bg-white p-8 rounded-3xl border border-[#FFCA28]/20 shadow-sm hover:shadow-md transition-all">
               <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Monthly Revenue</p>
-              <p className="text-4xl font-bold text-green-600">$12,450</p>
+              <p className="text-4xl font-bold text-[#F44336]">$12,450</p>
+              <div className="mt-4 h-1 w-full bg-[#FFCA28]/10 rounded-full overflow-hidden">
+                <div className="h-full bg-[#FFCA28] w-2/3" />
+              </div>
+            </div>
+          </div>
+          
+          <div className="card-aura p-8 bg-gradient-to-br from-[#F44336]/5 to-[#FFCA28]/5 border-none">
+            <h3 className="text-lg font-bold text-space-gray mb-4">Platform Health</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+              {[
+                { label: 'Uptime', value: '99.9%', color: '#F44336' },
+                { label: 'API Latency', value: '45ms', color: '#FFCA28' },
+                { label: 'Error Rate', value: '0.02%', color: '#F44336' },
+                { label: 'DB Load', value: '12%', color: '#FFCA28' }
+              ].map((stat, i) => (
+                <div key={i} className="space-y-1">
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{stat.label}</p>
+                  <p className="text-xl font-bold" style={{ color: stat.color }}>{stat.value}</p>
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -254,21 +280,10 @@ export default function App() {
           activeTab={activeTab} 
           setActiveTab={navigateTo}
           currentCompany={currentCompany || { id: 'temp', name: 'Rumby HR', logo: 'R', accentColor: '#007AFF', plan: 'Pro', employeeCount: 0, status: 'Active', ownerUid: '' }}
+          userProfile={userProfile}
           onBack={viewHistory.length > 1 || selectedEmployee ? goBack : undefined}
           onGoHome={() => setView('landing')}
         >
-          {userProfile?.role === 'platform_owner' && (
-            <button 
-              onClick={() => navigateTo('owner_kpis')}
-              className={cn(
-                "fixed bottom-24 left-8 p-4 bg-space-gray text-white rounded-2xl shadow-2xl flex items-center gap-3 hover:scale-105 transition-all z-50",
-                activeTab === 'owner_kpis' && "ring-2 ring-accent"
-              )}
-            >
-              <ShieldCheck className="w-5 h-5 text-accent" />
-              <span className="text-sm font-bold">Owner Dashboard</span>
-            </button>
-          )}
           {renderContent()}
         </Layout>
       )}

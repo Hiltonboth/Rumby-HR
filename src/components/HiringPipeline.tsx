@@ -21,12 +21,14 @@ import {
   Sparkles,
   X,
   AlertCircle,
-  Eye
+  Eye,
+  Loader2
 } from 'lucide-react';
 import { MOCK_CANDIDATES } from '../constants';
 import { cn } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 import SignaturePad from './SignaturePad';
+import { GoogleGenAI } from '@google/genai';
 
 const stages = ['Applied', 'Screening', 'Interviewing', 'Offer Sent', 'Hired'];
 
@@ -54,16 +56,72 @@ export default function HiringPipeline() {
   const [showBulkSignModal, setShowBulkSignModal] = useState(false);
   const [signingCandidate, setSigningCandidate] = useState<any | null>(null);
   const [showMatchModal, setShowMatchModal] = useState<any | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   const [candidates, setCandidates] = useState(MOCK_CANDIDATES.map(c => ({
     ...c,
     contractStatus: 'none' as 'none' | 'sent' | 'signed' | 'rejected',
-    matchAnalysis: {
-      strengths: ['Relevant experience', 'Strong technical skills', 'Local market knowledge'],
-      weaknesses: ['Missing specific certification', 'Salary expectations slightly high'],
-      recommendation: 'Highly recommended for interview.'
-    }
+    matchAnalysis: null as any
   })));
+
+  const generateMatchAnalysis = async (candidate: any) => {
+    if (candidate.matchAnalysis) {
+      setShowMatchModal(candidate);
+      return;
+    }
+
+    setIsAnalyzing(true);
+    setShowMatchModal({ ...candidate, isLoading: true });
+
+    try {
+      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+
+      const prompt = `
+        Analyze the match between this candidate and the job requirements.
+        Candidate: ${candidate.name}
+        Role: ${candidate.role}
+        Skills: ${candidate.skills}
+        Experience: ${candidate.experience}
+        
+        Job Requirements: Senior Software Engineer with expertise in React, TypeScript, Node.js, and cloud infrastructure.
+        
+        Provide a detailed analysis in JSON format:
+        {
+          "score": "0-5",
+          "strengths": ["strength 1", "strength 2", ...],
+          "weaknesses": ["weakness 1", "weakness 2", ...],
+          "recommendation": "detailed recommendation mimicking Indeed/Glassdoor style"
+        }
+      `;
+
+      const response = await ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: prompt,
+      });
+
+      const text = response.text || '';
+      const cleanText = text.replace(/```json|```/g, '').trim();
+      const analysis = JSON.parse(cleanText);
+
+      const updatedCandidate = { ...candidate, matchAnalysis: analysis, score: analysis.score };
+      
+      setCandidates(prev => prev.map(c => c.id === candidate.id ? updatedCandidate : c));
+      setShowMatchModal(updatedCandidate);
+    } catch (error) {
+      console.error("Error generating match analysis:", error);
+      setShowMatchModal({
+        ...candidate,
+        matchAnalysis: {
+          score: candidate.score,
+          strengths: ['Relevant experience', 'Strong technical skills'],
+          weaknesses: ['Could not generate detailed AI analysis'],
+          recommendation: 'Manual review recommended.'
+        }
+      });
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
 
   const handleSendContract = (candidateId: string) => {
     setCandidates(prev => prev.map(c => 
@@ -260,11 +318,16 @@ export default function HiringPipeline() {
                               </button>
                             )}
                             <button 
-                              onClick={() => setShowMatchModal(candidate)}
-                              className="p-2 text-gray-300 hover:text-accent transition-colors"
+                              onClick={() => generateMatchAnalysis(candidate)}
+                              disabled={isAnalyzing}
+                              className="p-2 text-gray-300 hover:text-accent transition-colors disabled:opacity-50"
                               title="View AI Match Analysis"
                             >
-                              <Sparkles className="w-4 h-4" />
+                              {isAnalyzing && showMatchModal?.id === candidate.id ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <Sparkles className="w-4 h-4" />
+                              )}
                             </button>
                             <button className="p-2 text-gray-300 hover:text-space-gray transition-colors">
                               <MoreHorizontal className="w-4 h-4" />
@@ -584,71 +647,80 @@ export default function HiringPipeline() {
                 </button>
               </div>
               <div className="p-8 space-y-8">
-                <div className="flex items-center justify-center">
-                  <div className="relative w-32 h-32">
-                    <svg className="w-full h-full" viewBox="0 0 36 36">
-                      <path
-                        className="text-apple-gray"
-                        strokeDasharray="100, 100"
-                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="3"
-                      />
-                      <path
-                        className="text-orange-500"
-                        strokeDasharray={`${parseFloat(showMatchModal.score) * 20}, 100`}
-                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="3"
-                        strokeLinecap="round"
-                      />
-                    </svg>
-                    <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <span className="text-3xl font-black text-space-gray">{showMatchModal.score}</span>
-                      <span className="text-[8px] font-bold text-gray-400 uppercase tracking-widest">Match Score</span>
+                {showMatchModal.isLoading ? (
+                  <div className="py-20 flex flex-col items-center justify-center space-y-4">
+                    <Loader2 className="w-12 h-12 text-accent animate-spin" />
+                    <p className="text-gray-500 font-medium">AI is analyzing candidate profile...</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-center justify-center">
+                      <div className="relative w-32 h-32">
+                        <svg className="w-full h-full" viewBox="0 0 36 36">
+                          <path
+                            className="text-apple-gray"
+                            strokeDasharray="100, 100"
+                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="3"
+                          />
+                          <path
+                            className="text-orange-500"
+                            strokeDasharray={`${parseFloat(showMatchModal.score) * 20}, 100`}
+                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="3"
+                            strokeLinecap="round"
+                          />
+                        </svg>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                          <span className="text-3xl font-black text-space-gray">{showMatchModal.score}</span>
+                          <span className="text-[8px] font-bold text-gray-400 uppercase tracking-widest">Match Score</span>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
 
-                <div className="grid grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <h4 className="text-xs font-bold text-green-600 uppercase tracking-widest flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4" />
-                      Strengths
-                    </h4>
-                    <ul className="space-y-2">
-                      {showMatchModal.matchAnalysis.strengths.map((s: string, i: number) => (
-                        <li key={i} className="text-sm text-gray-600 flex items-start gap-2">
-                          <div className="w-1.5 h-1.5 rounded-full bg-green-400 mt-1.5 flex-shrink-0" />
-                          {s}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  <div className="space-y-4">
-                    <h4 className="text-xs font-bold text-red-500 uppercase tracking-widest flex items-center gap-2">
-                      <XCircle className="w-4 h-4" />
-                      Weaknesses/Gaps
-                    </h4>
-                    <ul className="space-y-2">
-                      {showMatchModal.matchAnalysis.weaknesses.map((w: string, i: number) => (
-                        <li key={i} className="text-sm text-gray-600 flex items-start gap-2">
-                          <div className="w-1.5 h-1.5 rounded-full bg-red-400 mt-1.5 flex-shrink-0" />
-                          {w}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-4">
+                        <h4 className="text-xs font-bold text-green-600 uppercase tracking-widest flex items-center gap-2">
+                          <CheckCircle2 className="w-4 h-4" />
+                          Strengths
+                        </h4>
+                        <ul className="space-y-2">
+                          {showMatchModal.matchAnalysis?.strengths.map((s: string, i: number) => (
+                            <li key={i} className="text-sm text-gray-600 flex items-start gap-2">
+                              <div className="w-1.5 h-1.5 rounded-full bg-green-400 mt-1.5 flex-shrink-0" />
+                              {s}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                      <div className="space-y-4">
+                        <h4 className="text-xs font-bold text-red-500 uppercase tracking-widest flex items-center gap-2">
+                          <XCircle className="w-4 h-4" />
+                          Weaknesses/Gaps
+                        </h4>
+                        <ul className="space-y-2">
+                          {showMatchModal.matchAnalysis?.weaknesses.map((w: string, i: number) => (
+                            <li key={i} className="text-sm text-gray-600 flex items-start gap-2">
+                              <div className="w-1.5 h-1.5 rounded-full bg-red-400 mt-1.5 flex-shrink-0" />
+                              {w}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
 
-                <div className="p-6 bg-apple-gray/30 rounded-2xl border border-black/[0.03]">
-                  <h4 className="text-xs font-bold text-space-gray uppercase tracking-widest mb-2">Overall Recommendation</h4>
-                  <p className="text-sm text-gray-600 leading-relaxed italic">
-                    "{showMatchModal.matchAnalysis.recommendation}"
-                  </p>
-                </div>
+                    <div className="p-6 bg-apple-gray/30 rounded-2xl border border-black/[0.03]">
+                      <h4 className="text-xs font-bold text-space-gray uppercase tracking-widest mb-2">Overall Recommendation</h4>
+                      <p className="text-sm text-gray-600 leading-relaxed italic">
+                        "{showMatchModal.matchAnalysis?.recommendation}"
+                      </p>
+                    </div>
+                  </>
+                )}
               </div>
               <div className="p-8 border-t border-black/[0.05] flex justify-end">
                 <button onClick={() => setShowMatchModal(null)} className="btn-primary px-8 py-3">Close Analysis</button>

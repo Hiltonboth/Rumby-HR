@@ -113,9 +113,9 @@ export default function App() {
         <div className="space-y-8">
           <div className="flex items-center gap-4">
             <button onClick={goBack} className="p-2 hover:bg-red-50 rounded-xl transition-all">
-              <ArrowLeft className="w-5 h-5 text-[#F44336]" />
+              <ArrowLeft className="w-5 h-5 text-[#D32F2F]" />
             </button>
-            <h1 className="text-3xl font-bold tracking-tight text-[#F44336]">Platform Owner Dashboard</h1>
+            <h1 className="text-3xl font-bold tracking-tight text-[#D32F2F]">Platform Owner Dashboard</h1>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-white p-8 rounded-3xl border border-[#FFCA28]/20 shadow-sm hover:shadow-md transition-all">
@@ -125,29 +125,29 @@ export default function App() {
                 <div className="h-full bg-[#FFCA28] w-3/4" />
               </div>
             </div>
-            <div className="bg-white p-8 rounded-3xl border border-[#F44336]/20 shadow-sm hover:shadow-md transition-all">
+            <div className="bg-white p-8 rounded-3xl border border-[#D32F2F]/20 shadow-sm hover:shadow-md transition-all">
               <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Active Tenants</p>
               <p className="text-4xl font-bold text-space-gray">84</p>
-              <div className="mt-4 h-1 w-full bg-[#F44336]/10 rounded-full overflow-hidden">
-                <div className="h-full bg-[#F44336] w-1/2" />
+              <div className="mt-4 h-1 w-full bg-[#D32F2F]/10 rounded-full overflow-hidden">
+                <div className="h-full bg-[#D32F2F] w-1/2" />
               </div>
             </div>
             <div className="bg-white p-8 rounded-3xl border border-[#FFCA28]/20 shadow-sm hover:shadow-md transition-all">
               <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Monthly Revenue</p>
-              <p className="text-4xl font-bold text-[#F44336]">$12,450</p>
+              <p className="text-4xl font-bold text-[#D32F2F]">$12,450</p>
               <div className="mt-4 h-1 w-full bg-[#FFCA28]/10 rounded-full overflow-hidden">
                 <div className="h-full bg-[#FFCA28] w-2/3" />
               </div>
             </div>
           </div>
           
-          <div className="card-aura p-8 bg-gradient-to-br from-[#F44336]/5 to-[#FFCA28]/5 border-none">
+          <div className="card-aura p-8 bg-gradient-to-br from-[#D32F2F]/5 to-[#FFCA28]/5 border-none">
             <h3 className="text-lg font-bold text-space-gray mb-4">Platform Health</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
               {[
-                { label: 'Uptime', value: '99.9%', color: '#F44336' },
+                { label: 'Uptime', value: '99.9%', color: '#D32F2F' },
                 { label: 'API Latency', value: '45ms', color: '#FFCA28' },
-                { label: 'Error Rate', value: '0.02%', color: '#F44336' },
+                { label: 'Error Rate', value: '0.02%', color: '#D32F2F' },
                 { label: 'DB Load', value: '12%', color: '#FFCA28' }
               ].map((stat, i) => (
                 <div key={i} className="space-y-1">
@@ -272,7 +272,12 @@ export default function App() {
   return (
     <>
       {view === 'landing' ? (
-        <LandingPage onGetStarted={() => setView('signup')} onLogin={() => setView('login')} />
+        <LandingPage 
+          onGetStarted={() => setView('signup')} 
+          onLogin={() => setView('login')} 
+          user={user}
+          onGoToDashboard={() => setView('app')}
+        />
       ) : view === 'login' || view === 'signup' ? (
         <LoginPage isSignup={view === 'signup'} onBackToHome={() => setView('landing')} onSuccess={() => setView('app')} />
       ) : (

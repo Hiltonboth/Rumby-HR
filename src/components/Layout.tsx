@@ -71,7 +71,7 @@ export default function Layout({ children, activeTab, setActiveTab, currentCompa
               className={cn(
                 "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all duration-200",
                 activeTab === item.id 
-                  ? (item.id === 'owner_kpis' ? "bg-[#F44336] text-white shadow-md shadow-red-500/20" : "bg-accent text-white shadow-md shadow-accent/20")
+                  ? (item.id === 'owner_kpis' ? "bg-[#D32F2F] text-white shadow-md shadow-red-500/20" : "bg-accent text-white shadow-md shadow-accent/20")
                   : "text-gray-500 hover:text-space-gray hover:bg-apple-gray/50"
               )}
             >

@@ -99,8 +99,40 @@ export const MOCK_TASKS: Task[] = [
 ];
 
 export const MOCK_CANDIDATES: Candidate[] = [
-  { id: 'can1', name: 'Alex Rivera', role: 'Frontend Lead', status: 'Interviewing', score: 92 },
-  { id: 'can2', name: 'Jordan Smith', role: 'HR Manager', status: 'Offer Sent', score: 88 },
-  { id: 'can3', name: 'Taylor Wong', role: 'Sales Exec', status: 'Screening', score: 75 },
-  { id: 'can4', name: 'Sam Jones', role: 'DevOps', status: 'Applied', score: 82 },
+  { 
+    id: 'can1', 
+    name: 'Alex Rivera', 
+    role: 'Frontend Lead', 
+    status: 'Interviewing', 
+    score: 92,
+    skills: ['React', 'TypeScript', 'Tailwind', 'Next.js'],
+    experience: '8 years of experience in frontend development, leading teams at scale.'
+  },
+  { 
+    id: 'can2', 
+    name: 'Jordan Smith', 
+    role: 'HR Manager', 
+    status: 'Offer Sent', 
+    score: 88,
+    skills: ['Employee Relations', 'Payroll', 'Recruitment', 'Labour Law'],
+    experience: '6 years in HR management, specializing in compliance and culture.'
+  },
+  { 
+    id: 'can3', 
+    name: 'Taylor Wong', 
+    role: 'Sales Exec', 
+    status: 'Screening', 
+    score: 75,
+    skills: ['B2B Sales', 'CRM', 'Negotiation'],
+    experience: '4 years in enterprise sales with a track record of exceeding quotas.'
+  },
+  { 
+    id: 'can4', 
+    name: 'Sam Jones', 
+    role: 'DevOps', 
+    status: 'Applied', 
+    score: 82,
+    skills: ['Docker', 'Kubernetes', 'AWS', 'CI/CD'],
+    experience: '5 years in cloud infrastructure and automation.'
+  },
 ];

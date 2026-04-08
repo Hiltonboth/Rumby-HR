@@ -49,4 +49,6 @@ export interface Candidate {
   role: string;
   status: 'Applied' | 'Screening' | 'Interviewing' | 'Offer Sent' | 'Hired';
   score: number;
+  skills?: string[];
+  experience?: string;
 }

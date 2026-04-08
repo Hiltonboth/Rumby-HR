@@ -56,7 +56,9 @@ export default function HiringPipeline() {
   const [showBulkSignModal, setShowBulkSignModal] = useState(false);
   const [signingCandidate, setSigningCandidate] = useState<any | null>(null);
   const [showMatchModal, setShowMatchModal] = useState<any | null>(null);
+  const [showCoverLetterModal, setShowCoverLetterModal] = useState<any | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isGeneratingCoverLetter, setIsGeneratingCoverLetter] = useState(false);
 
   const [candidates, setCandidates] = useState(MOCK_CANDIDATES.map(c => ({
     ...c,
@@ -120,6 +122,40 @@ export default function HiringPipeline() {
       });
     } finally {
       setIsAnalyzing(false);
+    }
+  };
+
+  const generateCoverLetter = async (candidate: any) => {
+    setIsGeneratingCoverLetter(true);
+    setShowCoverLetterModal({ ...candidate, isLoading: true });
+
+    try {
+      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+
+      const prompt = `
+        Generate a professional cover letter for this candidate applying for the role of ${candidate.role}.
+        Candidate: ${candidate.name}
+        Skills: ${candidate.skills?.join(', ') || 'Not specified'}
+        Experience: ${candidate.experience || 'Not specified'}
+        
+        Job Description: Senior Software Engineer with expertise in React, TypeScript, Node.js, and cloud infrastructure.
+        
+        The cover letter should be professional, concise, and highlight how the candidate's skills match the job requirements. 
+        Tailor it to the Zimbabwean context if applicable.
+      `;
+
+      const response = await ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: prompt,
+      });
+
+      const coverLetter = response.text || "Could not generate cover letter.";
+      setShowCoverLetterModal({ ...candidate, content: coverLetter, isLoading: false });
+    } catch (error) {
+      console.error("Error generating cover letter:", error);
+      setShowCoverLetterModal({ ...candidate, content: "Error generating cover letter. Please try again.", isLoading: false });
+    } finally {
+      setIsGeneratingCoverLetter(false);
     }
   };
 
@@ -321,7 +357,7 @@ export default function HiringPipeline() {
                               onClick={() => generateMatchAnalysis(candidate)}
                               disabled={isAnalyzing}
                               className="p-2 text-gray-300 hover:text-accent transition-colors disabled:opacity-50"
-                              title="View AI Match Analysis"
+                              title="Check Job Match"
                             >
                               {isAnalyzing && showMatchModal?.id === candidate.id ? (
                                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -722,8 +758,72 @@ export default function HiringPipeline() {
                   </>
                 )}
               </div>
-              <div className="p-8 border-t border-black/[0.05] flex justify-end">
+              <div className="p-8 border-t border-black/[0.05] flex justify-end gap-3">
+                <button 
+                  onClick={() => {
+                    setShowMatchModal(null);
+                    generateCoverLetter(showMatchModal);
+                  }} 
+                  className="btn-secondary px-6 py-3 flex items-center gap-2"
+                >
+                  <FileText className="w-4 h-4" />
+                  Generate Cover Letter
+                </button>
                 <button onClick={() => setShowMatchModal(null)} className="btn-primary px-8 py-3">Close Analysis</button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Cover Letter Modal */}
+      <AnimatePresence>
+        {showCoverLetterModal && (
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[300] flex items-center justify-center p-6">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="bg-white w-full max-w-3xl rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+            >
+              <div className="p-8 border-b border-black/[0.05] flex items-center justify-between bg-apple-gray/10">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-accent rounded-xl flex items-center justify-center text-white">
+                    <FileText className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold">AI Generated Cover Letter</h3>
+                    <p className="text-xs text-gray-500">For {showCoverLetterModal.name} - {showCoverLetterModal.role}</p>
+                  </div>
+                </div>
+                <button onClick={() => setShowCoverLetterModal(null)} className="p-2 hover:bg-apple-gray rounded-full transition-colors">
+                  <X className="w-5 h-5 text-gray-400" />
+                </button>
+              </div>
+              <div className="p-8 overflow-y-auto flex-1 bg-apple-gray/5">
+                {showCoverLetterModal.isLoading ? (
+                  <div className="py-20 flex flex-col items-center justify-center space-y-4">
+                    <Loader2 className="w-12 h-12 text-accent animate-spin" />
+                    <p className="text-gray-500 font-medium">Rumby AI is drafting the cover letter...</p>
+                  </div>
+                ) : (
+                  <div className="bg-white p-8 rounded-2xl shadow-sm border border-black/[0.03] whitespace-pre-wrap font-serif text-gray-700 leading-relaxed">
+                    {showCoverLetterModal.content}
+                  </div>
+                )}
+              </div>
+              <div className="p-8 border-t border-black/[0.05] flex justify-end gap-3 bg-white">
+                <button 
+                  onClick={() => {
+                    navigator.clipboard.writeText(showCoverLetterModal.content);
+                    alert("Cover letter copied to clipboard!");
+                  }} 
+                  className="btn-secondary px-6 py-3 flex items-center gap-2"
+                >
+                  <FileText className="w-4 h-4" />
+                  Copy to Clipboard
+                </button>
+                <button onClick={() => setShowCoverLetterModal(null)} className="btn-primary px-8 py-3">Close</button>
               </div>
             </motion.div>
           </div>

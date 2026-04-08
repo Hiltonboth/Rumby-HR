@@ -9,6 +9,8 @@ import SuccessStories from './SuccessStories';
 interface LandingPageProps {
   onGetStarted: () => void;
   onLogin: () => void;
+  user?: any;
+  onGoToDashboard?: () => void;
 }
 
 const features = [
@@ -44,7 +46,7 @@ const features = [
   { name: 'Mobile app', id: 'mobile' },
 ];
 
-export default function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
+export default function LandingPage({ onGetStarted, onLogin, user, onGoToDashboard }: LandingPageProps) {
   const [isFeaturesOpen, setIsFeaturesOpen] = useState(false);
   const [activeSubMenu, setActiveSubMenu] = useState<string | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -153,18 +155,30 @@ export default function LandingPage({ onGetStarted, onLogin }: LandingPageProps)
           </div>
           <a href="#pricing" className="hover:text-space-gray transition-colors font-bold">Pricing</a>
           <div className="h-6 w-[1px] bg-black/[0.05]" />
-          <button 
-            onClick={onLogin} 
-            className="px-4 py-2 rounded-xl font-bold text-gray-600 hover:bg-apple-gray transition-all"
-          >
-            Login
-          </button>
-          <button 
-            onClick={onGetStarted} 
-            className="btn-primary px-6 py-2.5 shadow-lg shadow-accent/20"
-          >
-            Sign Up Free
-          </button>
+          {user ? (
+            <button 
+              onClick={onGoToDashboard} 
+              className="btn-primary px-6 py-2.5 shadow-lg shadow-accent/20 flex items-center gap-2"
+            >
+              Go to Dashboard
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          ) : (
+            <>
+              <button 
+                onClick={onLogin} 
+                className="px-4 py-2 rounded-xl font-bold text-gray-600 hover:bg-apple-gray transition-all"
+              >
+                Login
+              </button>
+              <button 
+                onClick={onGetStarted} 
+                className="btn-primary px-6 py-2.5 shadow-lg shadow-accent/20"
+              >
+                Sign Up Free
+              </button>
+            </>
+          )}
         </div>
 
         {/* Mobile Hamburger */}
@@ -236,8 +250,14 @@ export default function LandingPage({ onGetStarted, onLogin }: LandingPageProps)
                 </div>
                 
                 <div className="pt-6 border-t border-black/[0.05] space-y-4">
-                  <button onClick={onLogin} className="w-full p-3 text-center font-bold text-gray-600">Login</button>
-                  <button onClick={onGetStarted} className="w-full btn-primary py-4">Get Started</button>
+                  {user ? (
+                    <button onClick={onGoToDashboard} className="w-full btn-primary py-4">Go to Dashboard</button>
+                  ) : (
+                    <>
+                      <button onClick={onLogin} className="w-full p-3 text-center font-bold text-gray-600">Login</button>
+                      <button onClick={onGetStarted} className="w-full btn-primary py-4">Get Started</button>
+                    </>
+                  )}
                 </div>
               </div>
             </motion.div>

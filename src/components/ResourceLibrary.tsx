@@ -227,7 +227,7 @@ export default function ResourceLibrary() {
               <motion.div 
                 layout
                 key={item.id} 
-                className="p-8 rounded-3xl bg-white border border-black/[0.05] hover:shadow-xl transition-all group relative overflow-hidden"
+                className="p-8 rounded-[2.5rem] bg-white border border-black/[0.08] hover:border-accent/30 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 group relative overflow-hidden"
               >
                 <div className="flex items-center justify-between mb-4">
                   <span className="px-3 py-1 bg-accent/10 text-accent text-[10px] font-bold uppercase tracking-widest rounded-full">{item.type}</span>
@@ -297,7 +297,7 @@ export default function ResourceLibrary() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   key={item.id}
-                  className="p-8 rounded-[2.5rem] bg-apple-gray/30 border border-black/[0.03] space-y-4"
+                  className="p-8 rounded-[2.5rem] bg-white border border-black/[0.08] hover:border-accent/30 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 space-y-4 group"
                 >
                   <div className="flex items-center justify-between">
                     <span className={cn(
@@ -346,7 +346,7 @@ export default function ResourceLibrary() {
                 <motion.div 
                   layout
                   key={`faq-${i}`}
-                  className="p-8 rounded-3xl bg-blue-50/50 border border-blue-100 space-y-4"
+                  className="p-8 rounded-[2.5rem] bg-white border border-black/[0.08] hover:border-accent/30 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 space-y-4 group"
                 >
                   <h3 className="text-lg font-bold text-space-gray leading-tight">{faq.q}</h3>
                   <p className="text-sm text-gray-600 leading-relaxed">{faq.a}</p>

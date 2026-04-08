@@ -185,14 +185,28 @@ export default function Community() {
     setShowCreatePost(false);
   };
 
-  const handleReaction = (postId: string, emoji: string) => {
-    setPosts(prev => prev.map(p => {
-      if (p.id === postId) {
-        const newReactions = { ...p.reactions };
-        newReactions[emoji] = (newReactions[emoji] || 0) + 1;
-        return { ...p, reactions: newReactions };
+  const handleReaction = (postId: string, emoji: string, commentId?: string) => {
+    setPosts(prev => prev.map(post => {
+      if (post.id === postId) {
+        if (commentId) {
+          return {
+            ...post,
+            comments: post.comments.map(comment => {
+              if (comment.id === commentId) {
+                const newReactions = { ...comment.reactions };
+                newReactions[emoji] = (newReactions[emoji] || 0) + 1;
+                return { ...comment, reactions: newReactions };
+              }
+              return comment;
+            })
+          };
+        } else {
+          const newReactions = { ...post.reactions };
+          newReactions[emoji] = (newReactions[emoji] || 0) + 1;
+          return { ...post, reactions: newReactions };
+        }
       }
-      return p;
+      return post;
     }));
   };
 
@@ -365,6 +379,20 @@ export default function Community() {
                       <div className="flex items-center gap-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
                         <MessageCircle className="w-3 h-3" />
                         {post.comments.length}
+                      </div>
+                      <div className="flex gap-1 ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
+                        {['👍', '❤️', '👏'].map(emoji => (
+                          <button 
+                            key={emoji}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleReaction(post.id, emoji);
+                            }}
+                            className="w-6 h-6 bg-white border border-black/[0.05] rounded-full flex items-center justify-center text-[10px] shadow-sm hover:scale-110 transition-transform"
+                          >
+                            {emoji}
+                          </button>
+                        ))}
                       </div>
                     </div>
                   </div>
@@ -539,14 +567,24 @@ export default function Community() {
                           CV Builder
                         </button>
                       </div>
-                      <button 
-                        onClick={() => generateAIContent('match')}
-                        disabled={isGenerating || !userData.name}
-                        className="w-full btn-primary py-4 flex items-center justify-center gap-2"
-                      >
-                        <Sparkles className="w-5 h-5" />
-                        Check Job Match
-                      </button>
+                      <div className="flex gap-3">
+                        <button 
+                          onClick={() => generateAIContent('match')}
+                          disabled={isGenerating || !userData.name}
+                          className="flex-1 btn-primary py-4 flex items-center justify-center gap-2"
+                        >
+                          <Sparkles className="w-5 h-5" />
+                          Check Job Match
+                        </button>
+                        <button 
+                          onClick={() => generateAIContent('cover')}
+                          disabled={isGenerating || !userData.name}
+                          className="flex-1 btn-secondary py-4 flex items-center justify-center gap-2"
+                        >
+                          <FileText className="w-5 h-5" />
+                          Cover Letter
+                        </button>
+                      </div>
                     </div>
                   ) : (
                     <div className="p-8 bg-green-50 rounded-[2rem] border border-green-100 text-center space-y-6">
@@ -635,67 +673,117 @@ export default function Community() {
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
               className="w-full max-w-xl h-full bg-white shadow-2xl flex flex-col"
             >
-              <div className="p-6 border-b border-black/[0.05] flex items-center justify-between bg-apple-gray/10">
+              <div className="p-6 border-b border-black/[0.05] flex items-center justify-between bg-[#075E54] text-white">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center text-purple-600">
-                    <Hash className="w-5 h-5" />
+                  <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
+                    <User className="w-6 h-6" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-space-gray">Discussion Thread</h3>
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Started by {selectedPost.author}</p>
+                    <h3 className="font-bold">{selectedPost.author}</h3>
+                    <p className="text-[10px] font-medium opacity-80">online</p>
                   </div>
                 </div>
-                <button onClick={() => setSelectedPost(null)} className="p-2 hover:bg-black/5 rounded-full transition-colors">
-                  <X className="w-5 h-5 text-gray-400" />
-                </button>
+                <div className="flex items-center gap-4">
+                  <button className="p-2 hover:bg-white/10 rounded-full transition-colors">
+                    <MoreVertical className="w-5 h-5" />
+                  </button>
+                  <button onClick={() => setSelectedPost(null)} className="p-2 hover:bg-white/10 rounded-full transition-colors">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar">
+              <div className="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar bg-[#E5DDD5] relative">
+                {/* WhatsApp Background Pattern Overlay (Simulated) */}
+                <div className="absolute inset-0 opacity-[0.05] pointer-events-none bg-[url('https://picsum.photos/seed/pattern/1000/1000')] bg-repeat" />
+                
                 {/* Original Post */}
-                <div className="space-y-4">
+                <div className="relative z-10 space-y-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-apple-gray rounded-full flex items-center justify-center text-gray-400">
+                    <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-accent shadow-sm">
                       <User className="w-5 h-5" />
                     </div>
                     <div>
                       <p className="text-sm font-bold text-space-gray">{selectedPost.author}</p>
-                      <p className="text-[10px] text-gray-400">{selectedPost.time}</p>
+                      <p className="text-[10px] text-gray-500">{selectedPost.time}</p>
                     </div>
                   </div>
-                  <p className="text-base text-gray-600 leading-relaxed bg-apple-gray/30 p-4 rounded-2xl">{selectedPost.content}</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {['👍', '❤️', '😮', '👏'].map(emoji => (
-                      <button 
-                        key={emoji}
-                        onClick={() => handleReaction(selectedPost.id, emoji)}
-                        className="px-2.5 py-1 bg-apple-gray/50 hover:bg-apple-gray rounded-full text-xs transition-all flex items-center gap-1.5"
-                      >
-                        <span>{emoji}</span>
-                        <span className="text-[10px] font-bold text-gray-500">{selectedPost.reactions[emoji] || 0}</span>
-                      </button>
-                    ))}
+                  <div className="bg-white p-4 rounded-2xl rounded-tl-none shadow-sm relative max-w-[90%] before:content-[''] before:absolute before:top-0 before:-left-2 before:w-0 before:h-0 before:border-t-[10px] before:border-t-white before:border-l-[10px] before:border-l-transparent">
+                    <p className="text-base text-gray-700 leading-relaxed">{selectedPost.content}</p>
+                    <div className="flex flex-wrap gap-1 mt-3">
+                      {['👍', '❤️', '😮', '👏'].map(emoji => (
+                        <button 
+                          key={emoji}
+                          onClick={() => handleReaction(selectedPost.id, emoji)}
+                          className="px-2 py-0.5 bg-apple-gray/50 hover:bg-apple-gray rounded-full text-[10px] transition-all flex items-center gap-1"
+                        >
+                          <span>{emoji}</span>
+                          <span className="font-bold text-gray-500">{selectedPost.reactions[emoji] || 0}</span>
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
-                {/* Comments (Chat Style) */}
-                <div className="space-y-6">
+                {/* Comments (WhatsApp Style) */}
+                <div className="relative z-10 space-y-4">
                   <div className="flex items-center gap-2">
-                    <div className="h-[1px] flex-1 bg-black/[0.05]" />
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{selectedPost.comments.length} Comments</span>
-                    <div className="h-[1px] flex-1 bg-black/[0.05]" />
+                    <div className="h-[1px] flex-1 bg-black/[0.1]" />
+                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest bg-white/50 px-2 py-0.5 rounded-full backdrop-blur-sm">{selectedPost.comments.length} Comments</span>
+                    <div className="h-[1px] flex-1 bg-black/[0.1]" />
                   </div>
 
                   {selectedPost.comments.map((comment) => (
-                    <div key={comment.id} className="flex gap-3 group">
-                      <div className="w-8 h-8 bg-apple-gray rounded-lg flex-shrink-0 flex items-center justify-center text-gray-400 text-xs font-bold">
-                        {comment.author[0]}
-                      </div>
-                      <div className="flex-1 space-y-1">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-bold text-space-gray">{comment.author}</span>
-                          <span className="text-[10px] text-gray-400">{comment.time}</span>
+                    <div key={comment.id} className={cn(
+                      "flex flex-col max-w-[85%] space-y-1",
+                      comment.author === 'You' ? "ml-auto items-end" : "mr-auto items-start"
+                    )}>
+                      <div className={cn(
+                        "p-3 rounded-2xl shadow-sm relative group",
+                        comment.author === 'You' 
+                          ? "bg-[#DCF8C6] rounded-tr-none before:content-[''] before:absolute before:top-0 before:-right-2 before:w-0 before:h-0 before:border-t-[10px] before:border-t-[#DCF8C6] before:border-r-[10px] before:border-r-transparent" 
+                          : "bg-white rounded-tl-none before:content-[''] before:absolute before:top-0 before:-left-2 before:w-0 before:h-0 before:border-t-[10px] before:border-t-white before:border-l-[10px] before:border-l-transparent"
+                      )}>
+                        {comment.author !== 'You' && (
+                          <p className="text-[10px] font-bold text-accent mb-1">{comment.author}</p>
+                        )}
+                        <p className="text-sm text-gray-700 leading-relaxed">{comment.content}</p>
+                        <div className="flex items-center justify-end gap-2 mt-1">
+                          <span className="text-[9px] text-gray-400">{comment.time}</span>
                         </div>
-                        <p className="text-sm text-gray-600 leading-relaxed">{comment.content}</p>
+
+                        {/* Reaction Icons for Comments */}
+                        <div className={cn(
+                          "absolute -bottom-3 flex gap-1 transition-all opacity-0 group-hover:opacity-100",
+                          comment.author === 'You' ? "right-0" : "left-0"
+                        )}>
+                          {['👍', '❤️', '😮'].map(emoji => (
+                            <button
+                              key={emoji}
+                              onClick={() => handleReaction(selectedPost.id, emoji, comment.id)}
+                              className="w-6 h-6 bg-white border border-black/[0.05] rounded-full flex items-center justify-center text-xs shadow-sm hover:scale-110 transition-transform"
+                            >
+                              {emoji}
+                            </button>
+                          ))}
+                        </div>
+
+                        {/* Displayed Reactions */}
+                        {Object.keys(comment.reactions || {}).length > 0 && (
+                          <div className={cn(
+                            "absolute -bottom-2 flex -space-x-1",
+                            comment.author === 'You' ? "left-2" : "right-2"
+                          )}>
+                            {Object.entries(comment.reactions).map(([emoji, count]) => (
+                              (count as number) > 0 && (
+                                <div key={emoji} className="bg-white border border-black/[0.05] rounded-full px-1.5 py-0.5 text-[8px] flex items-center gap-0.5 shadow-sm">
+                                  <span>{emoji}</span>
+                                  <span className="font-bold text-gray-500">{count as number}</span>
+                                </div>
+                              )
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))}

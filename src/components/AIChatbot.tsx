@@ -20,7 +20,7 @@ export default function AIChatbot() {
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<Message[]>([
-    { role: 'assistant', content: "Hello! I'm Rumby, your AI HR assistant. How can I help you today?" }
+    { role: 'assistant', content: "Hello! I'm Your AI HR Manager. I'm here to help you with Zimbabwean labour laws, contracts, payroll, and any HR challenges your SME might face. How can I assist you today?" }
   ]);
   const [isLoading, setIsLoading] = useState(false);
   const [isScrolling, setIsScrolling] = useState(false);
@@ -46,15 +46,25 @@ export default function AIChatbot() {
     setIsLoading(true);
 
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+      const apiKey = process.env.GEMINI_API_KEY;
+      if (!apiKey) {
+        throw new Error('GEMINI_API_KEY is missing. Please add it to your Vercel environment variables.');
+      }
+
+      const ai = new GoogleGenAI({ apiKey });
+      
+      // Filter out the initial assistant greeting from the history sent to the API
+      // as the API expects the conversation to start with a user message.
+      const conversationHistory = messages.slice(1).map(m => ({
+        role: m.role === 'assistant' ? 'model' : 'user',
+        parts: [{ text: m.content }]
+      }));
+
       const response = await ai.models.generateContent({
         model: "gemini-3-flash-preview",
-        contents: [...messages, { role: 'user', content: userMessage }].map(m => ({
-          role: m.role === 'assistant' ? 'model' : 'user',
-          parts: [{ text: m.content }]
-        })),
+        contents: [...conversationHistory, { role: 'user', parts: [{ text: userMessage }] }],
         config: {
-          systemInstruction: "You are Rumby, an elite AI HR assistant for a high-end SaaS platform called Rumby HR. You are professional, helpful, and concise. You help with employee records, hiring, performance, and company policies. Always maintain a refined, Apple-style tone.",
+          systemInstruction: "You are 'Your AI HR Manager', an elite AI HR assistant for Rumby HR, a platform built for SMEs in Zimbabwe and Africa. You are an expert in the Zimbabwean Labour Act, NEC regulations, and local compliance (NSSA, PAYE, ZIMDEF). You are professional, helpful, and concise. You help with employee records, hiring, performance, and company policies. Always maintain a refined, Apple-style tone. If asked about specific laws, reference the Zimbabwean Labour Act where applicable.",
         }
       });
 
@@ -110,7 +120,7 @@ export default function AIChatbot() {
               className="flex-1 flex items-center gap-2 px-3 cursor-text group"
             >
               <Search className="w-4 h-4 text-gray-400 group-hover:text-accent transition-colors" />
-              <span className="text-sm text-gray-400 font-medium select-none">Ask Rumby AI...</span>
+              <span className="text-sm text-gray-400 font-medium select-none">Ask Your AI HR Manager...</span>
             </div>
           )}
 
@@ -142,7 +152,7 @@ export default function AIChatbot() {
                   <Bot className="w-6 h-6" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-space-gray">Rumby Assistant</h3>
+                  <h3 className="text-base font-bold text-space-gray">Your AI HR Manager</h3>
                   <p className="text-[10px] text-green-500 font-bold uppercase tracking-widest flex items-center gap-1">
                     <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
                     Online • HQ: Harare
@@ -202,7 +212,7 @@ export default function AIChatbot() {
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                    placeholder="Ask Rumby anything..."
+                    placeholder="Ask me about labour laws, contracts..."
                     className="w-full bg-apple-gray border-none rounded-2xl pl-4 pr-12 py-4 text-sm outline-none focus:ring-2 focus:ring-accent/20 transition-all shadow-inner"
                   />
                   <button

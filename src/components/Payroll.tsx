@@ -14,7 +14,8 @@ import {
   ChevronRight,
   FileText,
   X,
-  Printer
+  Printer,
+  MessageCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn, formatCurrency } from '../lib/utils';
@@ -25,11 +26,18 @@ interface PayslipData {
   employee: Employee;
   period: string;
   baseSalary: number;
-  taxFederal: number;
-  taxState: number;
-  socialSecurity: number;
-  medicare: number;
+  nssa: number;
+  paye: number;
+  zimdef: number;
+  aidsLevy: number;
   netPay: number;
+}
+
+interface DeductionRates {
+  nssa: number;
+  zimdef: number;
+  aidsLevy: number;
+  payeThreshold: number;
 }
 
 export default function Payroll() {
@@ -39,11 +47,30 @@ export default function Payroll() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [payslip, setPayslip] = useState<PayslipData | null>(null);
   const [editingSalary, setEditingSalary] = useState<{ id: string, value: string } | null>(null);
+  const [rates, setRates] = useState<DeductionRates>(() => {
+    const saved = localStorage.getItem('payroll_rates');
+    return saved ? JSON.parse(saved) : {
+      nssa: 4.5,
+      zimdef: 1,
+      aidsLevy: 3,
+      payeThreshold: 300
+    };
+  });
+  const [isSaving, setIsSaving] = useState(false);
+
+  const saveSettings = () => {
+    setIsSaving(true);
+    localStorage.setItem('payroll_rates', JSON.stringify(rates));
+    setTimeout(() => {
+      setIsSaving(false);
+      alert("Payroll settings saved successfully!");
+    }, 800);
+  };
 
   const stats = [
-    { label: 'Total Payroll', value: '$425,000', change: '+12.5%', trend: 'up' },
+    { label: 'Total Payroll (Monthly)', value: '$35,400', change: '+12.5%', trend: 'up' },
     { label: 'Employees Paid', value: '124', change: '+4', trend: 'up' },
-    { label: 'Tax Liabilities', value: '$82,400', change: '-2.1%', trend: 'down' },
+    { label: 'Tax Liabilities', value: '$6,200', change: '-2.1%', trend: 'down' },
     { label: 'Next Pay Date', value: 'Apr 15', change: 'In 8 days', trend: 'neutral' },
   ];
 
@@ -56,21 +83,30 @@ export default function Payroll() {
   const calculatePayslip = (employee: Employee) => {
     setIsGenerating(true);
     const monthlyBase = employee.salary / 12;
-    const fedTax = monthlyBase * 0.15;
-    const stateTax = monthlyBase * 0.05;
-    const ssTax = monthlyBase * 0.062;
-    const medicare = monthlyBase * 0.0145;
-    const net = monthlyBase - (fedTax + stateTax + ssTax + medicare);
+    
+    // Simple Zimbabwean tax logic
+    const nssa = monthlyBase * (rates.nssa / 100);
+    const zimdef = monthlyBase * (rates.zimdef / 100);
+    
+    // PAYE (Simplified for demo)
+    const taxableIncome = monthlyBase - nssa;
+    let paye = 0;
+    if (taxableIncome > rates.payeThreshold) {
+      paye = (taxableIncome - rates.payeThreshold) * 0.25;
+    }
+    
+    const aidsLevy = paye * (rates.aidsLevy / 100);
+    const net = monthlyBase - (nssa + zimdef + paye + aidsLevy);
 
     setTimeout(() => {
       setPayslip({
         employee,
         period: 'March 2024',
         baseSalary: monthlyBase,
-        taxFederal: fedTax,
-        taxState: stateTax,
-        socialSecurity: ssTax,
-        medicare: medicare,
+        nssa,
+        paye,
+        zimdef,
+        aidsLevy,
         netPay: net
       });
       setIsGenerating(false);
@@ -126,7 +162,7 @@ export default function Payroll() {
 
       {/* Tabs */}
       <div className="bg-white border border-black/[0.05] rounded-2xl p-1 flex overflow-x-auto no-scrollbar max-w-fit">
-        {['Overview', 'Employees', 'Payruns', 'Tax & Compliance'].map((tab) => (
+        {['Overview', 'Employees', 'Payruns', 'Settings'].map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -176,83 +212,72 @@ export default function Payroll() {
             </div>
           )}
 
-          {activeTab === 'Employees' && (
-            <div className="bg-white border border-black/[0.05] rounded-3xl overflow-hidden shadow-sm">
-              <div className="p-6 border-b border-black/[0.05] flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <h3 className="font-bold text-space-gray">Employee Salaries</h3>
-                <div className="flex gap-2">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
-                    <input 
-                      type="text" 
-                      placeholder="Search..."
-                      className="bg-apple-gray border-none rounded-xl pl-9 pr-4 py-2 text-xs outline-none focus:ring-2 focus:ring-accent/20 w-48"
-                    />
-                  </div>
-                  <button className="p-2 bg-apple-gray rounded-xl text-gray-500 hover:text-space-gray">
-                    <Filter className="w-4 h-4" />
-                  </button>
+          {activeTab === 'Settings' && (
+            <div className="bg-white border border-black/[0.05] rounded-3xl p-8 shadow-sm space-y-8">
+              <div>
+                <h3 className="text-xl font-bold text-space-gray">Payroll Settings</h3>
+                <p className="text-sm text-gray-500">Customize deduction rates based on your sector's NEC requirements.</p>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-4">
+                  <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">NSSA Rate (%)</label>
+                  <input 
+                    type="number" 
+                    value={rates.nssa}
+                    onChange={(e) => setRates({ ...rates, nssa: parseFloat(e.target.value) })}
+                    className="w-full bg-apple-gray border-none rounded-2xl px-4 py-3 text-sm font-bold outline-none focus:ring-2 focus:ring-accent/20"
+                  />
+                </div>
+                <div className="space-y-4">
+                  <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">ZIMDEF Rate (%)</label>
+                  <input 
+                    type="number" 
+                    value={rates.zimdef}
+                    onChange={(e) => setRates({ ...rates, zimdef: parseFloat(e.target.value) })}
+                    className="w-full bg-apple-gray border-none rounded-2xl px-4 py-3 text-sm font-bold outline-none focus:ring-2 focus:ring-accent/20"
+                  />
+                </div>
+                <div className="space-y-4">
+                  <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">AIDS Levy (%)</label>
+                  <input 
+                    type="number" 
+                    value={rates.aidsLevy}
+                    onChange={(e) => setRates({ ...rates, aidsLevy: parseFloat(e.target.value) })}
+                    className="w-full bg-apple-gray border-none rounded-2xl px-4 py-3 text-sm font-bold outline-none focus:ring-2 focus:ring-accent/20"
+                  />
+                </div>
+                <div className="space-y-4">
+                  <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">PAYE Threshold ($)</label>
+                  <input 
+                    type="number" 
+                    value={rates.payeThreshold}
+                    onChange={(e) => setRates({ ...rates, payeThreshold: parseFloat(e.target.value) })}
+                    className="w-full bg-apple-gray border-none rounded-2xl px-4 py-3 text-sm font-bold outline-none focus:ring-2 focus:ring-accent/20"
+                  />
                 </div>
               </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left">
-                  <thead>
-                    <tr className="bg-apple-gray/30 text-[10px] font-bold text-gray-400 uppercase tracking-widest border-b border-black/[0.05]">
-                      <th className="px-6 py-4">Employee</th>
-                      <th className="px-6 py-4">Base Salary (Annual)</th>
-                      <th className="px-6 py-4">Monthly Net (Est.)</th>
-                      <th className="px-6 py-4">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-black/[0.05]">
-                    {employees.map((emp) => (
-                      <tr key={emp.id} className="hover:bg-apple-gray/20 transition-colors group">
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-3">
-                            <img src={emp.avatar} className="w-8 h-8 rounded-lg object-cover" alt="" referrerPolicy="no-referrer" />
-                            <div>
-                              <p className="text-sm font-bold text-space-gray">{emp.name}</p>
-                              <p className="text-[10px] text-gray-500">{emp.role}</p>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          {editingSalary?.id === emp.id ? (
-                            <input
-                              autoFocus
-                              type="text"
-                              value={editingSalary.value}
-                              onChange={(e) => setEditingSalary({ ...editingSalary, value: e.target.value })}
-                              onBlur={() => handleSalaryUpdate(emp.id, editingSalary.value)}
-                              onKeyDown={(e) => e.key === 'Enter' && handleSalaryUpdate(emp.id, editingSalary.value)}
-                              className="w-32 bg-white border border-accent rounded-lg px-2 py-1 text-sm font-bold outline-none"
-                            />
-                          ) : (
-                            <div 
-                              onClick={() => setEditingSalary({ id: emp.id, value: emp.salary.toString() })}
-                              className="text-sm font-bold text-space-gray cursor-pointer hover:text-accent flex items-center gap-2"
-                            >
-                              {formatCurrency(emp.salary)}
-                              <span className="opacity-0 group-hover:opacity-100 text-[10px] text-accent">Edit</span>
-                            </div>
-                          )}
-                        </td>
-                        <td className="px-6 py-4 text-sm text-gray-500 font-medium">
-                          {formatCurrency((emp.salary / 12) * 0.72)}
-                        </td>
-                        <td className="px-6 py-4">
-                          <button 
-                            onClick={() => calculatePayslip(emp)}
-                            className="flex items-center gap-2 text-accent text-xs font-bold hover:bg-accent/10 px-3 py-1.5 rounded-lg transition-all"
-                          >
-                            <FileText className="w-3.5 h-3.5" />
-                            Generate Payslip
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              
+              <div className="p-6 bg-accent/5 rounded-3xl border border-accent/10 flex items-center gap-4">
+                <AlertCircle className="w-6 h-6 text-accent" />
+                <p className="text-sm text-accent/80 font-medium">
+                  Changes to these rates will apply to all future payslips generated. Ensure they match your current NEC handbook.
+                </p>
+              </div>
+
+              <div className="flex justify-end">
+                <button 
+                  onClick={saveSettings}
+                  disabled={isSaving}
+                  className="btn-primary px-10 py-4 flex items-center gap-2"
+                >
+                  {isSaving ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <CheckCircle2 className="w-4 h-4" />
+                  )}
+                  {isSaving ? 'Saving...' : 'Save Payroll Settings'}
+                </button>
               </div>
             </div>
           )}
@@ -360,28 +385,28 @@ export default function Payroll() {
                       </div>
 
                       <div className="space-y-4">
-                        <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest border-b border-black/[0.05] pb-2">Deductions (Taxes)</h4>
+                        <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest border-b border-black/[0.05] pb-2">Deductions (Compliance)</h4>
                         <div className="space-y-2">
                           <div className="flex justify-between text-sm">
-                            <span className="text-gray-500">Federal Tax (15%)</span>
-                            <span className="font-bold text-red-500">-{formatCurrency(payslip.taxFederal)}</span>
+                            <span className="text-gray-500">NSSA ({rates.nssa}%)</span>
+                            <span className="font-bold text-red-500">-{formatCurrency(payslip.nssa)}</span>
                           </div>
                           <div className="flex justify-between text-sm">
-                            <span className="text-gray-500">State Tax (5%)</span>
-                            <span className="font-bold text-red-500">-{formatCurrency(payslip.taxState)}</span>
+                            <span className="text-gray-500">PAYE</span>
+                            <span className="font-bold text-red-500">-{formatCurrency(payslip.paye)}</span>
                           </div>
                           <div className="flex justify-between text-sm">
-                            <span className="text-gray-500">Social Security (6.2%)</span>
-                            <span className="font-bold text-red-500">-{formatCurrency(payslip.socialSecurity)}</span>
+                            <span className="text-gray-500">ZIMDEF ({rates.zimdef}%)</span>
+                            <span className="font-bold text-red-500">-{formatCurrency(payslip.zimdef)}</span>
                           </div>
                           <div className="flex justify-between text-sm">
-                            <span className="text-gray-500">Medicare (1.45%)</span>
-                            <span className="font-bold text-red-500">-{formatCurrency(payslip.medicare)}</span>
+                            <span className="text-gray-500">AIDS Levy ({rates.aidsLevy}%)</span>
+                            <span className="font-bold text-red-500">-{formatCurrency(payslip.aidsLevy)}</span>
                           </div>
                         </div>
                         <div className="flex justify-between text-sm pt-2 border-t border-black/[0.05]">
                           <span className="font-bold text-space-gray">Total Deductions</span>
-                          <span className="font-bold text-red-500">-{formatCurrency(payslip.taxFederal + payslip.taxState + payslip.socialSecurity + payslip.medicare)}</span>
+                          <span className="font-bold text-red-500">-{formatCurrency(payslip.nssa + payslip.paye + payslip.zimdef + payslip.aidsLevy)}</span>
                         </div>
                       </div>
                     </div>
@@ -399,14 +424,25 @@ export default function Payroll() {
                     </div>
                   </div>
 
-                  <div className="p-8 border-t border-black/[0.05] flex gap-4">
-                    <button className="flex-1 btn-secondary flex items-center justify-center gap-2">
+                  <div className="p-8 border-t border-black/[0.05] grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <button className="btn-secondary flex items-center justify-center gap-2 text-xs">
                       <Download className="w-4 h-4" />
-                      Download PDF
+                      PDF
                     </button>
-                    <button className="flex-1 btn-primary flex items-center justify-center gap-2">
+                    <button className="btn-secondary flex items-center justify-center gap-2 text-xs">
                       <Printer className="w-4 h-4" />
-                      Print Payslip
+                      Print
+                    </button>
+                    <button 
+                      onClick={() => window.open(`https://wa.me/263772240081?text=Hi!%20Here%20is%20your%20payslip%20for%20${payslip.period}.`, '_blank')}
+                      className="btn-primary bg-[#25D366] border-none flex items-center justify-center gap-2 text-xs"
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                      WhatsApp
+                    </button>
+                    <button className="btn-primary flex items-center justify-center gap-2 text-xs">
+                      <FileText className="w-4 h-4" />
+                      Email
                     </button>
                   </div>
                 </>

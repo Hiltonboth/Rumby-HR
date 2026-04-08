@@ -36,7 +36,9 @@ interface OnboardingTask {
 interface OnboardingDoc {
   id: string;
   name: string;
-  status: 'pending' | 'uploaded' | 'verified';
+  status: 'pending' | 'uploading' | 'uploaded' | 'verified' | 'error';
+  type: string;
+  progress: number;
   error?: string;
 }
 
@@ -108,9 +110,9 @@ export default function OnboardingWizard({ userId, onComplete, onCancel }: Onboa
     { id: '5', title: 'Meet the team', completed: false },
   ]);
   const [docs, setDocs] = useState<OnboardingDoc[]>([
-    { id: '1', name: 'Identity Proof (Passport/ID)', status: 'pending' },
-    { id: '2', name: 'Tax Documents', status: 'pending' },
-    { id: '3', name: 'Signed Contract', status: 'pending' },
+    { id: '1', name: 'Identity Proof (Passport/ID)', status: 'pending', type: '.jpg,.jpeg,.png,.pdf', progress: 0 },
+    { id: '2', name: 'Tax Documents', status: 'pending', type: '.pdf', progress: 0 },
+    { id: '3', name: 'Signed Contract', status: 'pending', type: '.pdf', progress: 0 },
   ]);
   const [welcomeMessage, setWelcomeMessage] = useState('');
   const [isUploading, setIsUploading] = useState<string | null>(null);
@@ -138,8 +140,14 @@ export default function OnboardingWizard({ userId, onComplete, onCancel }: Onboa
   };
 
   const handleFileClick = (id: string) => {
-    setActiveDocId(id);
-    fileInputRef.current?.click();
+    const doc = docs.find(d => d.id === id);
+    if (doc) {
+      setActiveDocId(id);
+      if (fileInputRef.current) {
+        fileInputRef.current.accept = doc.type;
+        fileInputRef.current.click();
+      }
+    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -147,28 +155,30 @@ export default function OnboardingWizard({ userId, onComplete, onCancel }: Onboa
     if (!file || !activeDocId) return;
 
     // Validation
-    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png'];
-    const maxSize = 5 * 1024 * 1024; // 5MB
-
-    if (!allowedTypes.includes(file.type)) {
-      setDocs(docs.map(d => d.id === activeDocId ? { ...d, error: 'Invalid file type. Please upload PDF or JPG/PNG.' } : d));
-      return;
-    }
+    const maxSize = 10 * 1024 * 1024; // 10MB
 
     if (file.size > maxSize) {
-      setDocs(docs.map(d => d.id === activeDocId ? { ...d, error: 'File too large. Maximum size is 5MB.' } : d));
+      setDocs(docs.map(d => d.id === activeDocId ? { ...d, status: 'error', error: 'File too large. Maximum size is 10MB.' } : d));
       return;
     }
 
-    // Clear error and start upload simulation
-    setDocs(docs.map(d => d.id === activeDocId ? { ...d, error: undefined } : d));
+    // Start upload simulation
+    setDocs(docs.map(d => d.id === activeDocId ? { ...d, status: 'uploading', progress: 0, error: undefined } : d));
     setIsUploading(activeDocId);
     
-    setTimeout(() => {
-      setDocs(docs.map(d => d.id === activeDocId ? { ...d, status: 'uploaded' } : d));
-      setIsUploading(null);
-      setActiveDocId(null);
-    }, 1500);
+    let currentProgress = 0;
+    const interval = setInterval(() => {
+      currentProgress += Math.random() * 30;
+      if (currentProgress >= 100) {
+        currentProgress = 100;
+        clearInterval(interval);
+        setDocs(prev => prev.map(d => d.id === activeDocId ? { ...d, status: 'uploaded', progress: 100 } : d));
+        setIsUploading(null);
+        setActiveDocId(null);
+      } else {
+        setDocs(prev => prev.map(d => d.id === activeDocId ? { ...d, progress: currentProgress } : d));
+      }
+    }, 300);
 
     // Reset input
     e.target.value = '';
@@ -358,18 +368,26 @@ export default function OnboardingWizard({ userId, onComplete, onCancel }: Onboa
                       <div className="flex items-center gap-3">
                         <div className={cn(
                           "w-10 h-10 rounded-xl flex items-center justify-center",
-                          doc.status === 'pending' ? "bg-apple-gray text-gray-400" : "bg-green-50 text-green-600"
+                          doc.status === 'pending' || doc.status === 'uploading' ? "bg-apple-gray text-gray-400" : 
+                          doc.status === 'error' ? "bg-red-50 text-red-600" : "bg-green-50 text-green-600"
                         )}>
                           <FileText className="w-5 h-5" />
                         </div>
                         <div>
                           <p className="font-bold text-sm">{doc.name}</p>
-                          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                            {doc.status === 'pending' ? 'Required' : 'Uploaded'}
+                          <p className={cn(
+                            "text-[10px] font-black uppercase tracking-widest",
+                            doc.status === 'pending' ? "text-gray-400" :
+                            doc.status === 'uploading' ? "text-accent" :
+                            doc.status === 'error' ? "text-red-500" : "text-green-600"
+                          )}>
+                            {doc.status === 'pending' ? 'Required' : 
+                             doc.status === 'uploading' ? `Uploading ${Math.round(doc.progress)}%` : 
+                             doc.status === 'error' ? 'Upload Failed' : 'Uploaded'}
                           </p>
                         </div>
                       </div>
-                      {doc.status === 'uploaded' && (
+                      {(doc.status === 'uploaded' || doc.status === 'verified') && (
                         <div className="flex items-center gap-3">
                           <button
                             onClick={() => {
@@ -391,33 +409,33 @@ export default function OnboardingWizard({ userId, onComplete, onCancel }: Onboa
                           </button>
                           <div className="flex items-center gap-1 text-green-600 text-xs font-bold">
                             <FileCheck className="w-4 h-4" />
-                            Verified
+                            {doc.status === 'verified' ? 'Verified' : 'Pending Review'}
                           </div>
                         </div>
                       )}
                     </div>
 
-                    {doc.status === 'pending' && (
+                    {doc.status === 'uploading' && (
+                      <div className="h-1.5 w-full bg-apple-gray rounded-full overflow-hidden">
+                        <motion.div 
+                          initial={{ width: 0 }}
+                          animate={{ width: `${doc.progress}%` }}
+                          className="h-full bg-accent"
+                        />
+                      </div>
+                    )}
+
+                    {(doc.status === 'pending' || doc.status === 'error') && (
                       <div className="space-y-3">
                         <button
                           onClick={() => handleFileClick(doc.id)}
-                          disabled={isUploading === doc.id}
                           className={cn(
-                            "w-full py-3 rounded-xl border-2 border-dashed text-accent font-bold text-sm flex items-center justify-center gap-2 transition-all disabled:opacity-50",
-                            doc.error ? "border-red-200 bg-red-50 text-red-600" : "border-accent/20 hover:bg-accent/5"
+                            "w-full py-3 rounded-xl border-2 border-dashed text-accent font-bold text-sm flex items-center justify-center gap-2 transition-all",
+                            doc.status === 'error' ? "border-red-200 bg-red-50 text-red-600" : "border-accent/20 hover:bg-accent/5"
                           )}
                         >
-                          {isUploading === doc.id ? (
-                            <motion.div 
-                              animate={{ rotate: 360 }}
-                              transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-                            >
-                              <Upload className="w-4 h-4" />
-                            </motion.div>
-                          ) : (
-                            <Upload className="w-4 h-4" />
-                          )}
-                          {isUploading === doc.id ? 'Uploading...' : 'Choose File'}
+                          <Upload className="w-4 h-4" />
+                          {doc.status === 'error' ? 'Try Again' : 'Choose File'}
                         </button>
                         {doc.error && (
                           <div className="flex items-center gap-2 text-red-600 text-xs font-bold px-2">

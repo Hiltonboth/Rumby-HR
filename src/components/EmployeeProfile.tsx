@@ -193,6 +193,34 @@ export default function EmployeeProfile({ employee, onBack }: EmployeeProfilePro
               </div>
 
               <div className="bg-white border border-black/[0.05] rounded-3xl p-8 space-y-8">
+                <h3 className="text-xl font-bold text-space-gray border-b border-black/[0.05] pb-4">Skills & Expertise</h3>
+                <div className="flex flex-wrap gap-2">
+                  {['React', 'TypeScript', 'Node.js', 'UI/UX Design', 'Cloud Infrastructure', 'Agile Methodology', 'Product Strategy'].map((skill) => (
+                    <span 
+                      key={skill}
+                      className="px-4 py-2 bg-accent/5 text-accent border border-accent/10 rounded-xl text-sm font-bold"
+                    >
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div className="bg-white border border-black/[0.05] rounded-3xl p-8 space-y-8">
+                <h3 className="text-xl font-bold text-space-gray border-b border-black/[0.05] pb-4">Skills & Expertise</h3>
+                <div className="flex flex-wrap gap-2">
+                  {['React', 'TypeScript', 'Node.js', 'UI/UX Design', 'Cloud Infrastructure', 'Agile Methodology', 'Product Strategy'].map((skill) => (
+                    <span 
+                      key={skill}
+                      className="px-4 py-2 bg-accent/5 text-accent border border-accent/10 rounded-xl text-sm font-bold"
+                    >
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div className="bg-white border border-black/[0.05] rounded-3xl p-8 space-y-8">
                 <h3 className="text-xl font-bold text-space-gray border-b border-black/[0.05] pb-4">Basic Information</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-1">

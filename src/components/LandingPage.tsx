@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
-import { Shield, Zap, Users, BarChart3, ChevronRight, Star, CheckCircle2, ChevronDown, CreditCard, Menu, X, MessageCircle, Sparkles } from 'lucide-react';
+import { Shield, Zap, Users, BarChart3, ChevronRight, Star, CheckCircle2, ChevronDown, CreditCard, Menu, X, MessageCircle, Sparkles, FileText, Heart } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
+import ResourceLibrary from './ResourceLibrary';
+import Community from './Community';
+import SuccessStories from './SuccessStories';
 
 interface LandingPageProps {
   onGetStarted: () => void;
@@ -34,11 +37,11 @@ const features = [
     id: 'engagement',
     subFeatures: ['Case Management', 'Internal Communications', 'Employee Surveys', 'Recognition'] 
   },
+  { name: 'Resource Library', id: 'library' },
+  { name: 'Community Forum', id: 'community' },
+  { name: 'Case Studies', id: 'case-studies' },
   { name: 'HR automation', id: 'automation' },
-  { name: 'Custom services', id: 'custom' },
-  { name: 'HR chatbot', id: 'chatbot' },
   { name: 'Mobile app', id: 'mobile' },
-  { name: 'Integrations', id: 'integrations' },
 ];
 
 export default function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
@@ -259,8 +262,8 @@ export default function LandingPage({ onGetStarted, onLogin }: LandingPageProps)
             transition={{ delay: 0.1 }}
             className="text-6xl md:text-7xl font-bold tracking-tight text-space-gray max-w-4xl mx-auto leading-[1.1]"
           >
-            Unburden your HR. <br />
-            <span className="text-accent">Empower your people.</span>
+            Struggling with HR, contracts, <br />
+            <span className="text-accent">and labour disputes?</span>
           </motion.h1>
           <motion.p 
             initial={{ opacity: 0, y: 20 }}
@@ -268,7 +271,7 @@ export default function LandingPage({ onGetStarted, onLogin }: LandingPageProps)
             transition={{ delay: 0.2 }}
             className="text-xl text-gray-500 max-w-2xl mx-auto"
           >
-            The all-in-one HR platform designed for modern teams. From hiring to payroll, manage everything in one beautiful interface.
+            We handle it all. The all-in-one HR platform built specifically for SMEs in Zimbabwe and Africa. From hiring to payroll, manage everything in one beautiful interface.
           </motion.p>
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
@@ -327,6 +330,114 @@ export default function LandingPage({ onGetStarted, onLogin }: LandingPageProps)
                 </div>
               </div>
             </div>
+          </div>
+        </section>
+
+        {/* Resource Library Section */}
+        <section id="library" className="px-6 scroll-mt-24">
+          <div className="max-w-7xl mx-auto">
+            <ResourceLibrary />
+          </div>
+        </section>
+
+        {/* Community Forum Section */}
+        <section id="community" className="px-6 scroll-mt-24">
+          <div className="max-w-7xl mx-auto">
+            <Community />
+          </div>
+        </section>
+
+        {/* WhatsApp Integration Section */}
+        <section className="px-6">
+          <div className="max-w-7xl mx-auto bg-accent rounded-[3rem] p-12 md:p-20 text-white overflow-hidden relative">
+            <div className="relative z-10 grid md:grid-cols-2 gap-12 items-center">
+              <div className="space-y-8">
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 text-white text-sm font-bold">
+                  <MessageCircle className="w-4 h-4" />
+                  WhatsApp Integration
+                </div>
+                <h2 className="text-5xl font-bold leading-tight tracking-tight">Manage HR directly <br /> from WhatsApp.</h2>
+                <p className="text-xl text-white/80 leading-relaxed">
+                  Approve leave, view payslips, and answer employee queries without leaving your favorite chat app. Built for the way Africa works.
+                </p>
+                <div className="flex flex-wrap gap-4">
+                  <button 
+                    onClick={() => window.open('https://wa.me/263772240081?text=Hi!%20I%20want%20to%20manage%20my%20HR%20via%20WhatsApp.', '_blank')}
+                    className="bg-white text-accent px-8 py-4 rounded-2xl font-bold text-lg hover:scale-105 transition-all"
+                  >
+                    Chat with Us
+                  </button>
+                  <button className="bg-white/10 text-white border border-white/20 px-8 py-4 rounded-2xl font-bold text-lg hover:bg-white/20 transition-all">
+                    Learn More
+                  </button>
+                </div>
+              </div>
+              <div className="relative">
+                <div className="bg-white/10 backdrop-blur-3xl rounded-[2.5rem] p-8 border border-white/20 shadow-2xl">
+                  <div className="space-y-4">
+                    {[
+                      { sender: 'Employee', text: 'Hi, can I get my payslip for March?' },
+                      { sender: 'Rumby AI', text: 'Sure! Here is your March payslip in PDF format.', isBot: true },
+                      { sender: 'Employee', text: 'Thanks! Also, how many leave days do I have left?' }
+                    ].map((msg, i) => (
+                      <div key={i} className={cn(
+                        "p-4 rounded-2xl max-w-[85%] text-sm font-medium",
+                        msg.isBot ? "bg-white text-accent self-start" : "bg-white/20 text-white self-end ml-auto"
+                      )}>
+                        <p className="text-[10px] opacity-60 uppercase tracking-widest mb-1">{msg.sender}</p>
+                        {msg.text}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+            {/* Decorative circles */}
+            <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2 blur-3xl" />
+          </div>
+        </section>
+
+        {/* Support Sections */}
+        <section className="px-6">
+          <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-8">
+            <div className="p-12 rounded-[2.5rem] bg-white border border-black/[0.05] space-y-6 hover:border-accent/30 transition-all">
+              <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600">
+                <Zap className="w-6 h-6" />
+              </div>
+              <h3 className="text-3xl font-bold">Technical Challenges?</h3>
+              <p className="text-gray-500">Our technical team is ready to help you with any platform-related issues or integrations.</p>
+              <button 
+                onClick={() => window.open('https://wa.me/263772240081?text=I%20need%20technical%20support%20with%20the%20platform.', '_blank')}
+                className="text-accent font-bold flex items-center gap-2 hover:gap-3 transition-all"
+              >
+                Speak to Technical Team
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="p-12 rounded-[2.5rem] bg-white border border-black/[0.05] space-y-6 hover:border-accent/30 transition-all">
+              <div className="w-12 h-12 bg-purple-50 rounded-2xl flex items-center justify-center text-purple-600">
+                <Users className="w-6 h-6" />
+              </div>
+              <h3 className="text-3xl font-bold">Need HR Advice?</h3>
+              <p className="text-gray-500">Connect with our experienced HR consultants for advice on labor laws, disputes, or strategy.</p>
+              <button 
+                onClick={() => window.open('https://wa.me/263772240081?text=I%20need%20expert%20HR%20advice.', '_blank')}
+                className="text-accent font-bold flex items-center gap-2 hover:gap-3 transition-all"
+              >
+                Speak to HR Team
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </section>
+
+        {/* Hashtag Banner */}
+        <section className="px-6">
+          <div className="max-w-7xl mx-auto text-center py-12 border-y border-black/[0.03]">
+            <p className="text-2xl md:text-3xl font-bold text-gray-400 italic">
+              #WeCombineHRExpertise + AI + simpleToolsToManageYourWorkforce
+            </p>
           </div>
         </section>
 
@@ -583,6 +694,45 @@ export default function LandingPage({ onGetStarted, onLogin }: LandingPageProps)
           </div>
         </section>
       </div>
+
+      {/* Testimonials Section */}
+      <section className="relative py-12 overflow-hidden">
+        {/* Top-notch blue background with Firebase colors integration */}
+        <div className="absolute inset-0 bg-[#0A192F]" />
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#FFCA28] via-[#F44336] to-[#FFCA28]" />
+        <div className="absolute -top-24 -left-24 w-96 h-96 bg-[#F44336]/10 rounded-full blur-[100px]" />
+        <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-[#FFCA28]/10 rounded-full blur-[100px]" />
+        
+        <div className="container mx-auto px-6 relative z-10">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[
+              {
+                quote: "Rumby HR transformed our recruitment. We found the right talent in half the time.",
+                author: "Tinashe M.",
+                role: "CEO, TechZim"
+              },
+              {
+                quote: "The compliance tools are a lifesaver. No more worrying about the Labour Act updates.",
+                author: "Farai G.",
+                role: "HR Manager, Delta Corp"
+              },
+              {
+                quote: "Finally, an HR platform that understands the Zimbabwean business landscape.",
+                author: "Nyasha C.",
+                role: "Founder, ZimSME"
+              }
+            ].map((t, i) => (
+              <div key={i} className="p-6 bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl">
+                <p className="text-white/80 italic mb-4 text-sm">"{t.quote}"</p>
+                <div>
+                  <p className="text-white font-bold text-sm">{t.author}</p>
+                  <p className="text-[#FFCA28] text-[10px] font-bold uppercase tracking-widest">{t.role}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* Footer */}
       <footer className="py-20 px-6 border-t border-black/[0.03]">

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Bell, Command, LayoutDashboard, Users, Briefcase, TrendingUp, CreditCard, Heart, Settings, Zap, ChevronRight, Menu, X, Calendar, Clock, CheckCircle2, ArrowLeft, PartyPopper, ShieldCheck } from 'lucide-react';
+import { Search, Bell, Command, LayoutDashboard, Users, Briefcase, TrendingUp, CreditCard, Heart, Settings, Zap, ChevronRight, Menu, X, Calendar, Clock, CheckCircle2, ArrowLeft, PartyPopper, ShieldCheck, PenTool } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
 import { Company } from '../types';
@@ -36,6 +36,7 @@ export default function Layout({ children, activeTab, setActiveTab, currentCompa
     { id: 'team', label: 'Organization', icon: Users },
     { id: 'performance', label: 'Performance', icon: TrendingUp },
     { id: 'payroll', label: 'Payroll', icon: CreditCard },
+    { id: 'esignature', label: 'eSignature', icon: PenTool },
     { id: 'engagement', label: 'Engagement', icon: Heart },
     { id: 'workflows', label: 'Workflows', icon: Zap },
     { id: 'settings', label: 'Settings', icon: Settings },

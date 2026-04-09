@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { 
   DollarSign, 
   Download, 
@@ -15,503 +15,1174 @@ import {
   FileText,
   X,
   Printer,
-  MessageCircle
+  MessageCircle,
+  Users,
+  Settings,
+  ShieldCheck,
+  TrendingUp,
+  Plus,
+  Send,
+  Building2,
+  CreditCard,
+  Briefcase,
+  History,
+  FileBarChart,
+  Lock,
+  Unlock,
+  AlertTriangle,
+  Mail,
+  Smartphone,
+  Eye,
+  Sparkles,
+  Info
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn, formatCurrency } from '../lib/utils';
-import { MOCK_EMPLOYEES } from '../constants';
-import { Employee } from '../types';
+import { MOCK_EMPLOYEES, MOCK_PAYROLL_PROFILES, DEFAULT_STATUTORY_RATES, MOCK_PAYROLL_RUNS } from '../constants';
+import { Employee, PayrollProfile, StatutoryRates, PayrollRun } from '../types';
 
-interface PayslipData {
-  employee: Employee;
-  period: string;
-  baseSalary: number;
-  nssa: number;
-  paye: number;
-  zimdef: number;
-  aidsLevy: number;
-  netPay: number;
-}
+// --- Utility Functions ---
 
-interface DeductionRates {
-  nssa: number;
-  zimdef: number;
-  aidsLevy: number;
-  payeThreshold: number;
-}
-
-export default function Payroll() {
-  const [activeTab, setActiveTab] = useState('Overview');
-  const [employees, setEmployees] = useState(MOCK_EMPLOYEES);
-  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [payslip, setPayslip] = useState<PayslipData | null>(null);
-  const [editingSalary, setEditingSalary] = useState<{ id: string, value: string } | null>(null);
-  const [rates, setRates] = useState<DeductionRates>(() => {
-    const saved = localStorage.getItem('payroll_rates');
-    return saved ? JSON.parse(saved) : {
-      nssa: 4.5,
-      zimdef: 1,
-      aidsLevy: 3,
-      payeThreshold: 300
-    };
-  });
-  const [isSaving, setIsSaving] = useState(false);
-  const [showRunPayroll, setShowRunPayroll] = useState(false);
-  const [payrollStep, setPayrollStep] = useState(1);
-
-  const saveSettings = () => {
-    setIsSaving(true);
-    localStorage.setItem('payroll_rates', JSON.stringify(rates));
-    setTimeout(() => {
-      setIsSaving(false);
-      alert("Payroll settings saved successfully!");
-    }, 800);
-  };
-
-  const stats = [
-    { label: 'Total Payroll (Monthly)', value: '$35,400', change: '+12.5%', trend: 'up' },
-    { label: 'Employees Paid', value: '124', change: '+4', trend: 'up' },
-    { label: 'Tax Liabilities', value: '$6,200', change: '-2.1%', trend: 'down' },
-    { label: 'Next Pay Date', value: 'Apr 15', change: 'In 8 days', trend: 'neutral' },
+const calculatePAYE = (taxableIncome: number) => {
+  // Simplified Zimbabwean USD Monthly Tax Bands (Illustrative)
+  const bands = [
+    { limit: 300, rate: 0 },
+    { limit: 700, rate: 0.20 },
+    { limit: 3000, rate: 0.25 },
+    { limit: 7000, rate: 0.30 },
+    { limit: 10000, rate: 0.35 },
+    { limit: Infinity, rate: 0.40 }
   ];
 
-  const recentPayruns = [
-    { id: 'PR-001', date: 'Mar 31, 2024', amount: '$212,500', status: 'Completed', employees: 124 },
-    { id: 'PR-002', date: 'Mar 15, 2024', amount: '$210,200', status: 'Completed', employees: 122 },
-    { id: 'PR-003', date: 'Feb 28, 2024', amount: '$208,900', status: 'Completed', employees: 121 },
-  ];
+  let tax = 0;
+  let remaining = taxableIncome;
+  let previousLimit = 0;
 
-  const calculatePayslip = (employee: Employee) => {
-    setIsGenerating(true);
-    const monthlyBase = employee.salary / 12;
-    
-    // Simple Zimbabwean tax logic
-    const nssa = monthlyBase * (rates.nssa / 100);
-    const zimdef = monthlyBase * (rates.zimdef / 100);
-    
-    // PAYE (Simplified for demo)
-    const taxableIncome = monthlyBase - nssa;
-    let paye = 0;
-    if (taxableIncome > rates.payeThreshold) {
-      paye = (taxableIncome - rates.payeThreshold) * 0.25;
-    }
-    
-    const aidsLevy = paye * (rates.aidsLevy / 100);
-    const net = monthlyBase - (nssa + zimdef + paye + aidsLevy);
+  for (const band of bands) {
+    const taxableInBand = Math.min(remaining, band.limit - previousLimit);
+    if (taxableInBand <= 0) break;
+    tax += taxableInBand * band.rate;
+    remaining -= taxableInBand;
+    previousLimit = band.limit;
+  }
 
-    setTimeout(() => {
-      setPayslip({
-        employee,
-        period: 'March 2024',
-        baseSalary: monthlyBase,
-        nssa,
-        paye,
-        zimdef,
-        aidsLevy,
-        netPay: net
-      });
-      setIsGenerating(false);
-    }, 1000);
+  return tax;
+};
+
+const calculatePayrollForEmployee = (profile: PayrollProfile, rates: StatutoryRates) => {
+  const basic = profile.salaryStructure.basicSalary;
+  const allowances = profile.salaryStructure.fixedAllowances.reduce((acc, curr) => acc + curr.amount, 0);
+  const gross = basic + allowances;
+
+  // NSSA Calculation
+  const nssaInsurable = Math.min(gross, rates.nssaCap);
+  const nssaEmployee = nssaInsurable * (rates.nssaEmployeeRate / 100);
+  const nssaEmployer = nssaInsurable * (rates.nssaEmployerRate / 100);
+
+  // PAYE Calculation
+  const taxableIncome = gross - nssaEmployee; // NSSA is tax deductible
+  const paye = calculatePAYE(taxableIncome);
+  const aidsLevy = paye * (rates.aidsLevyRate / 100);
+
+  // NEC Levy
+  const necLevy = rates.necLevy.type === 'Fixed' 
+    ? rates.necLevy.value 
+    : gross * (rates.necLevy.value / 100);
+
+  // Other Deductions
+  const otherDeductions = profile.salaryStructure.fixedDeductions.reduce((acc, curr) => acc + curr.amount, 0);
+
+  const totalDeductions = nssaEmployee + paye + aidsLevy + necLevy + otherDeductions;
+  const netPay = gross - totalDeductions;
+
+  // Employer Contributions
+  const zimdef = gross * (rates.zimdefRate / 100);
+  const saz = gross * (rates.sazRate / 100);
+  const wcif = gross * (rates.wcifRate / 100);
+  const totalEmployerCost = gross + nssaEmployer + zimdef + saz + wcif;
+
+  return {
+    gross,
+    nssaEmployee,
+    nssaEmployer,
+    paye,
+    aidsLevy,
+    necLevy,
+    otherDeductions,
+    totalDeductions,
+    netPay,
+    zimdef,
+    saz,
+    wcif,
+    totalEmployerCost
   };
+};
 
-  const handleSalaryUpdate = (id: string, newValue: string) => {
-    const numValue = parseFloat(newValue.replace(/[^0-9.]/g, ''));
-    if (!isNaN(numValue)) {
-      setEmployees(prev => prev.map(emp => emp.id === id ? { ...emp, salary: numValue } : emp));
-    }
-    setEditingSalary(null);
-  };
+// --- Sub-components ---
 
-  return (
-    <div className="space-y-6 md:space-y-8 pb-20 relative">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-space-gray">Payroll Management</h1>
-          <p className="text-sm text-gray-500 mt-1">Manage salaries, taxes, and compliance in one place.</p>
-        </div>
-        <div className="flex flex-col sm:flex-row gap-3">
-          <button className="btn-secondary flex items-center justify-center gap-2 py-3 px-6">
-            <Download className="w-4 h-4" />
-            Export Reports
-          </button>
-          <button 
-            onClick={() => setShowRunPayroll(true)}
-            className="btn-primary flex items-center justify-center gap-2 py-3 px-6"
-          >
-            <DollarSign className="w-4 h-4" />
-            Run Payroll
-          </button>
-        </div>
-      </div>
-
-      {/* Stats Grid - Horizontal scroll on mobile */}
-      <div className="flex overflow-x-auto no-scrollbar -mx-8 px-8 lg:mx-0 lg:px-0 lg:grid lg:grid-cols-4 gap-4 md:gap-6">
-        {stats.map((stat) => (
-          <div key={stat.label} className="flex-shrink-0 w-64 lg:w-auto bg-white border border-black/[0.05] rounded-3xl p-6 shadow-sm space-y-2">
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{stat.label}</p>
-            <div className="flex items-end justify-between">
-              <h3 className="text-2xl font-bold text-space-gray">{stat.value}</h3>
-              <div className={cn(
-                "flex items-center gap-1 text-xs font-bold",
-                stat.trend === 'up' ? "text-green-500" : stat.trend === 'down' ? "text-red-500" : "text-gray-400"
-              )}>
-                {stat.trend === 'up' && <ArrowUpRight className="w-3 h-3" />}
-                {stat.trend === 'down' && <ArrowDownRight className="w-3 h-3" />}
-                {stat.change}
-              </div>
+const DashboardView = ({ stats, compliance, alerts }: any) => (
+  <div className="space-y-8">
+    {/* KPI Cards */}
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      {stats.map((stat: any) => (
+        <div key={stat.label} className="bg-white border border-black/[0.05] rounded-3xl p-6 shadow-sm">
+          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">{stat.label}</p>
+          <div className="flex items-end justify-between">
+            <h3 className="text-2xl font-bold text-space-gray">{stat.value}</h3>
+            <div className={cn(
+              "flex items-center gap-1 text-xs font-bold",
+              stat.trend === 'up' ? "text-green-500" : "text-red-500"
+            )}>
+              {stat.change}
             </div>
           </div>
-        ))}
+        </div>
+      ))}
+    </div>
+
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      {/* Compliance Dashboard */}
+      <div className="lg:col-span-2 space-y-6">
+        <div className="bg-white border border-black/[0.05] rounded-3xl p-8 shadow-sm">
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center text-green-600">
+                <ShieldCheck className="w-6 h-6" />
+              </div>
+              <h3 className="text-xl font-bold text-space-gray">Compliance Dashboard</h3>
+            </div>
+            <span className="text-xs font-bold text-green-500 bg-green-50 px-3 py-1 rounded-full uppercase tracking-widest">All Clear</span>
+          </div>
+          
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+            {compliance.map((item: any) => (
+              <div key={item.label} className="space-y-2 p-4 bg-apple-gray/30 rounded-2xl border border-black/[0.02]">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{item.label}</p>
+                <p className="text-lg font-bold text-space-gray">{formatCurrency(item.value)}</p>
+                <p className="text-[10px] text-gray-500">Due: {item.dueDate}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Recent Activity */}
+        <div className="bg-white border border-black/[0.05] rounded-3xl overflow-hidden shadow-sm">
+          <div className="p-6 border-b border-black/[0.05] flex items-center justify-between">
+            <h3 className="font-bold text-space-gray">Recent Payroll Activity</h3>
+            <button className="text-accent text-sm font-bold hover:underline">View All</button>
+          </div>
+          <div className="divide-y divide-black/[0.05]">
+            {MOCK_PAYROLL_RUNS.map((run) => (
+              <div key={run.id} className="p-6 flex items-center justify-between hover:bg-apple-gray/20 transition-colors cursor-pointer group">
+                <div className="flex items-center gap-4">
+                  <div className={cn(
+                    "w-12 h-12 rounded-2xl flex items-center justify-center",
+                    run.status === 'Paid' ? "bg-green-50 text-green-600" : "bg-orange-50 text-orange-600"
+                  )}>
+                    {run.status === 'Paid' ? <CheckCircle2 className="w-6 h-6" /> : <Clock className="w-6 h-6" />}
+                  </div>
+                  <div>
+                    <p className="font-bold text-space-gray">{run.period}</p>
+                    <p className="text-xs text-gray-500">{run.employeeCount} Employees • {run.id}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-6">
+                  <div className="text-right">
+                    <p className="font-bold text-space-gray">{formatCurrency(run.totalNet)}</p>
+                    <p className={cn(
+                      "text-[10px] font-bold uppercase tracking-widest",
+                      run.status === 'Paid' ? "text-green-500" : "text-orange-500"
+                    )}>{run.status}</p>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-gray-300 group-hover:text-accent transition-colors" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
-      {/* Tabs - Scrollable on mobile */}
-      <div className="bg-white border border-black/[0.05] rounded-2xl p-1 flex overflow-x-auto no-scrollbar max-w-full sm:max-w-fit">
-        {['Overview', 'Employees', 'Payruns', 'Settings'].map((tab) => (
+      {/* Alerts Panel */}
+      <div className="space-y-6">
+        <div className="bg-white border border-black/[0.05] rounded-3xl p-6 shadow-sm space-y-6">
+          <h3 className="font-bold text-space-gray">Smart Alerts</h3>
+          <div className="space-y-4">
+            {alerts.map((alert: any, i: number) => (
+              <div key={i} className={cn(
+                "p-4 rounded-2xl border flex gap-3",
+                alert.type === 'error' ? "bg-red-50 border-red-100 text-red-700" : "bg-orange-50 border-orange-100 text-orange-700"
+              )}>
+                {alert.type === 'error' ? <AlertTriangle className="w-5 h-5 flex-shrink-0" /> : <AlertCircle className="w-5 h-5 flex-shrink-0" />}
+                <div>
+                  <p className="text-sm font-bold">{alert.title}</p>
+                  <p className="text-xs opacity-80 mt-1">{alert.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="bg-accent rounded-3xl p-8 text-white space-y-4 relative overflow-hidden">
+          <div className="relative z-10">
+            <h4 className="text-lg font-bold">Need Help?</h4>
+            <p className="text-sm text-white/80">Our HR experts are available to help you with ZIMRA and NSSA compliance.</p>
+            <button className="mt-4 bg-white text-accent px-6 py-2 rounded-xl text-sm font-bold hover:scale-105 transition-all">
+              Talk to Expert
+            </button>
+          </div>
+          <Sparkles className="absolute -right-4 -bottom-4 w-32 h-32 text-white/10" />
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+const EmployeePayrollView = ({ employees, profiles, onSelect }: any) => (
+  <div className="bg-white border border-black/[0.05] rounded-3xl overflow-hidden shadow-sm">
+    <div className="p-6 border-b border-black/[0.05] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <h3 className="font-bold text-space-gray">Employee Payroll Profiles</h3>
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+        <input 
+          type="text" 
+          placeholder="Search employees..."
+          className="pl-10 pr-4 py-2 bg-apple-gray/50 border-none rounded-xl text-sm outline-none w-full sm:w-64"
+        />
+      </div>
+    </div>
+    <div className="overflow-x-auto">
+      <table className="w-full text-left border-collapse">
+        <thead>
+          <tr className="border-b border-black/[0.05] bg-apple-gray/30">
+            <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Employee</th>
+            <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">ID / NSSA</th>
+            <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Pay Grade</th>
+            <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Basic Salary</th>
+            <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-black/[0.05]">
+          {profiles.map((profile: PayrollProfile) => {
+            const emp = employees.find((e: Employee) => e.id === profile.employeeId);
+            return (
+              <tr key={profile.employeeId} className="hover:bg-apple-gray/20 transition-colors group">
+                <td className="px-6 py-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center text-accent font-bold">
+                      {emp?.name[0]}
+                    </div>
+                    <div>
+                      <p className="font-bold text-space-gray">{emp?.name}</p>
+                      <p className="text-xs text-gray-500">{emp?.role}</p>
+                    </div>
+                  </div>
+                </td>
+                <td className="px-6 py-4">
+                  <p className="text-sm font-medium text-space-gray">{profile.employeeNumber}</p>
+                  <p className="text-[10px] text-gray-400">{profile.statutory.nssaNumber || 'No NSSA'}</p>
+                </td>
+                <td className="px-6 py-4">
+                  <span className="px-2 py-1 bg-apple-gray rounded-lg text-[10px] font-bold text-gray-600">{profile.payGrade}</span>
+                </td>
+                <td className="px-6 py-4">
+                  <p className="text-sm font-bold text-space-gray">{formatCurrency(profile.salaryStructure.basicSalary)}</p>
+                </td>
+                <td className="px-6 py-4 text-right">
+                  <button 
+                    onClick={() => onSelect(profile)}
+                    className="p-2 hover:bg-accent/10 rounded-xl text-accent transition-colors"
+                  >
+                    <Eye className="w-5 h-5" />
+                  </button>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  </div>
+);
+
+const SalaryStructureView = ({ rates, onUpdateRates }: any) => {
+  const [activeSubTab, setActiveSubTab] = useState('Earnings');
+
+  return (
+    <div className="bg-white border border-black/[0.05] rounded-[2.5rem] overflow-hidden shadow-sm">
+      <div className="p-8 border-b border-black/[0.05] bg-apple-gray/10">
+        <h3 className="text-2xl font-bold text-space-gray">Salary Structure Setup</h3>
+        <p className="text-sm text-gray-500 mt-1">Define how earnings and deductions are calculated across your organization.</p>
+      </div>
+      
+      <div className="flex border-b border-black/[0.05] px-8 bg-apple-gray/5 overflow-x-auto no-scrollbar">
+        {['Earnings', 'Deductions', 'Employer Contributions', 'Tax Settings', 'NEC Settings'].map(tab => (
           <button
             key={tab}
-            onClick={() => setActiveTab(tab)}
+            onClick={() => setActiveSubTab(tab)}
             className={cn(
-              "py-2.5 px-6 rounded-xl text-sm font-bold transition-all whitespace-nowrap",
-              activeTab === tab 
-                ? "bg-accent text-white shadow-md shadow-accent/20" 
-                : "text-gray-500 hover:text-space-gray hover:bg-apple-gray/50"
+              "px-6 py-4 text-sm font-bold transition-all relative whitespace-nowrap",
+              activeSubTab === tab ? "text-accent" : "text-gray-400 hover:text-space-gray"
             )}
           >
             {tab}
+            {activeSubTab === tab && (
+              <motion.div layoutId="subtab" className="absolute bottom-0 left-0 right-0 h-1 bg-accent rounded-t-full" />
+            )}
           </button>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Main Content */}
-        <div className="lg:col-span-2 space-y-6 md:space-y-8">
-          {activeTab === 'Overview' && (
-            <div className="bg-white border border-black/[0.05] rounded-3xl overflow-hidden shadow-sm">
-              <div className="p-6 border-b border-black/[0.05] flex items-center justify-between">
-                <h3 className="font-bold text-space-gray">Recent Payruns</h3>
-                <button className="text-accent text-sm font-bold hover:underline">View All</button>
-              </div>
-              <div className="divide-y divide-black/[0.05]">
-                {recentPayruns.map((run) => (
-                  <div key={run.id} className="p-4 md:p-6 flex flex-col sm:flex-row sm:items-center justify-between hover:bg-apple-gray/20 transition-colors cursor-pointer group gap-4">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-green-50 flex items-center justify-center text-green-600">
-                        <CheckCircle2 className="w-5 h-5 md:w-6 md:h-6" />
-                      </div>
-                      <div>
-                        <p className="font-bold text-space-gray">{run.date}</p>
-                        <p className="text-xs text-gray-500">{run.employees} Employees • {run.id}</p>
-                      </div>
+      <div className="p-8">
+        {activeSubTab === 'Tax Settings' && (
+          <div className="space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-6">
+                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest border-b border-black/[0.05] pb-2">ZIMRA PAYE Bands (Monthly USD)</h4>
+                <div className="space-y-4">
+                  {[
+                    { range: '0 - 300', rate: '0%' },
+                    { range: '301 - 700', rate: '20%' },
+                    { range: '701 - 3,000', rate: '25%' },
+                    { range: '3,001 - 7,000', rate: '30%' },
+                    { range: '7,001 - 10,000', rate: '35%' },
+                    { range: 'Above 10,000', rate: '40%' },
+                  ].map((band, i) => (
+                    <div key={i} className="flex items-center justify-between p-3 bg-apple-gray/30 rounded-xl">
+                      <span className="text-sm font-medium text-gray-600">{band.range}</span>
+                      <span className="text-sm font-bold text-space-gray">{band.rate}</span>
                     </div>
-                    <div className="flex items-center justify-between sm:justify-end gap-6 pl-14 sm:pl-0">
-                      <div className="text-right">
-                        <p className="font-bold text-space-gray">{run.amount}</p>
-                        <p className="text-[10px] font-bold text-green-500 uppercase tracking-widest">{run.status}</p>
-                      </div>
-                      <ChevronRight className="w-5 h-5 text-gray-300 group-hover:text-accent transition-colors" />
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
+                <button className="btn-secondary w-full py-3 text-xs">Update Tax Tables</button>
               </div>
-            </div>
-          )}
 
-          {activeTab === 'Employees' && (
-            <div className="bg-white border border-black/[0.05] rounded-3xl overflow-hidden shadow-sm">
-              <div className="p-6 border-b border-black/[0.05] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <h3 className="font-bold text-space-gray">Employee Salaries</h3>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <input 
-                    type="text" 
-                    placeholder="Search employees..."
-                    className="pl-10 pr-4 py-2 bg-apple-gray/50 border-none rounded-xl text-sm outline-none w-full sm:w-64"
-                  />
+              <div className="space-y-6">
+                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest border-b border-black/[0.05] pb-2">Statutory Rates & Dates</h4>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-gray-400 uppercase">AIDS Levy Rate (%)</label>
+                    <input 
+                      type="number" 
+                      value={rates.aidsLevyRate}
+                      onChange={(e) => onUpdateRates({ aidsLevyRate: parseFloat(e.target.value) })}
+                      className="w-full bg-apple-gray border-none rounded-xl px-4 py-3 text-sm font-bold outline-none focus:ring-2 focus:ring-accent/20"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-gray-400 uppercase">Effective Date</label>
+                    <input 
+                      type="date" 
+                      defaultValue="2024-01-01"
+                      className="w-full bg-apple-gray border-none rounded-xl px-4 py-3 text-sm font-bold outline-none focus:ring-2 focus:ring-accent/20"
+                    />
+                  </div>
+                </div>
+                <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100 flex gap-3">
+                  <Info className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                  <p className="text-xs text-blue-700">These settings ensure compliance with ZIMRA regulations. Changes will be logged for audit purposes.</p>
                 </div>
               </div>
-              <div className="divide-y divide-black/[0.05]">
-                {employees.map((emp) => (
-                  <div key={emp.id} className="p-4 md:p-6 flex flex-col sm:flex-row sm:items-center justify-between hover:bg-apple-gray/20 transition-colors gap-4">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center text-accent font-bold">
-                        {emp.name[0]}
-                      </div>
-                      <div>
-                        <p className="font-bold text-space-gray">{emp.name}</p>
-                        <p className="text-xs text-gray-500">{emp.role}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between sm:justify-end gap-4 pl-14 sm:pl-0">
-                      <div className="text-right">
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Base Salary</p>
-                        {editingSalary?.id === emp.id ? (
-                          <input 
-                            autoFocus
-                            type="text"
-                            value={editingSalary.value}
-                            onChange={(e) => setEditingSalary({ ...editingSalary, value: e.target.value })}
-                            onBlur={() => handleSalaryUpdate(emp.id, editingSalary.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && handleSalaryUpdate(emp.id, editingSalary.value)}
-                            className="w-24 bg-white border border-accent rounded-lg px-2 py-1 text-sm font-bold outline-none"
-                          />
-                        ) : (
-                          <button 
-                            onClick={() => setEditingSalary({ id: emp.id, value: emp.salary.toString() })}
-                            className="font-bold text-space-gray hover:text-accent transition-colors"
-                          >
-                            {formatCurrency(emp.salary)}
-                          </button>
-                        )}
-                      </div>
-                      <button 
-                        onClick={() => calculatePayslip(emp)}
-                        className="p-2 hover:bg-accent/10 rounded-xl text-accent transition-colors"
+            </div>
+          </div>
+        )}
+
+        {activeSubTab === 'NEC Settings' && (
+          <div className="space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-6">
+                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest border-b border-black/[0.05] pb-2">NEC Sector Configuration</h4>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-gray-400 uppercase">Sector / Industry</label>
+                    <select className="w-full bg-apple-gray border-none rounded-xl px-4 py-3 text-sm font-bold outline-none focus:ring-2 focus:ring-accent/20">
+                      <option>Commercial Sectors</option>
+                      <option>Mining Industry</option>
+                      <option>Agricultural Industry</option>
+                      <option>Construction Industry</option>
+                      <option>Engineering Industry</option>
+                    </select>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-bold text-gray-400 uppercase">Levy Type</label>
+                      <select 
+                        value={rates.necLevy.type}
+                        onChange={(e) => onUpdateRates({ necLevy: { ...rates.necLevy, type: e.target.value } })}
+                        className="w-full bg-apple-gray border-none rounded-xl px-4 py-3 text-sm font-bold outline-none focus:ring-2 focus:ring-accent/20"
                       >
-                        <FileText className="w-5 h-5" />
-                      </button>
+                        <option value="Fixed">Fixed Amount</option>
+                        <option value="Percentage">Percentage</option>
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-bold text-gray-400 uppercase">Value</label>
+                      <input 
+                        type="number" 
+                        value={rates.necLevy.value}
+                        onChange={(e) => onUpdateRates({ necLevy: { ...rates.necLevy, value: parseFloat(e.target.value) } })}
+                        className="w-full bg-apple-gray border-none rounded-xl px-4 py-3 text-sm font-bold outline-none focus:ring-2 focus:ring-accent/20"
+                      />
                     </div>
                   </div>
-                ))}
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-gray-400 uppercase">Applicability</label>
+                    <div className="flex gap-4">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" defaultChecked className="w-4 h-4 rounded border-gray-300 text-accent focus:ring-accent" />
+                        <span className="text-sm text-gray-600">All Employees</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" className="w-4 h-4 rounded border-gray-300 text-accent focus:ring-accent" />
+                        <span className="text-sm text-gray-600">Grade Based</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest border-b border-black/[0.05] pb-2">NSSA & Other Statutory</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-gray-400 uppercase">NSSA Employee %</label>
+                    <input 
+                      type="number" 
+                      value={rates.nssaEmployeeRate}
+                      onChange={(e) => onUpdateRates({ nssaEmployeeRate: parseFloat(e.target.value) })}
+                      className="w-full bg-apple-gray border-none rounded-xl px-4 py-3 text-sm font-bold outline-none focus:ring-2 focus:ring-accent/20"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-gray-400 uppercase">NSSA Employer %</label>
+                    <input 
+                      type="number" 
+                      value={rates.nssaEmployerRate}
+                      onChange={(e) => onUpdateRates({ nssaEmployerRate: parseFloat(e.target.value) })}
+                      className="w-full bg-apple-gray border-none rounded-xl px-4 py-3 text-sm font-bold outline-none focus:ring-2 focus:ring-accent/20"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-gray-400 uppercase">NSSA Earnings Cap (USD)</label>
+                  <input 
+                    type="number" 
+                    value={rates.nssaCap}
+                    onChange={(e) => onUpdateRates({ nssaCap: parseFloat(e.target.value) })}
+                    className="w-full bg-apple-gray border-none rounded-xl px-4 py-3 text-sm font-bold outline-none focus:ring-2 focus:ring-accent/20"
+                  />
+                </div>
               </div>
             </div>
-          )}
+          </div>
+        )}
 
-          {activeTab === 'Settings' && (
-            <div className="bg-white border border-black/[0.05] rounded-3xl p-8 shadow-sm space-y-8">
-              <div>
-                <h3 className="text-xl font-bold text-space-gray">Payroll Settings</h3>
-                <p className="text-sm text-gray-500">Customize deduction rates based on your sector's NEC requirements.</p>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="space-y-4">
-                  <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">NSSA Rate (%)</label>
-                  <input 
-                    type="number" 
-                    value={rates.nssa}
-                    onChange={(e) => setRates({ ...rates, nssa: parseFloat(e.target.value) })}
-                    className="w-full bg-apple-gray border-none rounded-2xl px-4 py-3 text-sm font-bold outline-none focus:ring-2 focus:ring-accent/20"
-                  />
-                </div>
-                <div className="space-y-4">
-                  <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">ZIMDEF Rate (%)</label>
-                  <input 
-                    type="number" 
-                    value={rates.zimdef}
-                    onChange={(e) => setRates({ ...rates, zimdef: parseFloat(e.target.value) })}
-                    className="w-full bg-apple-gray border-none rounded-2xl px-4 py-3 text-sm font-bold outline-none focus:ring-2 focus:ring-accent/20"
-                  />
-                </div>
-                <div className="space-y-4">
-                  <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">AIDS Levy (%)</label>
-                  <input 
-                    type="number" 
-                    value={rates.aidsLevy}
-                    onChange={(e) => setRates({ ...rates, aidsLevy: parseFloat(e.target.value) })}
-                    className="w-full bg-apple-gray border-none rounded-2xl px-4 py-3 text-sm font-bold outline-none focus:ring-2 focus:ring-accent/20"
-                  />
-                </div>
-                <div className="space-y-4">
-                  <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">PAYE Threshold ($)</label>
-                  <input 
-                    type="number" 
-                    value={rates.payeThreshold}
-                    onChange={(e) => setRates({ ...rates, payeThreshold: parseFloat(e.target.value) })}
-                    className="w-full bg-apple-gray border-none rounded-2xl px-4 py-3 text-sm font-bold outline-none focus:ring-2 focus:ring-accent/20"
-                  />
-                </div>
-              </div>
-              
-              <div className="p-6 bg-accent/5 rounded-3xl border border-accent/10 flex items-center gap-4">
-                <AlertCircle className="w-6 h-6 text-accent" />
-                <p className="text-sm text-accent/80 font-medium">
-                  Changes to these rates will apply to all future payslips generated. Ensure they match your current NEC handbook.
-                </p>
-              </div>
-
-              <div className="flex justify-end">
-                <button 
-                  onClick={saveSettings}
-                  disabled={isSaving}
-                  className="btn-primary px-10 py-4 flex items-center gap-2"
-                >
-                  {isSaving ? (
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <CheckCircle2 className="w-4 h-4" />
-                  )}
-                  {isSaving ? 'Saving...' : 'Save Payroll Settings'}
-                </button>
-              </div>
+        {activeSubTab === 'Deductions' && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Defined Deduction Items</h4>
+              <button className="btn-secondary py-2 px-4 flex items-center gap-2 text-xs">
+                <Plus className="w-4 h-4" />
+                Add Deduction
+              </button>
             </div>
-          )}
-        </div>
-
-        {/* Sidebar */}
-        <div className="space-y-8">
-          {/* Upcoming Deadlines */}
-          <div className="bg-white border border-black/[0.05] rounded-3xl p-6 shadow-sm space-y-6">
-            <h3 className="font-bold text-space-gray">Upcoming Deadlines</h3>
-            <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {[
-                { label: 'Tax Filing Q1', date: 'Apr 15', type: 'Tax' },
-                { label: 'Payrun Approval', date: 'Apr 12', type: 'Payroll' },
-                { label: 'Benefit Enrollment', date: 'Apr 20', type: 'Benefits' },
-              ].map((item) => (
-                <div key={item.label} className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-apple-gray flex items-center justify-center text-gray-400">
-                    <Calendar className="w-5 h-5" />
+                { name: 'PAYE', type: 'Formula', statutory: true, value: 'Tax Table' },
+                { name: 'AIDS Levy', type: 'Percentage', statutory: true, value: '3% of PAYE' },
+                { name: 'NSSA Employee', type: 'Percentage', statutory: true, value: '4.5%' },
+                { name: 'NEC Levy', type: 'Fixed', statutory: true, value: '$5.43' },
+                { name: 'Medical Aid', type: 'Fixed', statutory: false, value: 'Variable' },
+                { name: 'Pension (Private)', type: 'Percentage', statutory: false, value: '5%' },
+                { name: 'Union Fees', type: 'Fixed', statutory: false, value: '$10.00' },
+                { name: 'Loan Repayment', type: 'Fixed', statutory: false, value: 'Variable' },
+              ].map(item => (
+                <div key={item.name} className="p-4 bg-apple-gray/30 rounded-2xl border border-black/[0.03] flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className={cn(
+                      "w-8 h-8 rounded-lg flex items-center justify-center",
+                      item.statutory ? "bg-red-50 text-red-600" : "bg-blue-50 text-blue-600"
+                    )}>
+                      {item.statutory ? <ShieldCheck className="w-4 h-4" /> : <Settings className="w-4 h-4" />}
+                    </div>
+                    <div>
+                      <p className="font-bold text-space-gray">{item.name}</p>
+                      <p className="text-[10px] text-gray-500">{item.statutory ? 'Statutory' : 'Optional'} • {item.type} ({item.value})</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm font-bold text-space-gray">{item.label}</p>
-                    <p className="text-xs text-gray-500">{item.date} • {item.type}</p>
-                  </div>
+                  <button className="p-2 hover:bg-apple-gray rounded-lg">
+                    <Settings className="w-4 h-4 text-gray-400" />
+                  </button>
                 </div>
               ))}
             </div>
           </div>
+        )}
 
-          {/* Payroll Alerts */}
-          <div className="bg-orange-50 border border-orange-100 rounded-3xl p-6 space-y-4">
-            <div className="flex items-center gap-2 text-orange-600">
-              <AlertCircle className="w-5 h-5" />
-              <h3 className="font-bold">Attention Needed</h3>
+        {activeSubTab === 'Employer Contributions' && (
+          <div className="space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-6">
+                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest border-b border-black/[0.05] pb-2">Statutory Contributions (Employer)</h4>
+                <div className="space-y-4">
+                  {[
+                    { name: 'NSSA Employer', rate: '4.5%', base: 'Gross (Capped)' },
+                    { name: 'ZIMDEF', rate: '1.0%', base: 'Gross' },
+                    { name: 'SAZ Levy', rate: '0.05%', base: 'Gross' },
+                    { name: 'WCIF', rate: '1.2%', base: 'Gross' },
+                  ].map((item, i) => (
+                    <div key={i} className="flex items-center justify-between p-4 bg-apple-gray/30 rounded-2xl border border-black/[0.03]">
+                      <div>
+                        <p className="font-bold text-space-gray">{item.name}</p>
+                        <p className="text-[10px] text-gray-500">Based on {item.base}</p>
+                      </div>
+                      <span className="text-sm font-black text-accent">{item.rate}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest border-b border-black/[0.05] pb-2">Optional Contributions</h4>
+                <div className="space-y-4">
+                  <div className="p-4 bg-apple-gray/30 rounded-2xl border border-black/[0.03] flex items-center justify-between">
+                    <div>
+                      <p className="font-bold text-space-gray">Pension (Employer Match)</p>
+                      <p className="text-[10px] text-gray-500">Percentage of Basic Salary</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input type="number" defaultValue={5} className="w-16 bg-white border border-black/[0.05] rounded-lg px-2 py-1 text-sm font-bold text-right" />
+                      <span className="text-sm font-bold text-gray-400">%</span>
+                    </div>
+                  </div>
+                  <div className="p-4 bg-apple-gray/30 rounded-2xl border border-black/[0.03] flex items-center justify-between">
+                    <div>
+                      <p className="font-bold text-space-gray">Medical Aid (Employer Part)</p>
+                      <p className="text-[10px] text-gray-500">Fixed Amount per Employee</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold text-gray-400">$</span>
+                      <input type="number" defaultValue={50} className="w-20 bg-white border border-black/[0.05] rounded-lg px-2 py-1 text-sm font-bold text-right" />
+                    </div>
+                  </div>
+                </div>
+                <button className="btn-secondary w-full py-3 text-xs flex items-center justify-center gap-2">
+                  <Plus className="w-4 h-4" />
+                  Add Contribution Item
+                </button>
+              </div>
             </div>
-            <p className="text-sm text-orange-700/80 leading-relaxed">
-              3 employees have missing bank details. Please update them before the next payrun on Apr 15.
-            </p>
-            <button className="w-full py-2.5 bg-orange-600 text-white rounded-xl text-sm font-bold hover:bg-orange-700 transition-colors">
-              Fix Now
-            </button>
+          </div>
+        )}
+
+        {activeSubTab === 'Earnings' && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Defined Earnings Items</h4>
+              <button className="btn-secondary py-2 px-4 flex items-center gap-2 text-xs">
+                <Plus className="w-4 h-4" />
+                Add Earning
+              </button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {[
+                { name: 'Basic Salary', type: 'Fixed', taxable: true, pensionable: true },
+                { name: 'Housing Allowance', type: 'Fixed', taxable: true, pensionable: false },
+                { name: 'Transport Allowance', type: 'Fixed', taxable: false, pensionable: false },
+                { name: 'Fuel Allowance', type: 'Variable', taxable: true, pensionable: false },
+                { name: 'Overtime', type: 'Variable', taxable: true, pensionable: false },
+                { name: 'Bonus', type: 'Variable', taxable: true, pensionable: false },
+              ].map(item => (
+                <div key={item.name} className="p-4 bg-apple-gray/30 rounded-2xl border border-black/[0.03] flex items-center justify-between">
+                  <div>
+                    <p className="font-bold text-space-gray">{item.name}</p>
+                    <p className="text-[10px] text-gray-500">{item.type} • {item.taxable ? 'Taxable' : 'Non-taxable'}</p>
+                  </div>
+                  <button className="p-2 hover:bg-apple-gray rounded-lg">
+                    <Settings className="w-4 h-4 text-gray-400" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const PayrollRunView = ({ runs, onStartRun }: any) => (
+  <div className="space-y-8">
+    <div className="bg-white border border-black/[0.05] rounded-[2.5rem] p-8 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6 bg-gradient-to-br from-accent/5 to-transparent">
+      <div className="space-y-2">
+        <h3 className="text-2xl font-bold text-space-gray">Payroll Engine</h3>
+        <p className="text-gray-500">Select a period to start processing salaries for your team.</p>
+      </div>
+      <button 
+        onClick={onStartRun}
+        className="btn-primary px-8 py-4 flex items-center gap-2 self-start"
+      >
+        <DollarSign className="w-5 h-5" />
+        Start New Payrun
+      </button>
+    </div>
+
+    <div className="bg-white border border-black/[0.05] rounded-[2.5rem] overflow-hidden shadow-sm">
+      <div className="p-8 border-b border-black/[0.05]">
+        <h3 className="font-bold text-space-gray">Payrun History</h3>
+      </div>
+      <div className="divide-y divide-black/[0.05]">
+        {runs.map((run: PayrollRun) => (
+          <div key={run.id} className="p-8 flex flex-col md:flex-row md:items-center justify-between hover:bg-apple-gray/20 transition-colors gap-6">
+            <div className="flex items-center gap-6">
+              <div className={cn(
+                "w-14 h-14 rounded-2xl flex items-center justify-center",
+                run.status === 'Paid' ? "bg-green-50 text-green-600" : "bg-orange-50 text-orange-600"
+              )}>
+                {run.status === 'Paid' ? <CheckCircle2 className="w-7 h-7" /> : <Clock className="w-7 h-7" />}
+              </div>
+              <div>
+                <h4 className="text-lg font-bold text-space-gray">{run.period}</h4>
+                <div className="flex items-center gap-3 mt-1">
+                  <span className="text-xs text-gray-500">{run.id}</span>
+                  <span className="w-1 h-1 bg-gray-300 rounded-full" />
+                  <span className="text-xs text-gray-500">{run.employeeCount} Employees</span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-8 md:gap-12">
+              <div className="text-right">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Gross Payroll</p>
+                <p className="font-bold text-space-gray">{formatCurrency(run.totalGross)}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Net Payroll</p>
+                <p className="font-bold text-space-gray">{formatCurrency(run.totalNet)}</p>
+              </div>
+              <div className="text-right hidden md:block">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status</p>
+                <span className={cn(
+                  "text-[10px] font-bold uppercase tracking-widest",
+                  run.status === 'Paid' ? "text-green-500" : "text-orange-500"
+                )}>{run.status}</span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button className="p-3 hover:bg-apple-gray rounded-xl text-gray-400 transition-colors">
+                <Download className="w-5 h-5" />
+              </button>
+              <button className="p-3 hover:bg-apple-gray rounded-xl text-gray-400 transition-colors">
+                <MoreVertical className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+);
+
+const PayslipTemplate = ({ data, rates }: any) => {
+  const { gross, paye, nssaEmployee, aidsLevy, necLevy, otherDeductions, totalDeductions, netPay, nssaEmployer, zimdef, saz, wcif } = calculatePayrollForEmployee(data, rates);
+
+  return (
+    <div className="bg-white p-8 md:p-12 space-y-10 font-sans text-space-gray max-w-4xl mx-auto shadow-2xl rounded-[2.5rem] border border-black/[0.05]">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row justify-between gap-8 border-b border-black/[0.05] pb-10">
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-accent rounded-2xl flex items-center justify-center text-white font-bold text-2xl">R</div>
+            <div>
+              <h2 className="text-2xl font-bold tracking-tight">Rumby's HR</h2>
+              <p className="text-xs text-gray-500">123 Samora Machel Ave, Harare</p>
+            </div>
+          </div>
+          <div className="pt-4">
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Pay Period</p>
+            <p className="text-lg font-bold">April 2026</p>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-x-12 gap-y-4 text-sm">
+          <div>
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Employee Name</p>
+            <p className="font-bold">{data.name || 'Alex Rivera'}</p>
+          </div>
+          <div>
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Employee No.</p>
+            <p className="font-bold">{data.employeeNumber}</p>
+          </div>
+          <div>
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">NSSA Number</p>
+            <p className="font-bold">{data.statutory.nssaNumber}</p>
+          </div>
+          <div>
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">NEC Grade</p>
+            <p className="font-bold">{data.statutory.necGrade}</p>
           </div>
         </div>
       </div>
 
-      {/* Payslip Modal */}
+      {/* Main Table */}
+      <div className="space-y-6">
+        <table className="w-full text-left border-collapse">
+          <thead>
+            <tr className="border-b-2 border-black/[0.05]">
+              <th className="py-4 text-xs font-bold text-gray-400 uppercase tracking-widest">Description</th>
+              <th className="py-4 text-xs font-bold text-gray-400 uppercase tracking-widest text-right">Current (USD)</th>
+              <th className="py-4 text-xs font-bold text-gray-400 uppercase tracking-widest text-right">YTD (USD)</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-black/[0.03]">
+            {/* Earnings */}
+            <tr>
+              <td className="py-4 font-bold text-space-gray">Basic Salary</td>
+              <td className="py-4 text-right font-bold">{formatCurrency(data.salaryStructure.basicSalary)}</td>
+              <td className="py-4 text-right text-gray-500">{formatCurrency(data.ytd.gross + data.salaryStructure.basicSalary)}</td>
+            </tr>
+            {data.salaryStructure.fixedAllowances.map((allow: any) => (
+              <tr key={allow.type}>
+                <td className="py-4 text-gray-600">{allow.type} Allowance</td>
+                <td className="py-4 text-right font-medium">{formatCurrency(allow.amount)}</td>
+                <td className="py-4 text-right text-gray-400">-</td>
+              </tr>
+            ))}
+            <tr className="bg-apple-gray/30">
+              <td className="py-4 px-4 font-bold text-space-gray">Total Earnings (Gross)</td>
+              <td className="py-4 px-4 text-right font-black">{formatCurrency(gross)}</td>
+              <td className="py-4 px-4 text-right font-bold text-gray-500">{formatCurrency(data.ytd.gross + gross)}</td>
+            </tr>
+
+            {/* Deductions */}
+            <tr>
+              <td className="py-4 text-red-500 font-medium">PAYE (ZIMRA)</td>
+              <td className="py-4 text-right text-red-500 font-bold">({formatCurrency(paye)})</td>
+              <td className="py-4 text-right text-gray-400">{formatCurrency(data.ytd.paye + paye)}</td>
+            </tr>
+            <tr>
+              <td className="py-4 text-red-500 font-medium">AIDS Levy (3% of PAYE)</td>
+              <td className="py-4 text-right text-red-500 font-bold">({formatCurrency(aidsLevy)})</td>
+              <td className="py-4 text-right text-gray-400">-</td>
+            </tr>
+            <tr>
+              <td className="py-4 text-red-500 font-medium">NSSA (Employee 4.5%)</td>
+              <td className="py-4 text-right text-red-500 font-bold">({formatCurrency(nssaEmployee)})</td>
+              <td className="py-4 text-right text-gray-400">{formatCurrency(data.ytd.nssa + nssaEmployee)}</td>
+            </tr>
+            <tr>
+              <td className="py-4 text-red-500 font-medium">NEC Levy</td>
+              <td className="py-4 text-right text-red-500 font-bold">({formatCurrency(necLevy)})</td>
+              <td className="py-4 text-right text-gray-400">-</td>
+            </tr>
+            {data.salaryStructure.fixedDeductions.map((ded: any) => (
+              <tr key={ded.type}>
+                <td className="py-4 text-red-500 font-medium">{ded.type}</td>
+                <td className="py-4 text-right text-red-500 font-bold">({formatCurrency(ded.amount)})</td>
+                <td className="py-4 text-right text-gray-400">-</td>
+              </tr>
+            ))}
+            <tr className="bg-red-50/50">
+              <td className="py-4 px-4 font-bold text-red-600">Total Deductions</td>
+              <td className="py-4 px-4 text-right font-black text-red-600">({formatCurrency(totalDeductions)})</td>
+              <td className="py-4 px-4 text-right font-bold text-red-400">-</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      {/* Net Pay Box */}
+      <div className="bg-accent p-8 rounded-3xl text-white flex flex-col md:flex-row items-center justify-between gap-6">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-widest opacity-80">Net Take-Home Pay</p>
+          <h3 className="text-4xl font-black">{formatCurrency(netPay)}</h3>
+        </div>
+        <div className="text-center md:text-right space-y-1">
+          <p className="text-sm font-bold">Bank: {data.bankDetails.bankName}</p>
+          <p className="text-xs opacity-80">Acc: {data.bankDetails.accountNumber}</p>
+        </div>
+      </div>
+
+      {/* Employer Contributions */}
+      <div className="p-8 bg-apple-gray/30 rounded-3xl space-y-4">
+        <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Employer Contributions (Not deducted from Net Pay)</h4>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div>
+            <p className="text-[10px] text-gray-500 uppercase">NSSA (4.5%)</p>
+            <p className="font-bold text-sm">{formatCurrency(nssaEmployer)}</p>
+          </div>
+          <div>
+            <p className="text-[10px] text-gray-500 uppercase">ZIMDEF (1%)</p>
+            <p className="font-bold text-sm">{formatCurrency(zimdef)}</p>
+          </div>
+          <div>
+            <p className="text-[10px] text-gray-500 uppercase">SAZ Levy (0.5%)</p>
+            <p className="font-bold text-sm">{formatCurrency(saz)}</p>
+          </div>
+          <div>
+            <p className="text-[10px] text-gray-500 uppercase">WCIF (0.5%)</p>
+            <p className="font-bold text-sm">{formatCurrency(wcif)}</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="text-center pt-10 border-t border-black/[0.05]">
+        <p className="text-xs text-gray-400 italic">This is a system-generated payslip and does not require a signature.</p>
+        <p className="text-[10px] text-gray-300 mt-2">Generated by Rumby HR on {new Date().toLocaleDateString()}</p>
+      </div>
+    </div>
+  );
+};
+
+// --- Main Component ---
+
+export default function Payroll() {
+  const [activeTab, setActiveTab] = useState('Overview');
+  const [rates, setRates] = useState<StatutoryRates>(DEFAULT_STATUTORY_RATES);
+  const [profiles, setProfiles] = useState<PayrollProfile[]>(MOCK_PAYROLL_PROFILES);
+  const [selectedProfile, setSelectedProfile] = useState<PayrollProfile | null>(null);
+  const [showRunPayroll, setShowRunPayroll] = useState(false);
+  const [payrollStep, setPayrollStep] = useState(1);
+  const [generatingReport, setGeneratingReport] = useState<string | null>(null);
+  const [reportReady, setReportReady] = useState<string | null>(null);
+
+  const handleGenerateReport = (reportName: string) => {
+    setGeneratingReport(reportName);
+    setTimeout(() => {
+      setGeneratingReport(null);
+      setReportReady(reportName);
+    }, 2000);
+  };
+
+  const stats = useMemo(() => [
+    { label: 'Gross Payroll', value: '$46,200', change: '+4.2%', trend: 'up' },
+    { label: 'Net Payroll', value: '$33,700', change: '+3.8%', trend: 'up' },
+    { label: 'Statutory Total', value: '$12,500', change: '+5.1%', trend: 'up' },
+    { label: 'Employer Cost', value: '$49,800', change: '+4.5%', trend: 'up' },
+  ], []);
+
+  const compliance = useMemo(() => [
+    { label: 'ZIMRA (PAYE)', value: 8450, dueDate: 'May 10' },
+    { label: 'NSSA (POBS)', value: 2100, dueDate: 'May 10' },
+    { label: 'ZIMDEF', value: 462, dueDate: 'May 10' },
+    { label: 'NEC Levy', value: 125, dueDate: 'May 10' },
+    { label: 'SAZ Levy', value: 231, dueDate: 'May 10' },
+    { label: 'WCIF', value: 231, dueDate: 'May 10' },
+  ], []);
+
+  const alerts = useMemo(() => [
+    { type: 'error', title: 'Missing NSSA Numbers', desc: '3 employees are missing NSSA numbers. This will block statutory reporting.' },
+    { type: 'warning', title: 'NSSA Cap Reached', desc: '5 employees have reached the USD $700 NSSA cap this month.' },
+    { type: 'warning', title: 'Unapproved Overtime', desc: '12 hours of overtime for the Engineering team are pending approval.' },
+  ], []);
+
+  const menuItems = [
+    { id: 'Overview', icon: TrendingUp },
+    { id: 'Employees', icon: Users },
+    { id: 'Salary Structures', icon: Building2 },
+    { id: 'Variable Inputs', icon: Plus },
+    { id: 'Payroll Runs', icon: DollarSign },
+    { id: 'Payslips', icon: FileText },
+    { id: 'Statutory Reports', icon: FileBarChart },
+    { id: 'Settings', icon: Settings },
+  ];
+
+  return (
+    <div className="space-y-8 pb-20">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div>
+          <h1 className="text-4xl font-bold tracking-tight text-space-gray">Payroll & Compliance</h1>
+          <p className="text-gray-500 mt-1">Zimbabwean-focused payroll engine with automated statutory handling.</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="px-4 py-2 bg-green-50 rounded-xl border border-green-100 flex items-center gap-2">
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+            <span className="text-xs font-bold text-green-600 uppercase tracking-widest">System Compliant</span>
+          </div>
+          <button className="p-3 bg-white border border-black/[0.05] rounded-xl shadow-sm hover:bg-apple-gray transition-all">
+            <Bell className="w-5 h-5 text-gray-400" />
+          </button>
+        </div>
+      </div>
+
+      {/* Navigation Tabs */}
+      <div className="flex overflow-x-auto no-scrollbar bg-white border border-black/[0.05] rounded-[2rem] p-1.5 shadow-sm">
+        {menuItems.map((item) => (
+          <button
+            key={item.id}
+            onClick={() => setActiveTab(item.id)}
+            className={cn(
+              "flex items-center gap-2 px-6 py-3 rounded-[1.5rem] text-sm font-bold transition-all whitespace-nowrap",
+              activeTab === item.id 
+                ? "bg-accent text-white shadow-lg shadow-accent/20" 
+                : "text-gray-500 hover:text-space-gray hover:bg-apple-gray/50"
+            )}
+          >
+            <item.icon className={cn("w-4 h-4", activeTab === item.id ? "text-white" : "text-gray-400")} />
+            {item.id}
+          </button>
+        ))}
+      </div>
+
+      {/* Main Content Area */}
+      <motion.div
+        key={activeTab}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        {activeTab === 'Overview' && <DashboardView stats={stats} compliance={compliance} alerts={alerts} />}
+        {activeTab === 'Employees' && <EmployeePayrollView employees={MOCK_EMPLOYEES} profiles={profiles} onSelect={setSelectedProfile} />}
+        {activeTab === 'Salary Structures' && <SalaryStructureView rates={rates} onUpdateRates={(newRates: any) => setRates({...rates, ...newRates})} />}
+        {activeTab === 'Payroll Runs' && <PayrollRunView runs={MOCK_PAYROLL_RUNS} onStartRun={() => setShowRunPayroll(true)} />}
+        
+        {activeTab === 'Variable Inputs' && (
+          <div className="space-y-8">
+            <div className="bg-white border border-black/[0.05] rounded-[2.5rem] p-8 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
+              <div>
+                <h3 className="text-2xl font-bold text-space-gray">Monthly Variable Inputs</h3>
+                <p className="text-gray-500 mt-1">Input overtime, bonuses, and special incentives for the current period.</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <button className="btn-secondary px-6 py-3 flex items-center gap-2">
+                  <Download className="w-4 h-4" />
+                  Download Template
+                </button>
+                <button className="btn-primary px-6 py-3 flex items-center gap-2">
+                  <Plus className="w-4 h-4" />
+                  Bulk Upload (Excel)
+                </button>
+              </div>
+            </div>
+
+            <div className="bg-white border border-black/[0.05] rounded-[2.5rem] overflow-hidden shadow-sm">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-black/[0.05] bg-apple-gray/30">
+                      <th className="px-8 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Employee</th>
+                      <th className="px-8 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Overtime (Hrs)</th>
+                      <th className="px-8 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Bonus (USD)</th>
+                      <th className="px-8 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Incentives</th>
+                      <th className="px-8 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Commission</th>
+                      <th className="px-8 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-right">Total Variable</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-black/[0.05]">
+                    {profiles.map((profile) => {
+                      const emp = MOCK_EMPLOYEES.find(e => e.id === profile.employeeId);
+                      return (
+                        <tr key={profile.employeeId} className="hover:bg-apple-gray/20 transition-colors">
+                          <td className="px-8 py-6">
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center text-accent text-xs font-bold">
+                                {emp?.name[0]}
+                              </div>
+                              <span className="font-bold text-space-gray">{emp?.name}</span>
+                            </div>
+                          </td>
+                          <td className="px-8 py-6">
+                            <input type="number" defaultValue={0} className="w-20 bg-apple-gray/50 border border-black/[0.05] rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-accent/20" />
+                          </td>
+                          <td className="px-8 py-6">
+                            <input type="number" defaultValue={0} className="w-24 bg-apple-gray/50 border border-black/[0.05] rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-accent/20" />
+                          </td>
+                          <td className="px-8 py-6">
+                            <input type="number" defaultValue={0} className="w-24 bg-apple-gray/50 border border-black/[0.05] rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-accent/20" />
+                          </td>
+                          <td className="px-8 py-6">
+                            <input type="number" defaultValue={0} className="w-24 bg-apple-gray/50 border border-black/[0.05] rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-accent/20" />
+                          </td>
+                          <td className="px-8 py-6 text-right font-bold text-accent">
+                            $0.00
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              <div className="p-8 border-t border-black/[0.05] flex justify-end">
+                <button className="btn-primary px-8 py-3">Save All Changes</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'Statutory Reports' && (
+          <div className="space-y-8">
+            <div className="bg-white border border-black/[0.05] rounded-[2.5rem] p-8 shadow-sm">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div>
+                  <h3 className="text-2xl font-bold text-space-gray">Remittance Reports</h3>
+                  <p className="text-gray-500 mt-1">Generate submission-ready schedules for ZIMRA, NSSA, and NEC.</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <button className="btn-secondary px-6 py-3 flex items-center gap-2">
+                    <Filter className="w-4 h-4" />
+                    Filter Period
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[
+                { name: 'ZIMRA P2 (PAYE)', icon: Building2, desc: 'Monthly PAYE and AIDS Levy remittance schedule.', color: 'text-blue-600', bg: 'bg-blue-50' },
+                { name: 'NSSA P4 Schedule', icon: ShieldCheck, desc: 'Employee and Employer POBS contributions.', color: 'text-green-600', bg: 'bg-green-50' },
+                { name: 'NEC Sector Report', icon: Briefcase, desc: 'NEC levies and grade-based contributions.', color: 'text-purple-600', bg: 'bg-purple-50' },
+                { name: 'ZIMDEF Schedule', icon: TrendingUp, desc: '1% Employer training levy summary.', color: 'text-orange-600', bg: 'bg-orange-50' },
+                { name: 'WCIF Assessment', icon: AlertCircle, desc: 'Workers Compensation Insurance Fund report.', color: 'text-red-600', bg: 'bg-red-50' },
+                { name: 'Bank Transfer File', icon: CreditCard, desc: 'Bulk payment file for bank integration.', color: 'text-gray-600', bg: 'bg-gray-50' },
+              ].map((report) => (
+                <div key={report.name} className="bg-white border border-black/[0.05] rounded-3xl p-8 shadow-sm hover:shadow-md transition-all group">
+                  <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center mb-6", report.bg)}>
+                    <report.icon className={cn("w-7 h-7", report.color)} />
+                  </div>
+                  <h4 className="text-lg font-bold text-space-gray mb-2">{report.name}</h4>
+                  <p className="text-sm text-gray-500 mb-8 leading-relaxed">{report.desc}</p>
+                  <button 
+                    onClick={() => handleGenerateReport(report.name)}
+                    className="w-full py-3 bg-apple-gray text-space-gray rounded-xl text-sm font-bold group-hover:bg-accent group-hover:text-white transition-all flex items-center justify-center gap-2"
+                  >
+                    <Download className="w-4 h-4" />
+                    Generate Report
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        
+        {/* Placeholder for other tabs */}
+        {['Payslips', 'Settings'].includes(activeTab) && (
+          <div className="bg-white border border-black/[0.05] rounded-[2.5rem] p-20 text-center space-y-4">
+            <div className="w-20 h-20 bg-apple-gray rounded-full flex items-center justify-center text-gray-300 mx-auto">
+              <Lock className="w-10 h-10" />
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-space-gray">{activeTab} Module</h3>
+              <p className="text-gray-500 max-w-md mx-auto">This module is being optimized for the latest ZIMRA tax tables and NEC sector requirements. Check back soon!</p>
+            </div>
+          </div>
+        )}
+      </motion.div>
+
+      {/* Employee Profile Modal */}
       <AnimatePresence>
-        {(isGenerating || payslip) && (
-          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[200] flex items-center justify-center p-0 sm:p-6">
+        {selectedProfile && (
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[300] flex items-center justify-center p-6">
             <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="bg-white w-full h-full sm:h-auto sm:max-w-2xl sm:rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col sm:max-h-[90vh]"
+              className="bg-white w-full max-w-5xl rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
             >
-              {isGenerating ? (
-                <div className="p-20 flex flex-col items-center justify-center space-y-4">
-                  <div className="w-12 h-12 border-4 border-accent border-t-transparent rounded-full animate-spin" />
-                  <p className="font-bold text-space-gray">Calculating taxes and generating payslip...</p>
+              <div className="p-8 border-b border-black/[0.05] flex items-center justify-between bg-apple-gray/10">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-accent rounded-2xl flex items-center justify-center text-white font-bold text-xl">
+                    {MOCK_EMPLOYEES.find(e => e.id === selectedProfile.employeeId)?.name[0]}
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-bold text-space-gray">{MOCK_EMPLOYEES.find(e => e.id === selectedProfile.employeeId)?.name}</h3>
+                    <p className="text-sm text-gray-500">Payroll Profile • {selectedProfile.employeeNumber}</p>
+                  </div>
                 </div>
-              ) : payslip && (
-                <>
-                  <div className="p-6 md:p-8 border-b border-black/[0.05] flex items-center justify-between bg-apple-gray/30">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 md:w-12 md:h-12 bg-accent rounded-2xl flex items-center justify-center text-white font-bold text-xl">R</div>
-                      <div>
-                        <h2 className="text-lg md:text-xl font-bold text-space-gray">Employee Payslip</h2>
-                        <p className="text-[10px] md:text-xs text-gray-500 font-medium">Period: {payslip.period}</p>
+                <div className="flex items-center gap-3">
+                  <button className="btn-secondary px-6 py-2 text-sm">Edit Profile</button>
+                  <button onClick={() => setSelectedProfile(null)} className="p-2 hover:bg-apple-gray rounded-full">
+                    <X className="w-6 h-6 text-gray-400" />
+                  </button>
+                </div>
+              </div>
+              
+              <div className="flex-1 overflow-y-auto p-8">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                  {/* Left Column: Details */}
+                  <div className="lg:col-span-2 space-y-8">
+                    <div className="grid grid-cols-2 gap-8">
+                      <div className="space-y-6">
+                        <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest border-b border-black/[0.05] pb-2">Statutory Details</h4>
+                        <div className="space-y-4">
+                          <div>
+                            <p className="text-[10px] text-gray-400 uppercase">NSSA Number</p>
+                            <p className="font-bold">{selectedProfile.statutory.nssaNumber}</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-gray-400 uppercase">NEC Grade</p>
+                            <p className="font-bold">{selectedProfile.statutory.necGrade}</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-gray-400 uppercase">Tax Status</p>
+                            <p className="font-bold">{selectedProfile.statutory.taxStatus}</p>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                    <button 
-                      onClick={() => setPayslip(null)}
-                      className="p-2 hover:bg-black/5 rounded-full transition-colors"
-                    >
-                      <X className="w-6 h-6 text-gray-400" />
-                    </button>
-                  </div>
-                  
-                  <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6 md:space-y-8">
-                    {/* Employee Info */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-8 p-4 md:p-6 bg-apple-gray/20 rounded-3xl">
-                      <div className="space-y-1">
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Employee</p>
-                        <p className="font-bold text-space-gray">{payslip.employee.name}</p>
-                        <p className="text-xs text-gray-500">{payslip.employee.role}</p>
-                      </div>
-                      <div className="space-y-1 sm:text-right">
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Employee ID</p>
-                        <p className="font-bold text-space-gray">EMP-{payslip.employee.id.slice(0, 6).toUpperCase()}</p>
+                      <div className="space-y-6">
+                        <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest border-b border-black/[0.05] pb-2">Payment Details</h4>
+                        <div className="space-y-4">
+                          <div>
+                            <p className="text-[10px] text-gray-400 uppercase">Bank Name</p>
+                            <p className="font-bold">{selectedProfile.bankDetails.bankName}</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-gray-400 uppercase">Account Number</p>
+                            <p className="font-bold">{selectedProfile.bankDetails.accountNumber}</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-gray-400 uppercase">Branch</p>
+                            <p className="font-bold">{selectedProfile.bankDetails.branch}</p>
+                          </div>
+                        </div>
                       </div>
                     </div>
 
-                    {/* Earnings & Deductions */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      <div className="space-y-4">
-                        <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest border-b border-black/[0.05] pb-2">Earnings</h4>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-gray-500">Base Salary</span>
-                          <span className="font-bold text-space-gray">{formatCurrency(payslip.baseSalary)}</span>
+                    <div className="space-y-6">
+                      <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest border-b border-black/[0.05] pb-2">Salary Structure</h4>
+                      <div className="bg-apple-gray/30 rounded-3xl p-6 space-y-4">
+                        <div className="flex justify-between items-center">
+                          <span className="font-bold text-space-gray">Basic Salary</span>
+                          <span className="text-lg font-black text-accent">{formatCurrency(selectedProfile.salaryStructure.basicSalary)}</span>
                         </div>
-                        <div className="flex justify-between text-sm pt-2 border-t border-black/[0.05]">
-                          <span className="font-bold text-space-gray">Gross Pay</span>
-                          <span className="font-bold text-space-gray">{formatCurrency(payslip.baseSalary)}</span>
-                        </div>
-                      </div>
-
-                      <div className="space-y-4">
-                        <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest border-b border-black/[0.05] pb-2">Deductions (Compliance)</h4>
                         <div className="space-y-2">
-                          <div className="flex justify-between text-sm">
-                            <span className="text-gray-500">NSSA ({rates.nssa}%)</span>
-                            <span className="font-bold text-red-500">-{formatCurrency(payslip.nssa)}</span>
-                          </div>
-                          <div className="flex justify-between text-sm">
-                            <span className="text-gray-500">PAYE</span>
-                            <span className="font-bold text-red-500">-{formatCurrency(payslip.paye)}</span>
-                          </div>
-                          <div className="flex justify-between text-sm">
-                            <span className="text-gray-500">ZIMDEF ({rates.zimdef}%)</span>
-                            <span className="font-bold text-red-500">-{formatCurrency(payslip.zimdef)}</span>
-                          </div>
-                          <div className="flex justify-between text-sm">
-                            <span className="text-gray-500">AIDS Levy ({rates.aidsLevy}%)</span>
-                            <span className="font-bold text-red-500">-{formatCurrency(payslip.aidsLevy)}</span>
-                          </div>
+                          <p className="text-[10px] font-bold text-gray-400 uppercase">Allowances</p>
+                          {selectedProfile.salaryStructure.fixedAllowances.map(allow => (
+                            <div key={allow.type} className="flex justify-between text-sm">
+                              <span className="text-gray-600">{allow.type}</span>
+                              <span className="font-bold">{formatCurrency(allow.amount)}</span>
+                            </div>
+                          ))}
                         </div>
-                        <div className="flex justify-between text-sm pt-2 border-t border-black/[0.05]">
-                          <span className="font-bold text-space-gray">Total Deductions</span>
-                          <span className="font-bold text-red-500">-{formatCurrency(payslip.nssa + payslip.paye + payslip.zimdef + payslip.aidsLevy)}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Net Pay */}
-                    <div className="p-6 md:p-8 bg-accent/5 border border-accent/10 rounded-3xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                      <div>
-                        <p className="text-[10px] font-bold text-accent uppercase tracking-widest">Net Take-Home Pay</p>
-                        <h3 className="text-2xl md:text-3xl font-bold text-accent">{formatCurrency(payslip.netPay)}</h3>
-                      </div>
-                      <div className="sm:text-right text-xs text-gray-400">
-                        <p>Paid via Direct Deposit</p>
-                        <p>Account ending in ****4567</p>
                       </div>
                     </div>
                   </div>
 
-                  <div className="p-6 md:p-8 border-t border-black/[0.05] grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-4">
-                    <button className="btn-secondary flex items-center justify-center gap-2 text-[10px] md:text-xs py-3">
-                      <Download className="w-4 h-4" />
-                      PDF
-                    </button>
-                    <button className="btn-secondary flex items-center justify-center gap-2 text-[10px] md:text-xs py-3">
-                      <Printer className="w-4 h-4" />
-                      Print
-                    </button>
-                    <button 
-                      onClick={() => window.open(`https://wa.me/263772240081?text=Hi!%20Here%20is%20your%20payslip%20for%20${payslip.period}.`, '_blank')}
-                      className="btn-primary bg-[#25D366] border-none flex items-center justify-center gap-2 text-[10px] md:text-xs py-3"
-                    >
-                      <MessageCircle className="w-4 h-4" />
-                      WhatsApp
-                    </button>
-                    <button className="btn-primary flex items-center justify-center gap-2 text-[10px] md:text-xs py-3">
-                      <FileText className="w-4 h-4" />
-                      Email
-                    </button>
+                  {/* Right Column: Payslip Preview */}
+                  <div className="space-y-6">
+                    <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest border-b border-black/[0.05] pb-2">Current Payslip Preview</h4>
+                    <div className="scale-[0.6] origin-top -mt-10">
+                      <PayslipTemplate data={selectedProfile} rates={rates} />
+                    </div>
+                    <div className="space-y-3">
+                      <button className="w-full btn-primary py-4 rounded-2xl flex items-center justify-center gap-2">
+                        <Download className="w-5 h-5" />
+                        Download PDF
+                      </button>
+                      <button 
+                        onClick={() => window.open(`https://wa.me/263772240081?text=Hi!%20Here%20is%20your%20payslip%20for%20April%202026.`, '_blank')}
+                        className="w-full bg-[#25D366] text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-2"
+                      >
+                        <MessageCircle className="w-5 h-5" />
+                        Send via WhatsApp
+                      </button>
+                      <button className="w-full btn-secondary py-4 rounded-2xl flex items-center justify-center gap-2">
+                        <Mail className="w-5 h-5" />
+                        Send via Email
+                      </button>
+                    </div>
                   </div>
-                </>
-              )}
+                </div>
+              </div>
             </motion.div>
           </div>
         )}
@@ -520,20 +1191,20 @@ export default function Payroll() {
       {/* Run Payroll Wizard */}
       <AnimatePresence>
         {showRunPayroll && (
-          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[250] flex items-center justify-center p-0 sm:p-6">
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[400] flex items-center justify-center p-6">
             <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="bg-white w-full h-full sm:h-auto sm:max-w-xl sm:rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col"
+              className="bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl overflow-hidden"
             >
-              <div className="p-6 md:p-8 border-b border-black/[0.05] flex items-center justify-between bg-apple-gray/10">
+              <div className="p-8 border-b border-black/[0.05] flex items-center justify-between bg-apple-gray/10">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-accent rounded-xl flex items-center justify-center text-white">
                     <DollarSign className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold">Run Payroll</h3>
+                    <h3 className="text-xl font-bold">Run Payroll Engine</h3>
                     <p className="text-xs text-gray-500">Step {payrollStep} of 3</p>
                   </div>
                 </div>
@@ -542,61 +1213,85 @@ export default function Payroll() {
                 </button>
               </div>
 
-              <div className="p-6 md:p-8 flex-1 overflow-y-auto">
+              <div className="p-8 space-y-8">
                 {payrollStep === 1 && (
                   <div className="space-y-6">
-                    <div className="space-y-4">
-                      <h4 className="font-bold text-space-gray">Select Pay Period</h4>
-                      <div className="grid grid-cols-1 gap-3">
-                        {['April 1 - April 15, 2024', 'March 16 - March 31, 2024', 'March 1 - March 15, 2024'].map((period) => (
-                          <button key={period} className="p-4 bg-apple-gray/30 border border-black/[0.03] rounded-2xl text-left hover:border-accent/30 transition-all flex items-center justify-between group">
-                            <span className="text-sm font-medium text-gray-600">{period}</span>
-                            <div className="w-5 h-5 rounded-full border-2 border-gray-200 group-hover:border-accent" />
-                          </button>
-                        ))}
-                      </div>
+                    <h4 className="font-bold text-space-gray">1. Select Pay Period</h4>
+                    <div className="grid grid-cols-1 gap-4">
+                      {['April 2026', 'March 2026', 'February 2026'].map((period) => (
+                        <button key={period} className="p-6 bg-apple-gray/30 border border-black/[0.03] rounded-3xl text-left hover:border-accent/30 transition-all flex items-center justify-between group">
+                          <div>
+                            <p className="font-bold text-space-gray">{period}</p>
+                            <p className="text-xs text-gray-500">Standard Monthly Cycle</p>
+                          </div>
+                          <div className="w-6 h-6 rounded-full border-2 border-gray-200 group-hover:border-accent flex items-center justify-center">
+                            <div className="w-3 h-3 bg-accent rounded-full scale-0 group-hover:scale-100 transition-transform" />
+                          </div>
+                        </button>
+                      ))}
                     </div>
                   </div>
                 )}
+
                 {payrollStep === 2 && (
                   <div className="space-y-6">
+                    <h4 className="font-bold text-space-gray">2. Smart Review & Exceptions</h4>
                     <div className="space-y-4">
-                      <h4 className="font-bold text-space-gray">Review Employee Data</h4>
-                      <div className="space-y-3">
-                        {employees.slice(0, 3).map(emp => (
-                          <div key={emp.id} className="p-4 bg-apple-gray/30 rounded-2xl flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center text-accent font-bold text-xs">{emp.name[0]}</div>
-                              <span className="text-sm font-bold text-space-gray">{emp.name}</span>
+                      <div className="p-4 bg-orange-50 border border-orange-100 rounded-2xl flex gap-3">
+                        <AlertTriangle className="w-5 h-5 text-orange-600 flex-shrink-0" />
+                        <p className="text-xs text-orange-700">5 employees have reached the NSSA cap. The system will automatically apply the USD $700 limit.</p>
+                      </div>
+                      <div className="p-4 bg-blue-50 border border-blue-100 rounded-2xl flex gap-3">
+                        <TrendingUp className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                        <p className="text-xs text-blue-700">Payroll is 4.2% higher than last month due to new hires in Engineering.</p>
+                      </div>
+                      <div className="divide-y divide-black/[0.05] border border-black/[0.05] rounded-2xl overflow-hidden">
+                        {profiles.map(p => {
+                          const emp = MOCK_EMPLOYEES.find(e => e.id === p.employeeId);
+                          const calc = calculatePayrollForEmployee(p, rates);
+                          return (
+                            <div key={p.employeeId} className="p-4 flex items-center justify-between bg-white">
+                              <span className="text-sm font-bold text-space-gray">{emp?.name}</span>
+                              <div className="text-right">
+                                <p className="text-sm font-bold text-space-gray">{formatCurrency(calc.netPay)}</p>
+                                <p className="text-[10px] text-gray-400">Net Pay</p>
+                              </div>
                             </div>
-                            <span className="text-sm font-bold text-space-gray">{formatCurrency(emp.salary / 12)}</span>
-                          </div>
-                        ))}
-                        <p className="text-center text-xs text-gray-400 font-medium">+ {employees.length - 3} more employees</p>
+                          );
+                        })}
                       </div>
                     </div>
                   </div>
                 )}
+
                 {payrollStep === 3 && (
-                  <div className="space-y-6 text-center">
-                    <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center text-green-600 mx-auto">
-                      <CheckCircle2 className="w-10 h-10" />
+                  <div className="space-y-8 text-center py-10">
+                    <div className="w-24 h-24 bg-green-50 rounded-full flex items-center justify-center text-green-600 mx-auto">
+                      <CheckCircle2 className="w-12 h-12" />
                     </div>
-                    <div className="space-y-2">
-                      <h4 className="text-xl font-bold text-space-gray">Ready to Process</h4>
-                      <p className="text-sm text-gray-500">Total payroll amount: <span className="font-bold text-space-gray">$35,400.00</span></p>
+                    <div>
+                      <h4 className="text-2xl font-bold text-space-gray">Ready to Finalize</h4>
+                      <p className="text-gray-500 mt-2">Total Net Remittance: <span className="font-bold text-space-gray">$33,700.00</span></p>
                     </div>
-                    <div className="p-6 bg-orange-50 border border-orange-100 rounded-3xl text-left flex items-start gap-4">
-                      <AlertCircle className="w-6 h-6 text-orange-600 flex-shrink-0" />
-                      <p className="text-xs text-orange-700/80 leading-relaxed">
-                        Once processed, this action cannot be undone. Payslips will be generated and distributed to all employees automatically.
-                      </p>
+                    <div className="p-6 bg-apple-gray/30 rounded-3xl text-left space-y-3">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-500">Total Gross</span>
+                        <span className="font-bold">$46,200.00</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-500">Total Statutory (Remittable)</span>
+                        <span className="font-bold">$12,500.00</span>
+                      </div>
+                      <div className="flex justify-between text-sm pt-3 border-t border-black/[0.05]">
+                        <span className="font-bold text-space-gray">Total Employer Cost</span>
+                        <span className="font-black text-accent">$49,800.00</span>
+                      </div>
                     </div>
                   </div>
                 )}
               </div>
 
-              <div className="p-6 md:p-8 border-t border-black/[0.05] flex gap-4">
+              <div className="p-8 border-t border-black/[0.05] flex gap-4">
                 {payrollStep > 1 && (
                   <button onClick={() => setPayrollStep(prev => prev - 1)} className="flex-1 btn-secondary py-4">Back</button>
                 )}
@@ -606,12 +1301,66 @@ export default function Payroll() {
                     else {
                       setShowRunPayroll(false);
                       setPayrollStep(1);
-                      alert("Payroll processed successfully!");
+                      alert("Payroll processed and locked successfully!");
                     }
                   }}
                   className="flex-1 btn-primary py-4"
                 >
-                  {payrollStep === 3 ? 'Confirm & Process' : 'Continue'}
+                  {payrollStep === 3 ? 'Approve & Lock Payroll' : 'Continue'}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Report Generation Modal */}
+      <AnimatePresence>
+        {generatingReport && (
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[500] flex items-center justify-center p-6">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="bg-white p-12 rounded-[2.5rem] shadow-2xl text-center space-y-6 max-w-md w-full"
+            >
+              <div className="w-20 h-20 border-4 border-accent border-t-transparent rounded-full animate-spin mx-auto" />
+              <div>
+                <h3 className="text-xl font-bold text-space-gray">Generating {generatingReport}</h3>
+                <p className="text-sm text-gray-500 mt-2">Compiling payroll data and formatting for statutory submission...</p>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Report Ready Modal */}
+      <AnimatePresence>
+        {reportReady && (
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[500] flex items-center justify-center p-6">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="bg-white p-10 rounded-[2.5rem] shadow-2xl text-center space-y-8 max-w-md w-full"
+            >
+              <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center text-green-600 mx-auto">
+                <CheckCircle2 className="w-10 h-10" />
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold text-space-gray">Report Ready!</h3>
+                <p className="text-sm text-gray-500 mt-2">The {reportReady} has been generated successfully and is ready for download.</p>
+              </div>
+              <div className="flex gap-4">
+                <button 
+                  onClick={() => setReportReady(null)}
+                  className="flex-1 btn-secondary py-4"
+                >
+                  Close
+                </button>
+                <button className="flex-1 btn-primary py-4 flex items-center justify-center gap-2">
+                  <Download className="w-5 h-5" />
+                  Download
                 </button>
               </div>
             </motion.div>
@@ -621,3 +1370,10 @@ export default function Payroll() {
     </div>
   );
 }
+
+// --- Helper Components ---
+const Bell = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+  </svg>
+);

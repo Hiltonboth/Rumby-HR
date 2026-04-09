@@ -52,3 +52,65 @@ export interface Candidate {
   skills?: string[];
   experience?: string;
 }
+
+export interface PayrollStatutory {
+  nssaNumber?: string;
+  necGrade?: string;
+  taxStatus?: string;
+  pensionMember?: boolean;
+  medicalAidMember?: boolean;
+}
+
+export interface BankDetails {
+  bankName: string;
+  branch: string;
+  accountNumber: string;
+  mobileMoney?: string;
+}
+
+export interface PayrollProfile {
+  employeeId: string;
+  employeeNumber: string;
+  payGrade: string;
+  statutory: PayrollStatutory;
+  bankDetails: BankDetails;
+  dateEngaged: string;
+  payFrequency: 'Monthly' | 'Fortnightly' | 'Weekly';
+  salaryStructure: {
+    basicSalary: number;
+    fixedAllowances: { type: string; amount: number }[];
+    fixedDeductions: { type: string; amount: number }[];
+  };
+  ytd: {
+    gross: number;
+    paye: number;
+    nssa: number;
+    net: number;
+  };
+}
+
+export interface PayrollRun {
+  id: string;
+  period: string; // e.g. "April 2026"
+  status: 'Draft' | 'Processing' | 'Approved' | 'Paid';
+  totalGross: number;
+  totalDeductions: number;
+  totalNet: number;
+  employerCost: number;
+  employeeCount: number;
+  processedAt?: string;
+}
+
+export interface StatutoryRates {
+  nssaEmployeeRate: number; // 4.5
+  nssaEmployerRate: number; // 4.5
+  nssaCap: number; // 700
+  aidsLevyRate: number; // 3 (of PAYE)
+  zimdefRate: number; // 1
+  sazRate: number; // 0.5
+  wcifRate: number; // 0.5
+  necLevy: {
+    type: 'Fixed' | 'Percentage';
+    value: number;
+  };
+}

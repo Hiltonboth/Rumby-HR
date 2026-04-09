@@ -136,3 +136,115 @@ export const MOCK_CANDIDATES: Candidate[] = [
     experience: '5 years in cloud infrastructure and automation.'
   },
 ];
+
+export const MOCK_PAYROLL_PROFILES: any[] = [
+  {
+    employeeId: '1',
+    employeeNumber: 'EMP001',
+    payGrade: 'D1',
+    statutory: {
+      nssaNumber: '12345678A',
+      necGrade: 'Grade 12',
+      taxStatus: 'P1',
+      pensionMember: true,
+      medicalAidMember: true,
+    },
+    bankDetails: {
+      bankName: 'CABS',
+      branch: 'First Street',
+      accountNumber: '1001234567',
+    },
+    dateEngaged: '2021-03-15',
+    payFrequency: 'Monthly',
+    salaryStructure: {
+      basicSalary: 2500,
+      fixedAllowances: [
+        { type: 'Housing', amount: 500 },
+        { type: 'Transport', amount: 200 }
+      ],
+      fixedDeductions: [
+        { type: 'Medical Aid', amount: 150 },
+        { type: 'Pension', amount: 100 }
+      ]
+    },
+    ytd: {
+      gross: 7500,
+      paye: 1200,
+      nssa: 315,
+      net: 5800
+    }
+  },
+  {
+    employeeId: '2',
+    employeeNumber: 'EMP002',
+    payGrade: 'C4',
+    statutory: {
+      nssaNumber: '87654321B',
+      necGrade: 'Grade 10',
+      taxStatus: 'P1',
+      pensionMember: true,
+      medicalAidMember: false,
+    },
+    bankDetails: {
+      bankName: 'Stanbic',
+      branch: 'Samora Machel',
+      accountNumber: '9087654321',
+    },
+    dateEngaged: '2022-01-10',
+    payFrequency: 'Monthly',
+    salaryStructure: {
+      basicSalary: 1800,
+      fixedAllowances: [
+        { type: 'Housing', amount: 300 }
+      ],
+      fixedDeductions: [
+        { type: 'Union Fees', amount: 20 }
+      ]
+    },
+    ytd: {
+      gross: 5400,
+      paye: 800,
+      nssa: 243,
+      net: 4200
+    }
+  }
+];
+
+export const DEFAULT_STATUTORY_RATES: any = {
+  nssaEmployeeRate: 4.5,
+  nssaEmployerRate: 4.5,
+  nssaCap: 700,
+  aidsLevyRate: 3,
+  zimdefRate: 1,
+  sazRate: 0.5,
+  wcifRate: 0.5,
+  necLevy: {
+    type: 'Fixed',
+    value: 5.43
+  }
+};
+
+export const MOCK_PAYROLL_RUNS: any[] = [
+  {
+    id: 'PR-2024-03',
+    period: 'March 2024',
+    status: 'Paid',
+    totalGross: 45000,
+    totalDeductions: 12000,
+    totalNet: 33000,
+    employerCost: 48500,
+    employeeCount: 12,
+    processedAt: '2024-03-28'
+  },
+  {
+    id: 'PR-2024-04',
+    period: 'April 2024',
+    status: 'Draft',
+    totalGross: 46200,
+    totalDeductions: 12500,
+    totalNet: 33700,
+    employerCost: 49800,
+    employeeCount: 12
+  }
+];
+

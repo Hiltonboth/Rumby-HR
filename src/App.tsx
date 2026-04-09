@@ -10,6 +10,7 @@ import AIChatbot from './components/AIChatbot';
 import LandingPage from './components/LandingPage';
 import LoginPage from './components/LoginPage';
 import Payroll from './components/Payroll';
+import ESignature from './components/ESignature';
 import { auth, db } from './firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { doc, getDoc, onSnapshot, updateDoc } from 'firebase/firestore';
@@ -185,6 +186,8 @@ export default function App() {
         return <HiringPipeline />;
       case 'payroll':
         return <Payroll />;
+      case 'esignature':
+        return <ESignature />;
       case 'onboarding':
         return (
           <OnboardingWizard 

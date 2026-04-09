@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Shield, Zap, Users, BarChart3, ChevronRight, Star, CheckCircle2, ChevronDown, CreditCard, Menu, X, MessageCircle, Sparkles, FileText, Heart } from 'lucide-react';
+import { Shield, Zap, Users, BarChart3, ChevronRight, Star, CheckCircle2, ChevronDown, CreditCard, Menu, X, MessageCircle, Sparkles, FileText, Heart, PenTool } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
 import ResourceLibrary from './ResourceLibrary';
@@ -33,6 +33,11 @@ const features = [
     name: 'Payroll & Expense', 
     id: 'payroll',
     subFeatures: ['Payroll Integration', 'Expense Claims', 'Reimbursements', 'Tax Compliance'] 
+  },
+  {
+    name: 'E-Signature',
+    id: 'esignature',
+    subFeatures: ['Document Upload', 'Digital Signing', 'Signature Requests', 'Audit Trails']
   },
   { 
     name: 'Employee Engagement', 
@@ -364,6 +369,54 @@ export default function LandingPage({ onGetStarted, onLogin, user, onGoToDashboa
         <section id="community" className="px-6 scroll-mt-24">
           <div className="max-w-7xl mx-auto">
             <Community />
+          </div>
+        </section>
+
+        {/* E-Signature Section */}
+        <section id="esignature" className="px-6 scroll-mt-24">
+          <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-16 items-center">
+            <div className="order-2 md:order-1 bg-apple-gray/50 rounded-[2.5rem] p-8 aspect-square flex items-center justify-center border border-black/[0.03]">
+              <div className="w-full max-w-sm bg-white rounded-3xl shadow-2xl border border-black/[0.05] p-8 space-y-6">
+                <div className="flex items-center justify-between">
+                  <div className="w-12 h-12 bg-accent rounded-2xl flex items-center justify-center text-white">
+                    <PenTool className="w-6 h-6" />
+                  </div>
+                  <div className="px-3 py-1 bg-green-100 text-green-600 rounded-full text-[10px] font-bold uppercase tracking-widest">Secure</div>
+                </div>
+                <div className="space-y-2">
+                  <h4 className="font-bold text-lg">Sign Employment Contract</h4>
+                  <p className="text-sm text-gray-500">Document: Contract_Rivera.pdf</p>
+                </div>
+                <div className="h-32 w-full border-2 border-dashed border-black/[0.05] rounded-2xl flex items-center justify-center">
+                  <p className="text-xs text-gray-300 font-medium italic">Signature goes here</p>
+                </div>
+                <button className="w-full btn-primary py-3 rounded-xl">Confirm Signature</button>
+              </div>
+            </div>
+            <div className="order-1 md:order-2 space-y-6">
+              <div className="w-12 h-12 bg-purple-50 rounded-2xl flex items-center justify-center text-purple-600">
+                <Shield className="w-6 h-6" />
+              </div>
+              <h2 className="text-4xl font-bold tracking-tight">Secure E-Signatures</h2>
+              <p className="text-lg text-gray-500">
+                Go paperless with our integrated e-signature solution. Upload any document, sign it digitally, and request signatures from employees or partners with a single click.
+              </p>
+              <ul className="space-y-4">
+                {['Legally Binding Signatures', 'Bulk Signature Requests', 'Document Status Tracking', 'Secure Audit Trails'].map(item => (
+                  <li key={item} className="flex items-center gap-3 text-gray-600 font-medium">
+                    <CheckCircle2 className="w-5 h-5 text-accent" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+              <button 
+                onClick={onLogin}
+                className="btn-primary px-6 py-3 flex items-center gap-2 shadow-lg shadow-accent/20"
+              >
+                Try E-Signatures
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         </section>
 

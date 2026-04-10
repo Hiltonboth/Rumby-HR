@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { TrendingUp, CreditCard, LogOut, ShieldCheck, ArrowLeft } from 'lucide-react';
+import { TrendingUp, CreditCard, LogOut, ShieldCheck, ArrowLeft, Upload, Sparkles, Building2, FileText, Calendar, Users } from 'lucide-react';
 import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
 import TeamDirectory from './components/TeamDirectory';
@@ -82,11 +82,9 @@ export default function App() {
   }, [currentCompany]);
 
   const navigateTo = (tab: string) => {
-    if (tab !== activeTab) {
-      setViewHistory(prev => [...prev, tab]);
-      setActiveTab(tab);
-      setSelectedEmployee(null);
-    }
+    setViewHistory(prev => [...prev, tab]);
+    setActiveTab(tab);
+    setSelectedEmployee(null);
   };
 
   const goBack = () => {
@@ -106,6 +104,33 @@ export default function App() {
   const handleLogout = async () => {
     await signOut(auth);
     setView('landing');
+  };
+
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !currentCompany) return;
+
+    setIsUploadingLogo(true);
+    // Simulate upload
+    setTimeout(async () => {
+      try {
+        // In a real app, we'd upload to Storage and get a URL
+        // Here we'll just use a placeholder or the first letter as requested if it "fails"
+        // But the user said "simulate an upload process and then display the first letter... as a fallback if the upload fails"
+        // Let's assume it "succeeds" with a mock URL for now, or just updates the state.
+        const mockUrl = URL.createObjectURL(file);
+        const tenantRef = doc(db, 'tenants', currentCompany.id);
+        await updateDoc(tenantRef, { logo: mockUrl });
+        setCurrentCompany(prev => prev ? { ...prev, logo: mockUrl } : null);
+      } catch (error) {
+        console.error("Error uploading logo:", error);
+      } finally {
+        setIsUploadingLogo(false);
+      }
+    }, 1500);
   };
 
   const renderContent = () => {
@@ -222,43 +247,139 @@ export default function App() {
               </button>
             </div>
             {currentCompany && (
-              <div className="card-aura p-8 space-y-8">
-                <div className="space-y-4">
-                  <h3 className="font-semibold">Branding</h3>
-                  <div className="flex items-center gap-6">
-                    <div 
-                      className="w-16 h-16 rounded-2xl flex items-center justify-center text-white text-2xl font-bold shadow-lg"
-                      style={{ backgroundColor: currentCompany.accentColor }}
-                    >
-                      {currentCompany.logo || currentCompany.name.charAt(0)}
-                    </div>
-                    <div className="space-y-2">
-                      <p className="text-sm font-medium">Accent Color</p>
-                      <div className="flex gap-2">
-                        {['#007AFF', '#5856D6', '#FF2D55', '#AF52DE', '#FF9500'].map(color => (
-                          <button
-                            key={color}
-                            onClick={async () => {
-                              try {
-                                const tenantRef = doc(db, 'tenants', currentCompany.id);
-                                await updateDoc(tenantRef, { accentColor: color });
-                                setCurrentCompany(prev => prev ? { ...prev, accentColor: color } : null);
-                              } catch (error) {
-                                console.error("Error updating accent color:", error);
-                              }
-                            }}
-                            className="w-8 h-8 rounded-full border-2 border-white shadow-sm transition-transform hover:scale-110"
-                            style={{ backgroundColor: color }}
-                          />
-                        ))}
+              <div className="space-y-8">
+                <div className="card-aura p-8 space-y-8">
+                  <div className="space-y-4">
+                    <h3 className="font-semibold flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-accent" />
+                      Branding
+                    </h3>
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-6">
+                      <div className="relative group">
+                        <div 
+                          className="w-20 h-20 rounded-2xl flex items-center justify-center text-white text-3xl font-bold shadow-lg overflow-hidden bg-accent"
+                          style={{ backgroundColor: currentCompany.accentColor }}
+                        >
+                          {isUploadingLogo ? (
+                            <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          ) : currentCompany.logo ? (
+                            <img src={currentCompany.logo} alt="Logo" className="w-full h-full object-cover" />
+                          ) : (
+                            currentCompany.name.charAt(0)
+                          )}
+                        </div>
+                        <button 
+                          onClick={() => fileInputRef.current?.click()}
+                          className="absolute -bottom-2 -right-2 p-2 bg-white rounded-xl shadow-md border border-black/[0.05] text-gray-500 hover:text-accent transition-all"
+                        >
+                          <Upload className="w-4 h-4" />
+                        </button>
+                        <input 
+                          type="file" 
+                          ref={fileInputRef} 
+                          onChange={handleLogoUpload} 
+                          className="hidden" 
+                          accept="image/*" 
+                        />
+                      </div>
+                      <div className="flex-1 space-y-4">
+                        <div className="space-y-2">
+                          <p className="text-sm font-bold text-space-gray">Company Logo</p>
+                          <p className="text-xs text-gray-500">Upload a square logo for your company. PNG or JPG preferred.</p>
+                        </div>
+                        <div className="space-y-2">
+                          <p className="text-sm font-medium">Accent Color</p>
+                          <div className="flex flex-wrap gap-2">
+                            {['#007AFF', '#5856D6', '#FF2D55', '#AF52DE', '#FF9500'].map(color => (
+                              <button
+                                key={color}
+                                onClick={async () => {
+                                  try {
+                                    const tenantRef = doc(db, 'tenants', currentCompany.id);
+                                    await updateDoc(tenantRef, { accentColor: color });
+                                    setCurrentCompany(prev => prev ? { ...prev, accentColor: color } : null);
+                                  } catch (error) {
+                                    console.error("Error updating accent color:", error);
+                                  }
+                                }}
+                                className="w-8 h-8 rounded-full border-2 border-white shadow-sm transition-transform hover:scale-110"
+                                style={{ backgroundColor: color }}
+                              />
+                            ))}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
+
+                <div className="card-aura p-8 space-y-8">
+                  <div className="space-y-6">
+                    <h3 className="font-semibold flex items-center gap-2">
+                      <Building2 className="w-4 h-4 text-accent" />
+                      Company Settings
+                    </h3>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <button 
+                        onClick={() => alert('Opening Policy Manager...')}
+                        className="p-6 bg-apple-gray/30 rounded-2xl border border-black/[0.02] text-left hover:bg-apple-gray/50 transition-all group"
+                      >
+                        <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center mb-4 shadow-sm group-hover:scale-110 transition-transform">
+                          <FileText className="w-5 h-5 text-blue-500" />
+                        </div>
+                        <p className="font-bold text-space-gray">Company Policies</p>
+                        <p className="text-xs text-gray-500 mt-1">Manage employee handbooks and legal documents.</p>
+                      </button>
+
+                      <button 
+                        onClick={() => alert('Opening Holiday Calendar...')}
+                        className="p-6 bg-apple-gray/30 rounded-2xl border border-black/[0.02] text-left hover:bg-apple-gray/50 transition-all group"
+                      >
+                        <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center mb-4 shadow-sm group-hover:scale-110 transition-transform">
+                          <Calendar className="w-5 h-5 text-orange-500" />
+                        </div>
+                        <p className="font-bold text-space-gray">Holiday Calendar</p>
+                        <p className="text-xs text-gray-500 mt-1">Configure public holidays and company-wide breaks.</p>
+                      </button>
+
+                      <button 
+                        onClick={() => alert('Opening Department Structures...')}
+                        className="p-6 bg-apple-gray/30 rounded-2xl border border-black/[0.02] text-left hover:bg-apple-gray/50 transition-all group"
+                      >
+                        <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center mb-4 shadow-sm group-hover:scale-110 transition-transform">
+                          <Users className="w-5 h-5 text-purple-500" />
+                        </div>
+                        <p className="font-bold text-space-gray">Department Structure</p>
+                        <p className="text-xs text-gray-500 mt-1">Define organizational hierarchy and reporting lines.</p>
+                      </button>
+
+                      <button 
+                        onClick={() => alert('Opening Security Settings...')}
+                        className="p-6 bg-apple-gray/30 rounded-2xl border border-black/[0.02] text-left hover:bg-apple-gray/50 transition-all group"
+                      >
+                        <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center mb-4 shadow-sm group-hover:scale-110 transition-transform">
+                          <ShieldCheck className="w-5 h-5 text-green-500" />
+                        </div>
+                        <p className="font-bold text-space-gray">Security & Access</p>
+                        <p className="text-xs text-gray-500 mt-1">Manage admin permissions and login security.</p>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex justify-end">
+                  <button 
+                    onClick={() => alert('All settings saved successfully!')}
+                    className="btn-primary px-8 py-3"
+                  >
+                    Save All Changes
+                  </button>
+                </div>
               </div>
             )}
-          </div>
-        );
+        </div>
+      );
       default:
         return <Dashboard onNavigate={navigateTo} />;
     }

@@ -110,8 +110,8 @@ export default function Layout({ children, activeTab, setActiveTab, currentCompa
       {/* Main Content */}
       <main className="flex-1 lg:pl-64">
         {/* Header */}
-        <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-black/[0.05] px-8 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
+        <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-black/[0.05] px-4 md:px-8 py-3 md:py-4 flex items-center justify-between">
+          <div className="flex items-center gap-2 md:gap-4">
             {onBack ? (
               <button 
                 onClick={onBack}
@@ -128,21 +128,21 @@ export default function Layout({ children, activeTab, setActiveTab, currentCompa
                 <Menu className="w-6 h-6" />
               </button>
             )}
-            <div className="flex items-center gap-2 text-sm font-bold text-gray-400">
+            <div className="flex items-center gap-1 md:gap-2 text-xs md:text-sm font-bold text-gray-400">
               <button 
                 onClick={() => setActiveTab('dashboard')}
-                className="hover:text-space-gray transition-colors"
+                className="hover:text-space-gray transition-colors hidden sm:inline"
               >
                 Rumby HR
               </button>
-              <ChevronRight className="w-4 h-4" />
-              <span className="text-space-gray capitalize">{activeTab.replace('_', ' ')}</span>
+              <ChevronRight className="w-3 h-3 md:w-4 md:h-4 hidden sm:inline" />
+              <span className="text-space-gray capitalize truncate max-w-[100px] md:max-w-none">{activeTab.replace('_', ' ')}</span>
             </div>
           </div>
 
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-3 md:gap-6">
             {/* Search */}
-            <div className="hidden md:flex items-center gap-2 px-4 py-2 bg-apple-gray/50 rounded-xl border border-black/[0.03] w-64 focus-within:bg-white focus-within:shadow-sm focus-within:ring-1 focus-within:ring-accent/20 transition-all">
+            <div className="hidden xl:flex items-center gap-2 px-4 py-2 bg-apple-gray/50 rounded-xl border border-black/[0.03] w-64 focus-within:bg-white focus-within:shadow-sm focus-within:ring-1 focus-within:ring-accent/20 transition-all">
               <Search className="w-4 h-4 text-gray-400" />
               <input 
                 type="text" 
@@ -151,18 +151,18 @@ export default function Layout({ children, activeTab, setActiveTab, currentCompa
               />
             </div>
 
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 md:gap-4">
               <button className="relative p-2 text-gray-500 hover:text-accent transition-colors">
                 <Bell className="w-5 h-5" />
-                <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white" />
+                <span className="absolute top-2 right-2 w-1.5 h-1.5 md:w-2 md:h-2 bg-red-500 rounded-full border-2 border-white" />
               </button>
-              <div className="h-8 w-[1px] bg-black/[0.05]" />
-              <button className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-                <div className="text-right hidden sm:block">
+              <div className="h-6 md:h-8 w-[1px] bg-black/[0.05]" />
+              <button className="flex items-center gap-2 md:gap-3 hover:opacity-80 transition-opacity">
+                <div className="text-right hidden md:block">
                   <p className="text-xs font-bold text-space-gray">Sarah Jenkins</p>
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">HR Manager</p>
                 </div>
-                <div className="w-10 h-10 rounded-xl overflow-hidden border border-black/[0.05] shadow-sm">
+                <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl overflow-hidden border border-black/[0.05] shadow-sm">
                   <img 
                     src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop" 
                     alt="User"
@@ -175,7 +175,7 @@ export default function Layout({ children, activeTab, setActiveTab, currentCompa
         </header>
 
         {/* Page Content */}
-        <div className="p-8 max-w-7xl mx-auto">
+        <div className="p-4 md:p-8 max-w-7xl mx-auto">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
@@ -244,6 +244,19 @@ export default function Layout({ children, activeTab, setActiveTab, currentCompa
                     {item.label}
                   </button>
                 ))}
+                
+                <div className="pt-4 mt-4 border-t border-black/[0.05]">
+                  <button
+                    onClick={() => {
+                      onGoHome?.();
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-gray-500 hover:text-accent hover:bg-accent/5 transition-all"
+                  >
+                    <LayoutDashboard className="w-5 h-5" />
+                    Landing Page
+                  </button>
+                </div>
               </nav>
             </motion.div>
           </>

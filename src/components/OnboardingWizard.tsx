@@ -492,18 +492,18 @@ export default function OnboardingWizard({ userId, onComplete, onCancel }: Onboa
       </div>
 
       {/* Footer Controls */}
-      <div className="fixed bottom-0 left-0 w-full p-4 bg-white/80 backdrop-blur-xl border-t border-black/[0.03] flex items-center justify-between md:relative md:bg-transparent md:border-none md:p-0 md:mt-auto md:pb-8 md:max-w-2xl md:mx-auto">
+      <div className="fixed bottom-0 left-0 w-full p-4 bg-white/80 backdrop-blur-xl border-t border-black/[0.03] flex items-center justify-between md:relative md:bg-transparent md:border-none md:p-0 md:mt-auto md:pb-8 md:max-w-2xl md:mx-auto z-[70]">
         <button
           onClick={prevStep}
           disabled={step === 1}
-          className="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-gray-400 hover:text-space-gray transition-colors disabled:opacity-0"
+          className="flex items-center gap-1 md:gap-2 px-4 md:px-6 py-3 rounded-2xl font-bold text-gray-400 hover:text-space-gray transition-colors disabled:opacity-0 text-sm md:text-base"
         >
           <ChevronLeft className="w-5 h-5" />
           Back
         </button>
         <button
           onClick={nextStep}
-          className="btn-primary px-10 py-4 text-lg flex items-center gap-2 shadow-xl shadow-accent/20"
+          className="btn-primary px-6 md:px-10 py-3 md:py-4 text-base md:text-lg flex items-center gap-2 shadow-xl shadow-accent/20"
         >
           {step === totalSteps ? 'Finish' : 'Continue'}
           <ChevronRight className="w-5 h-5" />

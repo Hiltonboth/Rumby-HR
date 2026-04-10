@@ -19,10 +19,13 @@ import {
   Building,
   Camera,
   Upload,
-  Save
+  Save,
+  X,
+  MessageCircle
 } from 'lucide-react';
 import { Employee } from '../types';
 import { cn, formatCurrency } from '../lib/utils';
+import { motion, AnimatePresence } from 'motion/react';
 
 interface EmployeeProfileProps {
   employee: Employee;
@@ -34,6 +37,7 @@ export default function EmployeeProfile({ employee, onBack }: EmployeeProfilePro
   const [isUploading, setIsUploading] = useState(false);
   const [bio, setBio] = useState(employee.bio || '<p>Kofi is a highly experienced software engineer with a passion for building scalable web applications. He has a strong background in React, Node.js, and cloud infrastructure.</p>');
   const [isEditingBio, setIsEditingBio] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -52,20 +56,23 @@ export default function EmployeeProfile({ employee, onBack }: EmployeeProfilePro
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-20">
       {/* Simple Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <button 
           onClick={onBack}
-          className="flex items-center gap-2 text-gray-500 hover:text-accent font-bold transition-colors"
+          className="flex items-center gap-2 text-gray-500 hover:text-accent font-bold transition-colors w-fit"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Directory
         </button>
-        <div className="flex gap-3">
-          <button className="btn-secondary flex items-center gap-2">
+        <div className="flex gap-2 sm:gap-3">
+          <button 
+            onClick={() => setShowEditModal(true)}
+            className="flex-1 sm:flex-none btn-secondary flex items-center justify-center gap-2 py-2.5 px-4 text-sm"
+          >
             <Edit3 className="w-4 h-4" />
             Edit Profile
           </button>
-          <button className="btn-primary">Actions</button>
+          <button className="flex-1 sm:flex-none btn-primary py-2.5 px-4 text-sm">Actions</button>
         </div>
       </div>
 
@@ -449,6 +456,24 @@ export default function EmployeeProfile({ employee, onBack }: EmployeeProfilePro
             <h3 className="font-bold text-space-gray">Quick Actions</h3>
             <div className="space-y-3">
               <button 
+                onClick={() => window.location.href = `mailto:${employee.email}`}
+                className="w-full px-4 py-3 rounded-xl text-sm font-bold bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all flex items-center gap-3 group"
+              >
+                <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center group-hover:bg-white/20">
+                  <Mail className="w-4 h-4" />
+                </div>
+                Send Email
+              </button>
+              <button 
+                onClick={() => window.open(`https://wa.me/${employee.phone?.replace(/\D/g, '') || '263770000000'}`, '_blank')}
+                className="w-full px-4 py-3 rounded-xl text-sm font-bold bg-green-50 text-green-600 hover:bg-green-600 hover:text-white transition-all flex items-center gap-3 group"
+              >
+                <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center group-hover:bg-white/20">
+                  <MessageCircle className="w-4 h-4" />
+                </div>
+                WhatsApp Message
+              </button>
+              <button 
                 onClick={() => alert("Generating payslip for " + employee.name + "...")}
                 className="w-full px-4 py-3 rounded-xl text-sm font-bold bg-accent/5 text-accent hover:bg-accent hover:text-white transition-all flex items-center gap-3 group"
               >
@@ -465,10 +490,6 @@ export default function EmployeeProfile({ employee, onBack }: EmployeeProfilePro
                   <Calendar className="w-4 h-4" />
                 </div>
                 Request Leave
-              </button>
-              <button className="w-full text-left px-4 py-3 rounded-xl text-sm font-bold text-gray-500 hover:bg-apple-gray/50 transition-all flex items-center gap-3">
-                <Users className="w-4 h-4" />
-                Change Manager
               </button>
             </div>
           </div>
@@ -489,6 +510,60 @@ export default function EmployeeProfile({ employee, onBack }: EmployeeProfilePro
           </div>
         </div>
       </div>
+
+      {/* Edit Profile Modal */}
+      <AnimatePresence>
+        {showEditModal && (
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[300] flex items-end sm:items-center justify-center p-0 sm:p-6">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="bg-white w-full max-w-2xl rounded-t-[2rem] sm:rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+            >
+              <div className="p-6 md:p-8 border-b border-black/[0.05] flex items-center justify-between bg-apple-gray/10">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-accent rounded-xl flex items-center justify-center text-white">
+                    <Edit3 className="w-5 h-5" />
+                  </div>
+                  <h3 className="text-lg md:text-xl font-bold">Edit Profile</h3>
+                </div>
+                <button onClick={() => setShowEditModal(false)} className="p-2 hover:bg-apple-gray rounded-full">
+                  <X className="w-5 h-5 text-gray-400" />
+                </button>
+              </div>
+              <div className="p-6 md:p-8 space-y-6 overflow-y-auto">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Full Name</label>
+                    <input type="text" defaultValue={employee.name} className="w-full bg-apple-gray/30 border border-black/[0.05] rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-accent/20" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Job Title</label>
+                    <input type="text" defaultValue={employee.role} className="w-full bg-apple-gray/30 border border-black/[0.05] rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-accent/20" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Email Address</label>
+                    <input type="email" defaultValue={employee.email} className="w-full bg-apple-gray/30 border border-black/[0.05] rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-accent/20" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Phone Number</label>
+                    <input type="tel" defaultValue="+1 (555) 012-3456" className="w-full bg-apple-gray/30 border border-black/[0.05] rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-accent/20" />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Location</label>
+                  <input type="text" defaultValue={employee.location} className="w-full bg-apple-gray/30 border border-black/[0.05] rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-accent/20" />
+                </div>
+                <div className="flex flex-col sm:flex-row gap-3 pt-4">
+                  <button onClick={() => setShowEditModal(false)} className="w-full sm:flex-1 btn-secondary py-4">Cancel</button>
+                  <button onClick={() => { setShowEditModal(false); alert("Profile updated successfully!"); }} className="w-full sm:flex-1 btn-primary py-4">Save Changes</button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

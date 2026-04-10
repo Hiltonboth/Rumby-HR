@@ -8,6 +8,7 @@ export interface Employee {
   location?: string;
   startDate?: string;
   email: string;
+  phone?: string;
   avatar?: string;
   status: EmployeeStatus;
   salary?: number;

@@ -77,6 +77,7 @@ interface DashboardProps {
 }
 
 export default function Dashboard({ onNavigate }: DashboardProps) {
+  const [tasks, setTasks] = React.useState(MOCK_TASKS);
   const services = [
     { id: 'onboarding', title: 'Onboarding', icon: PartyPopper, description: 'New hire welcome & setup', color: 'bg-accent' },
     { id: 'self_service', title: 'Self Service', icon: Users, description: 'Manage your profile and assets', color: 'bg-blue-500' },
@@ -103,11 +104,17 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
           <p className="text-gray-500 mt-2 text-base md:text-lg">Welcome back, Sarah. What would you like to do today?</p>
         </div>
         <div className="flex gap-3">
-          <button className="flex-1 md:flex-none btn-secondary flex items-center justify-center gap-2 py-3 px-6">
+          <button 
+            onClick={() => alert('Checking in... Time logged: ' + new Date().toLocaleTimeString())}
+            className="flex-1 md:flex-none btn-secondary flex items-center justify-center gap-2 py-3 px-6"
+          >
             <Clock className="w-4 h-4" />
             Check In
           </button>
-          <button className="flex-1 md:flex-none btn-primary flex items-center justify-center gap-2 py-3 px-6">
+          <button 
+            onClick={() => onNavigate('leave')}
+            className="flex-1 md:flex-none btn-primary flex items-center justify-center gap-2 py-3 px-6"
+          >
             <Plus className="w-4 h-4" />
             Apply Leave
           </button>
@@ -116,22 +123,34 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
 
       {/* Quick Stats - Simple Numbers */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-        <div className="bg-apple-gray/30 p-4 md:p-6 rounded-2xl border border-black/[0.03]">
-          <p className="text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Team Size</p>
+        <button 
+          onClick={() => onNavigate('team')}
+          className="bg-apple-gray/30 p-4 md:p-6 rounded-2xl border border-black/[0.03] text-left hover:bg-apple-gray/50 transition-all hover:shadow-sm group"
+        >
+          <p className="text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-widest mb-1 group-hover:text-accent transition-colors">Team Size</p>
           <p className="text-2xl md:text-3xl font-bold text-space-gray">124</p>
-        </div>
-        <div className="bg-apple-gray/30 p-4 md:p-6 rounded-2xl border border-black/[0.03]">
-          <p className="text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">On Leave</p>
+        </button>
+        <button 
+          onClick={() => onNavigate('leave')}
+          className="bg-apple-gray/30 p-4 md:p-6 rounded-2xl border border-black/[0.03] text-left hover:bg-apple-gray/50 transition-all hover:shadow-sm group"
+        >
+          <p className="text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-widest mb-1 group-hover:text-accent transition-colors">On Leave</p>
           <p className="text-2xl md:text-3xl font-bold text-space-gray">8</p>
-        </div>
-        <div className="bg-apple-gray/30 p-4 md:p-6 rounded-2xl border border-black/[0.03]">
-          <p className="text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Open Roles</p>
+        </button>
+        <button 
+          onClick={() => onNavigate('hiring')}
+          className="bg-apple-gray/30 p-4 md:p-6 rounded-2xl border border-black/[0.03] text-left hover:bg-apple-gray/50 transition-all hover:shadow-sm group"
+        >
+          <p className="text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-widest mb-1 group-hover:text-accent transition-colors">Open Roles</p>
           <p className="text-2xl md:text-3xl font-bold text-space-gray">12</p>
-        </div>
-        <div className="bg-apple-gray/30 p-4 md:p-6 rounded-2xl border border-black/[0.03]">
-          <p className="text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Pending Tasks</p>
+        </button>
+        <button 
+          onClick={() => onNavigate('workflows')}
+          className="bg-apple-gray/30 p-4 md:p-6 rounded-2xl border border-black/[0.03] text-left hover:bg-apple-gray/50 transition-all hover:shadow-sm group"
+        >
+          <p className="text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-widest mb-1 group-hover:text-accent transition-colors">Pending Tasks</p>
           <p className="text-2xl md:text-3xl font-bold text-space-gray">3</p>
-        </div>
+        </button>
       </div>
 
       {/* Services Grid */}
@@ -167,7 +186,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
           </button>
         </div>
         <div className="divide-y divide-black/[0.05]">
-          {MOCK_TASKS.map((task) => (
+          {tasks.map((task) => (
             <div key={task.id} className="p-4 md:p-6 flex flex-col sm:flex-row sm:items-center justify-between hover:bg-apple-gray/20 transition-colors gap-4">
               <div className="flex items-center gap-3 md:gap-4">
                 <div className={cn(
@@ -185,13 +204,26 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
               </div>
               <div className="flex gap-2 w-full sm:w-auto">
                 <button 
-                  onClick={() => alert(`Rejected: ${task.title}`)}
+                  onClick={() => alert(`Viewing details for: ${task.title}`)}
+                  className="flex-1 sm:flex-none px-4 py-2 text-xs md:text-sm font-bold text-gray-500 hover:bg-apple-gray rounded-xl transition-colors flex items-center justify-center gap-2"
+                >
+                  <Eye className="w-4 h-4" />
+                  View
+                </button>
+                <button 
+                  onClick={() => {
+                    setTasks(tasks.filter(t => t.id !== task.id));
+                    alert(`Rejected: ${task.title}`);
+                  }}
                   className="flex-1 sm:flex-none px-4 py-2 text-xs md:text-sm font-bold text-red-500 hover:bg-red-50 rounded-xl transition-colors"
                 >
                   Reject
                 </button>
                 <button 
-                  onClick={() => alert(`Approved: ${task.title}`)}
+                  onClick={() => {
+                    setTasks(tasks.filter(t => t.id !== task.id));
+                    alert(`Approved: ${task.title}`);
+                  }}
                   className="flex-1 sm:flex-none px-4 py-2 text-xs md:text-sm font-bold text-green-600 bg-green-50 hover:bg-green-100 rounded-xl transition-colors"
                 >
                   Approve
@@ -199,6 +231,15 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
               </div>
             </div>
           ))}
+          {tasks.length === 0 && (
+            <div className="p-12 text-center">
+              <div className="w-16 h-16 bg-green-50 text-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle2 className="w-8 h-8" />
+              </div>
+              <p className="font-bold text-space-gray">All caught up!</p>
+              <p className="text-sm text-gray-500">No pending approvals at the moment.</p>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -18,6 +18,8 @@ export default function Layout({ children, activeTab, setActiveTab, currentCompa
   const [isScrolled, setIsScrolled] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 10);
@@ -152,12 +154,67 @@ export default function Layout({ children, activeTab, setActiveTab, currentCompa
             </div>
 
             <div className="flex items-center gap-2 md:gap-4">
-              <button className="relative p-2 text-gray-500 hover:text-accent transition-colors">
-                <Bell className="w-5 h-5" />
-                <span className="absolute top-2 right-2 w-1.5 h-1.5 md:w-2 md:h-2 bg-red-500 rounded-full border-2 border-white" />
-              </button>
+              <div className="relative">
+                <button 
+                  onClick={() => setShowNotifications(!showNotifications)}
+                  className="relative p-2 text-gray-500 hover:text-accent transition-colors"
+                >
+                  <Bell className="w-5 h-5" />
+                  <span className="absolute top-2 right-2 w-1.5 h-1.5 md:w-2 md:h-2 bg-red-500 rounded-full border-2 border-white" />
+                </button>
+
+                <AnimatePresence>
+                  {showNotifications && (
+                    <>
+                      <div 
+                        className="fixed inset-0 z-40" 
+                        onClick={() => setShowNotifications(false)} 
+                      />
+                      <motion.div
+                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                        className="absolute right-0 mt-2 w-80 bg-white border border-black/[0.05] rounded-2xl shadow-xl z-50 overflow-hidden"
+                      >
+                        <div className="p-4 border-b border-black/[0.05] flex items-center justify-between bg-apple-gray/10">
+                          <h3 className="font-bold text-space-gray">Notifications</h3>
+                          <span className="text-[10px] font-bold text-accent bg-accent/10 px-2 py-0.5 rounded-full">3 NEW</span>
+                        </div>
+                        <div className="max-h-96 overflow-y-auto divide-y divide-black/[0.05]">
+                          {[
+                            { title: 'Payroll Approved', desc: 'April 2026 payroll has been approved by Finance.', time: '2h ago', icon: CheckCircle2, color: 'text-green-500' },
+                            { title: 'New Leave Request', desc: 'Sarah Johnson requested 3 days of annual leave.', time: '4h ago', icon: Calendar, color: 'text-blue-500' },
+                            { title: 'System Update', desc: 'New ZIMRA tax tables have been integrated.', time: '1d ago', icon: Zap, color: 'text-yellow-500' },
+                          ].map((n, i) => (
+                            <div key={i} className="p-4 hover:bg-apple-gray/20 transition-colors cursor-pointer">
+                              <div className="flex gap-3">
+                                <div className={cn("w-8 h-8 rounded-lg bg-apple-gray/50 flex items-center justify-center flex-shrink-0", n.color)}>
+                                  <n.icon className="w-4 h-4" />
+                                </div>
+                                <div>
+                                  <p className="text-sm font-bold text-space-gray">{n.title}</p>
+                                  <p className="text-xs text-gray-500 mt-0.5">{n.desc}</p>
+                                  <p className="text-[10px] text-gray-400 mt-1">{n.time}</p>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        <button className="w-full p-3 text-xs font-bold text-accent hover:bg-accent/5 transition-colors border-t border-black/[0.05]">
+                          View All Notifications
+                        </button>
+                      </motion.div>
+                    </>
+                  )}
+                </AnimatePresence>
+              </div>
+
               <div className="h-6 md:h-8 w-[1px] bg-black/[0.05]" />
-              <button className="flex items-center gap-2 md:gap-3 hover:opacity-80 transition-opacity">
+              
+              <button 
+                onClick={() => setShowProfileModal(true)}
+                className="flex items-center gap-2 md:gap-3 hover:opacity-80 transition-opacity"
+              >
                 <div className="text-right hidden md:block">
                   <p className="text-xs font-bold text-space-gray">Sarah Jenkins</p>
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">HR Manager</p>
@@ -260,6 +317,149 @@ export default function Layout({ children, activeTab, setActiveTab, currentCompa
               </nav>
             </motion.div>
           </>
+        )}
+      </AnimatePresence>
+
+      {/* Profile Editing Modal */}
+      <AnimatePresence>
+        {showProfileModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowProfileModal(false)}
+              className="fixed inset-0 bg-black/40 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative w-full max-w-2xl bg-white rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+            >
+              <div className="p-6 md:p-8 border-b border-black/[0.05] flex items-center justify-between bg-apple-gray/10">
+                <div>
+                  <h2 className="text-xl md:text-2xl font-bold text-space-gray">User Settings</h2>
+                  <p className="text-sm text-gray-500">Manage your personal profile and account security.</p>
+                </div>
+                <button 
+                  onClick={() => setShowProfileModal(false)}
+                  className="p-2 hover:bg-white rounded-full transition-colors"
+                >
+                  <X className="w-6 h-6 text-gray-400" />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-8">
+                {/* Profile Section */}
+                <section className="space-y-4">
+                  <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Profile Information</h3>
+                  <div className="flex flex-col md:flex-row gap-6 items-start">
+                    <div className="relative group">
+                      <div className="w-24 h-24 rounded-3xl overflow-hidden border-4 border-apple-gray shadow-inner">
+                        <img 
+                          src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=200&fit=crop" 
+                          alt="Sarah Jenkins"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <button className="absolute -bottom-2 -right-2 p-2 bg-accent text-white rounded-xl shadow-lg hover:scale-110 transition-transform">
+                        <PenTool className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-bold text-gray-400 uppercase ml-1">Full Name</label>
+                        <input 
+                          type="text" 
+                          defaultValue="Sarah Jenkins"
+                          className="w-full bg-apple-gray border-none rounded-xl px-4 py-3 text-sm font-bold outline-none focus:ring-2 focus:ring-accent/20"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-bold text-gray-400 uppercase ml-1">Job Title</label>
+                        <input 
+                          type="text" 
+                          defaultValue="HR Manager"
+                          className="w-full bg-apple-gray border-none rounded-xl px-4 py-3 text-sm font-bold outline-none focus:ring-2 focus:ring-accent/20"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                {/* Account & Security */}
+                <section className="space-y-4">
+                  <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Account & Security</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <button className="p-4 bg-apple-gray/30 rounded-2xl border border-black/[0.03] text-left hover:bg-apple-gray/50 transition-all flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                        <ShieldCheck className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-space-gray">Security Settings</p>
+                        <p className="text-[10px] text-gray-500">2FA, Password, Sessions</p>
+                      </div>
+                    </button>
+                    <button className="p-4 bg-apple-gray/30 rounded-2xl border border-black/[0.03] text-left hover:bg-apple-gray/50 transition-all flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
+                        <Settings className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-space-gray">System Roles</p>
+                        <p className="text-[10px] text-gray-500">Manage permissions</p>
+                      </div>
+                    </button>
+                  </div>
+                </section>
+
+                {/* Company Settings */}
+                <section className="space-y-4">
+                  <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Company Configuration</h3>
+                  <div className="p-6 bg-apple-gray/30 rounded-3xl border border-black/[0.03] space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-2xl bg-accent flex items-center justify-center text-white font-bold text-xl">R</div>
+                        <div>
+                          <p className="font-bold text-space-gray">Rumby HR</p>
+                          <p className="text-xs text-gray-500">Pro Plan • 124 Employees</p>
+                        </div>
+                      </div>
+                      <button className="text-xs font-bold text-accent hover:underline">Edit Company</button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 pt-4 border-t border-black/[0.05]">
+                      <div className="space-y-1">
+                        <p className="text-[10px] font-bold text-gray-400 uppercase">Currency</p>
+                        <p className="text-sm font-bold text-space-gray">USD ($)</p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-[10px] font-bold text-gray-400 uppercase">Fiscal Year</p>
+                        <p className="text-sm font-bold text-space-gray">Jan - Dec</p>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+              </div>
+
+              <div className="p-6 md:p-8 border-t border-black/[0.05] bg-apple-gray/10 flex items-center justify-end gap-4">
+                <button 
+                  onClick={() => setShowProfileModal(false)}
+                  className="px-6 py-3 text-sm font-bold text-gray-500 hover:text-space-gray transition-colors"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={() => {
+                    alert('Profile settings saved successfully!');
+                    setShowProfileModal(false);
+                  }}
+                  className="btn-primary px-8 py-3"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </div>

@@ -40,6 +40,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn, formatCurrency } from '../lib/utils';
+import { generatePayslipPDF } from '../lib/pdfUtils';
 import { MOCK_EMPLOYEES, MOCK_PAYROLL_PROFILES, DEFAULT_STATUTORY_RATES, MOCK_PAYROLL_RUNS } from '../constants';
 import { Employee, PayrollProfile, StatutoryRates, PayrollRun } from '../types';
 
@@ -487,7 +488,7 @@ const SalaryStructureView = ({ rates, onUpdateRates }: any) => {
             key={tab}
             onClick={() => setActiveSubTab(tab)}
             className={cn(
-              "px-4 md:px-6 py-4 text-sm font-bold transition-all relative whitespace-nowrap",
+              "px-4 md:px-6 py-4 text-[10px] md:text-sm font-bold transition-all relative whitespace-nowrap uppercase tracking-widest md:normal-case md:tracking-normal",
               activeSubTab === tab ? "text-accent" : "text-gray-400 hover:text-space-gray"
             )}
           >
@@ -499,7 +500,7 @@ const SalaryStructureView = ({ rates, onUpdateRates }: any) => {
         ))}
       </div>
 
-      <div className="p-8">
+      <div className="p-4 md:p-8">
         {activeSubTab === 'Tax Settings' && (
           <div className="space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -1721,7 +1722,7 @@ export default function Payroll() {
                           <td className="px-8 py-6">
                             <div className="flex items-center justify-end gap-2">
                               <button 
-                                onClick={() => handleGenerateReport(`Payslip_${emp?.name.replace(' ', '_')}`)}
+                                onClick={() => emp && generatePayslipPDF(emp, profile, calc, selectedPeriod)}
                                 className="p-2 hover:bg-accent/10 text-gray-400 hover:text-accent rounded-lg transition-colors"
                                 title="Download PDF"
                               >
@@ -1780,7 +1781,7 @@ export default function Payroll() {
                       </div>
                       <div className="flex gap-2">
                         <button 
-                          onClick={() => handleGenerateReport(`Payslip_${emp?.name.replace(' ', '_')}`)}
+                          onClick={() => emp && generatePayslipPDF(emp, profile, calc, selectedPeriod)}
                           className="flex-1 py-3 bg-apple-gray text-space-gray rounded-xl text-xs font-bold flex items-center justify-center gap-2"
                         >
                           <Download className="w-4 h-4" />

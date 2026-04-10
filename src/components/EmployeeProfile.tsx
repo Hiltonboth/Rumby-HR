@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 import { 
@@ -21,23 +21,90 @@ import {
   Upload,
   Save,
   X,
-  MessageCircle
+  MessageCircle,
+  Plus,
+  CheckCircle2,
+  AlertCircle,
+  FileUp,
+  ShieldCheck
 } from 'lucide-react';
 import { Employee } from '../types';
 import { cn, formatCurrency } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
+import DocumentBuilder from './DocumentBuilder';
 
 interface EmployeeProfileProps {
   employee: Employee;
   onBack: () => void;
 }
 
+interface EmployeeDoc {
+  id: string;
+  name: string;
+  size: string;
+  date: string;
+  status: 'Draft' | 'Pending' | 'Completed';
+  type: string;
+}
+
 export default function EmployeeProfile({ employee, onBack }: EmployeeProfileProps) {
   const [activeTab, setActiveTab] = useState('Personal');
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [showDocBuilder, setShowDocBuilder] = useState<string | null>(null);
+  
+  const [docs, setDocs] = useState<EmployeeDoc[]>([
+    { id: '1', name: 'Employment_Contract.pdf', size: '1.2 MB', date: 'Jan 12, 2024', status: 'Completed', type: 'PDF' },
+    { id: '2', name: 'ID_Proof.jpg', size: '450 KB', date: 'Jan 12, 2024', status: 'Completed', type: 'JPG' },
+    { id: '3', name: 'Education_Certificates.zip', size: '4.5 MB', date: 'Jan 15, 2024', status: 'Completed', type: 'ZIP' },
+  ]);
+
   const [bio, setBio] = useState(employee.bio || '<p>Kofi is a highly experienced software engineer with a passion for building scalable web applications. He has a strong background in React, Node.js, and cloud infrastructure.</p>');
   const [isEditingBio, setIsEditingBio] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      startUpload(file);
+    }
+  };
+
+  const startUpload = (file: File) => {
+    setIsUploading(true);
+    setUploadProgress(0);
+    
+    const interval = setInterval(() => {
+      setUploadProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          setTimeout(() => {
+            setIsUploading(false);
+            setShowUploadModal(false);
+            setShowDocBuilder(file.name);
+          }, 500);
+          return 100;
+        }
+        return prev + 10;
+      });
+    }, 200);
+  };
+
+  const handleSaveDoc = (data: any) => {
+    const newDoc: EmployeeDoc = {
+      id: `doc-${Date.now()}`,
+      name: data.docName,
+      size: '1.2 MB',
+      date: new Date().toLocaleDateString(),
+      status: data.status,
+      type: data.docName.split('.').pop()?.toUpperCase() || 'PDF'
+    };
+    setDocs([newDoc, ...docs]);
+    setShowDocBuilder(null);
+  };
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -375,37 +442,64 @@ export default function EmployeeProfile({ employee, onBack }: EmployeeProfilePro
           )}
 
           {activeTab === 'Documents' && (
-            <div className="bg-white border border-black/[0.05] rounded-3xl p-8 space-y-8">
-              <div className="flex items-center justify-between border-b border-black/[0.05] pb-4">
+            <div className="bg-white border border-black/[0.05] rounded-3xl p-6 md:p-8 space-y-8">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-black/[0.05] pb-4">
                 <h3 className="text-xl font-bold text-space-gray">Employee Documents</h3>
-                <button className="btn-secondary text-xs py-2 flex items-center gap-2">
-                  <Upload className="w-3.5 h-3.5" />
-                  Upload New
+                <button 
+                  onClick={() => setShowUploadModal(true)}
+                  className="btn-secondary text-xs py-2.5 px-4 flex items-center justify-center gap-2"
+                >
+                  <Upload className="w-4 h-4" />
+                  Upload New Document
                 </button>
               </div>
+              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {[
-                  { name: 'Employment_Contract.pdf', size: '1.2 MB', date: 'Jan 12, 2024' },
-                  { name: 'ID_Proof.jpg', size: '450 KB', date: 'Jan 12, 2024' },
-                  { name: 'Education_Certificates.zip', size: '4.5 MB', date: 'Jan 15, 2024' },
-                  { name: 'Previous_Experience_Letter.pdf', size: '800 KB', date: 'Jan 15, 2024' },
-                ].map((doc, i) => (
-                  <div key={i} className="flex items-center justify-between p-4 rounded-2xl border border-black/[0.05] hover:bg-apple-gray/20 transition-all group">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-xl bg-apple-gray flex items-center justify-center text-gray-400">
+                {docs.map((doc) => (
+                  <div key={doc.id} className="flex items-center justify-between p-4 rounded-2xl border border-black/[0.05] hover:bg-apple-gray/20 transition-all group">
+                    <div className="flex items-center gap-3 md:gap-4">
+                      <div className="w-10 h-10 rounded-xl bg-apple-gray flex items-center justify-center text-gray-400 flex-shrink-0">
                         <FileText className="w-5 h-5" />
                       </div>
-                      <div>
-                        <p className="text-sm font-bold text-space-gray">{doc.name}</p>
-                        <p className="text-xs text-gray-500">{doc.size} • {doc.date}</p>
+                      <div className="min-w-0">
+                        <p className="text-sm font-bold text-space-gray truncate">{doc.name}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-[10px] text-gray-500">{doc.size} • {doc.date}</p>
+                          <span className={cn(
+                            "px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-widest",
+                            doc.status === 'Completed' ? "bg-green-50 text-green-600" : "bg-orange-50 text-orange-600"
+                          )}>
+                            {doc.status}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                    <button className="p-2 text-gray-300 hover:text-accent opacity-0 group-hover:opacity-100 transition-all">
-                      <Download className="w-4 h-4" />
-                    </button>
+                    <div className="flex items-center gap-1">
+                      <button className="p-2 text-gray-300 hover:text-accent md:opacity-0 md:group-hover:opacity-100 transition-all">
+                        <Download className="w-4 h-4" />
+                      </button>
+                      <button 
+                        onClick={() => setDocs(docs.filter(d => d.id !== doc.id))}
+                        className="p-2 text-gray-300 hover:text-red-500 md:opacity-0 md:group-hover:opacity-100 transition-all"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
+
+              {docs.length === 0 && (
+                <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
+                  <div className="w-16 h-16 bg-apple-gray rounded-3xl flex items-center justify-center text-gray-300">
+                    <FileText className="w-8 h-8" />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="font-bold text-space-gray">No documents found</p>
+                    <p className="text-sm text-gray-500">Upload contracts, IDs, or certificates for this employee.</p>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -511,57 +605,88 @@ export default function EmployeeProfile({ employee, onBack }: EmployeeProfilePro
         </div>
       </div>
 
-      {/* Edit Profile Modal */}
+      {/* Upload Document Modal */}
       <AnimatePresence>
-        {showEditModal && (
+        {showUploadModal && (
           <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[300] flex items-end sm:items-center justify-center p-0 sm:p-6">
             <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="bg-white w-full max-w-2xl rounded-t-[2rem] sm:rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+              className="bg-white w-full max-w-xl rounded-t-[2rem] sm:rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col"
             >
               <div className="p-6 md:p-8 border-b border-black/[0.05] flex items-center justify-between bg-apple-gray/10">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-accent rounded-xl flex items-center justify-center text-white">
-                    <Edit3 className="w-5 h-5" />
+                    <FileUp className="w-5 h-5" />
                   </div>
-                  <h3 className="text-lg md:text-xl font-bold">Edit Profile</h3>
+                  <h3 className="text-lg md:text-xl font-bold">Upload Document</h3>
                 </div>
-                <button onClick={() => setShowEditModal(false)} className="p-2 hover:bg-apple-gray rounded-full">
+                <button onClick={() => setShowUploadModal(false)} className="p-2 hover:bg-apple-gray rounded-full">
                   <X className="w-5 h-5 text-gray-400" />
                 </button>
               </div>
-              <div className="p-6 md:p-8 space-y-6 overflow-y-auto">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Full Name</label>
-                    <input type="text" defaultValue={employee.name} className="w-full bg-apple-gray/30 border border-black/[0.05] rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-accent/20" />
+              
+              <div className="p-6 md:p-8 space-y-6">
+                <div 
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    const file = e.dataTransfer.files[0];
+                    if (file) startUpload(file);
+                  }}
+                  onClick={() => fileInputRef.current?.click()}
+                  className="border-2 border-dashed border-black/[0.05] rounded-3xl p-10 flex flex-col items-center justify-center space-y-4 bg-apple-gray/20 hover:bg-apple-gray/30 transition-all cursor-pointer group"
+                >
+                  <input 
+                    type="file" 
+                    ref={fileInputRef} 
+                    className="hidden" 
+                    onChange={handleFileUpload}
+                  />
+                  <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                    <Upload className="w-8 h-8 text-accent" />
                   </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Job Title</label>
-                    <input type="text" defaultValue={employee.role} className="w-full bg-apple-gray/30 border border-black/[0.05] rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-accent/20" />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Email Address</label>
-                    <input type="email" defaultValue={employee.email} className="w-full bg-apple-gray/30 border border-black/[0.05] rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-accent/20" />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Phone Number</label>
-                    <input type="tel" defaultValue="+1 (555) 012-3456" className="w-full bg-apple-gray/30 border border-black/[0.05] rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-accent/20" />
+                  <div className="text-center">
+                    <p className="font-bold text-space-gray">Click or drag to upload</p>
+                    <p className="text-xs text-gray-500">PDF, DOCX, JPG or PNG up to 10MB</p>
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Location</label>
-                  <input type="text" defaultValue={employee.location} className="w-full bg-apple-gray/30 border border-black/[0.05] rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-accent/20" />
-                </div>
-                <div className="flex flex-col sm:flex-row gap-3 pt-4">
-                  <button onClick={() => setShowEditModal(false)} className="w-full sm:flex-1 btn-secondary py-4">Cancel</button>
-                  <button onClick={() => { setShowEditModal(false); alert("Profile updated successfully!"); }} className="w-full sm:flex-1 btn-primary py-4">Save Changes</button>
+
+                {isUploading && (
+                  <div className="space-y-3">
+                    <div className="flex justify-between text-xs font-bold">
+                      <span className="text-gray-400 uppercase tracking-widest">Uploading...</span>
+                      <span className="text-accent">{uploadProgress}%</span>
+                    </div>
+                    <div className="w-full h-2 bg-apple-gray rounded-full overflow-hidden">
+                      <motion.div 
+                        className="h-full bg-accent"
+                        initial={{ width: 0 }}
+                        animate={{ width: `${uploadProgress}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100 flex gap-3">
+                  <ShieldCheck className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                  <p className="text-xs text-blue-700">All documents are encrypted and stored securely in compliance with data protection laws.</p>
                 </div>
               </div>
             </motion.div>
           </div>
+        )}
+      </AnimatePresence>
+
+      {/* Document Builder Modal */}
+      <AnimatePresence>
+        {showDocBuilder && (
+          <DocumentBuilder 
+            docName={showDocBuilder}
+            onClose={() => setShowDocBuilder(null)}
+            onSave={handleSaveDoc}
+          />
         )}
       </AnimatePresence>
     </div>

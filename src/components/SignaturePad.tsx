@@ -70,8 +70,11 @@ export default function SignaturePad({ onSave, onClear }: SignaturePadProps) {
 
   const stopDrawing = () => {
     setIsDrawing(false);
+  };
+
+  const handleConfirm = () => {
     const canvas = canvasRef.current;
-    if (canvas) {
+    if (canvas && !isEmpty) {
       onSave(canvas.toDataURL());
     }
   };
@@ -115,10 +118,14 @@ export default function SignaturePad({ onSave, onClear }: SignaturePadProps) {
           <RotateCcw className="w-3.5 h-3.5" />
           Clear
         </button>
-        <div className="flex items-center gap-1.5 text-[10px] font-bold text-green-600 uppercase tracking-widest">
-          <Check className="w-3 h-3" />
-          Secure E-Signature
-        </div>
+        <button 
+          onClick={handleConfirm}
+          disabled={isEmpty}
+          className="btn-primary px-6 py-2 rounded-xl text-xs flex items-center gap-2 disabled:opacity-50"
+        >
+          <Check className="w-3.5 h-3.5" />
+          Confirm Signature
+        </button>
       </div>
     </div>
   );

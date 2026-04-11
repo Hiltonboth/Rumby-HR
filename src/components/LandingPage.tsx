@@ -287,8 +287,8 @@ export default function LandingPage({ onGetStarted, onLogin, user, onGoToDashboa
             transition={{ delay: 0.1 }}
             className="text-6xl md:text-7xl font-bold tracking-tight text-space-gray max-w-4xl mx-auto leading-[1.1]"
           >
-            Struggling with HR, contracts, <br />
-            <span className="text-accent">and labour disputes?</span>
+            Your All-in-One <br />
+            <span className="text-accent">HR Platform for SMEs</span>
           </motion.h1>
           <motion.p 
             initial={{ opacity: 0, y: 20 }}

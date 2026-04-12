@@ -80,7 +80,7 @@ const MOCK_DOCS: EDoc[] = [
       { email: 'alex.rivera@example.com', status: 'Signed', signedAt: '2024-04-05 14:20', role: 'Signer' },
       { email: 'hr@rumby.hr', status: 'Signed', signedAt: '2024-04-05 15:45', role: 'Signer' }
     ],
-    content: 'This employment contract is between Rumby HR and Alex Rivera...',
+    content: 'This employment contract is between ZivoHR and Alex Rivera...',
     fields: [],
     auditTrail: [
       { action: 'Document Created', user: 'Sarah Jenkins', timestamp: '2024-04-05 09:00' },
@@ -100,7 +100,7 @@ const MOCK_DOCS: EDoc[] = [
       { email: 'j.smith@stellar.tech', status: 'Pending', role: 'Signer' },
       { email: 'legal@rumby.hr', status: 'Signed', signedAt: '2024-04-07 11:30', role: 'Signer' }
     ],
-    content: 'Non-Disclosure Agreement between Rumby HR and Stellar Tech...',
+    content: 'Non-Disclosure Agreement between ZivoHR and Stellar Tech...',
     fields: [],
     auditTrail: [
       { action: 'Document Created', user: 'Sarah Jenkins', timestamp: '2024-04-07 10:00' },
@@ -252,7 +252,7 @@ export default function ESignature() {
     pdf.setTextColor(15, 23, 42);
     pdf.setFontSize(24);
     pdf.setFont('helvetica', 'bold');
-    pdf.text('Rumby HR', 20, 25);
+    pdf.text('ZivoHR', 20, 25);
     
     pdf.setFontSize(12);
     pdf.text('Document Content:', 20, 40);
@@ -678,13 +678,13 @@ export default function ESignature() {
                     <div className="space-y-8 text-space-gray leading-relaxed">
                       <p className="font-bold text-lg">Subject: {viewingDoc.name.replace('.pdf', '')}</p>
                       <p className="text-sm">
-                        This document serves as a formal agreement between Rumby HR and the undersigned parties. 
+                        This document serves as a formal agreement between ZivoHR and the undersigned parties. 
                         The terms and conditions outlined herein are binding and effective as of the date of final signature.
                       </p>
                       <div className="space-y-4">
                         <h5 className="font-bold text-sm uppercase tracking-widest text-gray-400">1. Terms of Service</h5>
                         <p className="text-sm">
-                          The recipient agrees to the standard terms of service provided by Rumby HR. 
+                          The recipient agrees to the standard terms of service provided by ZivoHR. 
                           This includes but is not limited to data privacy, operational standards, and compliance with local Zimbabwean labor laws.
                         </p>
                       </div>

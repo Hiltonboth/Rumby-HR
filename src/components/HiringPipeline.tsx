@@ -552,7 +552,7 @@ export default function HiringPipeline() {
                   <h3 className="font-bold text-space-gray">Ranked Applicants (AI Pre-screened)</h3>
                   <div className="flex items-center gap-2 text-xs font-bold text-gray-400">
                     <Sparkles className="w-3.5 h-3.5 text-accent" />
-                    Powered by Rumby AI
+                    Powered by ZivoHR AI
                   </div>
                 </div>
                 <div className="divide-y divide-black/[0.05]">
@@ -880,7 +880,7 @@ export default function HiringPipeline() {
                 {showCoverLetterModal.isLoading ? (
                   <div className="py-12 md:py-20 flex flex-col items-center justify-center space-y-4">
                     <Loader2 className="w-10 h-10 md:w-12 md:h-12 text-accent animate-spin" />
-                    <p className="text-sm md:text-base text-gray-500 font-medium">Rumby AI is drafting the cover letter...</p>
+                    <p className="text-sm md:text-base text-gray-500 font-medium">ZivoHR AI is drafting the cover letter...</p>
                   </div>
                 ) : (
                   <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-black/[0.03] whitespace-pre-wrap font-serif text-gray-700 text-sm md:text-base leading-relaxed">
@@ -951,7 +951,7 @@ export default function HiringPipeline() {
                 <div className="p-4 md:p-6 bg-accent/5 rounded-2xl border border-accent/10 flex items-center gap-3 md:gap-4">
                   <Sparkles className="w-5 h-5 md:w-6 md:h-6 text-accent flex-shrink-0" />
                   <p className="text-[10px] md:text-xs text-accent/80 font-medium">
-                    Rumby AI will automatically pre-screen and rank applicants based on your job description and requirements.
+                    ZivoHR AI will automatically pre-screen and rank applicants based on your job description and requirements.
                   </p>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-3 md:gap-4 pt-2 md:pt-4">

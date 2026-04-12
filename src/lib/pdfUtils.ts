@@ -95,7 +95,7 @@ export const generatePayslipPDF = (
   doc.setFontSize(8);
   doc.setTextColor(150, 150, 150);
   doc.text('This is a computer-generated document and does not require a signature.', pageWidth / 2, finalY, { align: 'center' });
-  doc.text('Rumby HR - The Minimalist HR Platform for Zimbabwe', pageWidth / 2, finalY + 5, { align: 'center' });
+  doc.text('ZivoHR - The Minimalist HR Platform for Zimbabwe', pageWidth / 2, finalY + 5, { align: 'center' });
 
   doc.save(`Payslip_${employee.name.replace(/\s+/g, '_')}_${period.replace(/\s+/g, '_')}.pdf`);
 };

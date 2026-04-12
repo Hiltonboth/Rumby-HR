@@ -135,7 +135,7 @@ export default function Layout({ children, activeTab, setActiveTab, currentCompa
                 onClick={() => setActiveTab('dashboard')}
                 className="hover:text-space-gray transition-colors hidden sm:inline"
               >
-                Rumby HR
+                ZivoHR
               </button>
               <ChevronRight className="w-3 h-3 md:w-4 md:h-4 hidden sm:inline" />
               <span className="text-space-gray capitalize truncate max-w-[100px] md:max-w-none">{activeTab.replace('_', ' ')}</span>
@@ -421,7 +421,7 @@ export default function Layout({ children, activeTab, setActiveTab, currentCompa
                       <div className="flex items-center gap-3">
                         <div className="w-12 h-12 rounded-2xl bg-accent flex items-center justify-center text-white font-bold text-xl">R</div>
                         <div>
-                          <p className="font-bold text-space-gray">Rumby HR</p>
+                          <p className="font-bold text-space-gray">ZivoHR</p>
                           <p className="text-xs text-gray-500">Pro Plan • 124 Employees</p>
                         </div>
                       </div>

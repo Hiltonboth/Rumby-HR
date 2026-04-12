@@ -1,6 +1,6 @@
-# Rumby HR
+# ZivoHR
 
-Rumby HR is a modern, high-end HR management platform headquartered in Harare, Zimbabwe. It provides tools for employee management, hiring, payroll, and performance tracking.
+ZivoHR is a modern, high-end HR management platform headquartered in Harare, Zimbabwe. It provides tools for employee management, hiring, payroll, and performance tracking.
 
 ## Core Features
 
@@ -9,7 +9,7 @@ Rumby HR is a modern, high-end HR management platform headquartered in Harare, Z
 - **Onboarding**: Automated onboarding checklists and task management.
 - **Payroll**: Automated salary calculations, tax deductions, and payslip generation.
 - **Performance**: 360-degree reviews and performance tracking.
-- **AI Assistant**: "Rumby AI" - a built-in HR assistant powered by Gemini.
+- **AI Assistant**: "ZivoHR AI" - a built-in HR assistant powered by Gemini.
 
 ## Headquarters
 Harare, Zimbabwe

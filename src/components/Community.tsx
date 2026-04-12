@@ -248,7 +248,7 @@ export default function Community() {
   const [showShareModal, setShowShareModal] = useState<Post | null>(null);
 
   const handleShare = (post: Post, platform: 'whatsapp' | 'facebook' | 'copy') => {
-    const text = encodeURIComponent(`Check out this HR discussion on Rumby HR: "${post.content.slice(0, 50)}..."`);
+    const text = encodeURIComponent(`Check out this HR discussion on ZivoHR: "${post.content.slice(0, 50)}..."`);
     const url = window.location.href;
     
     if (platform === 'whatsapp') {

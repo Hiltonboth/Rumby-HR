@@ -16,6 +16,7 @@ import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { doc, getDoc, onSnapshot, updateDoc } from 'firebase/firestore';
 import { Employee, Company, UserProfile } from './types';
 import { cn } from './lib/utils';
+import { handleFirestoreError, OperationType } from './lib/firestoreErrorHandler';
 
 export default function App() {
   const [user, setUser] = useState<any>(null);
@@ -42,7 +43,13 @@ export default function App() {
       
       // Fetch user profile from Firestore 'profiles' collection
       const profileRef = doc(db, 'profiles', firebaseUser.uid);
-      const profileSnap = await getDoc(profileRef);
+      let profileSnap;
+      try {
+        profileSnap = await getDoc(profileRef);
+      } catch (error) {
+        handleFirestoreError(error, OperationType.GET, 'profiles/' + firebaseUser.uid);
+        return;
+      }
 
       if (profileSnap.exists()) {
         const profile = profileSnap.data() as UserProfile;
@@ -50,7 +57,13 @@ export default function App() {
         
         // Fetch company data
         const tenantRef = doc(db, 'tenants', profile.tenantId);
-        const tenantSnap = await getDoc(tenantRef);
+        let tenantSnap;
+        try {
+          tenantSnap = await getDoc(tenantRef);
+        } catch (error) {
+          handleFirestoreError(error, OperationType.GET, 'tenants/' + profile.tenantId);
+          return;
+        }
 
         if (tenantSnap.exists()) {
           setCurrentCompany({ id: tenantSnap.id, ...tenantSnap.data() } as Company);
@@ -123,7 +136,11 @@ export default function App() {
         // Let's assume it "succeeds" with a mock URL for now, or just updates the state.
         const mockUrl = URL.createObjectURL(file);
         const tenantRef = doc(db, 'tenants', currentCompany.id);
-        await updateDoc(tenantRef, { logo: mockUrl });
+        try {
+          await updateDoc(tenantRef, { logo: mockUrl });
+        } catch (error) {
+          handleFirestoreError(error, OperationType.UPDATE, 'tenants/' + currentCompany.id);
+        }
         setCurrentCompany(prev => prev ? { ...prev, logo: mockUrl } : null);
       } catch (error) {
         console.error("Error uploading logo:", error);
@@ -296,7 +313,11 @@ export default function App() {
                                 onClick={async () => {
                                   try {
                                     const tenantRef = doc(db, 'tenants', currentCompany.id);
-                                    await updateDoc(tenantRef, { accentColor: color });
+                                    try {
+                                      await updateDoc(tenantRef, { accentColor: color });
+                                    } catch (error) {
+                                      handleFirestoreError(error, OperationType.UPDATE, 'tenants/' + currentCompany.id);
+                                    }
                                     setCurrentCompany(prev => prev ? { ...prev, accentColor: color } : null);
                                   } catch (error) {
                                     console.error("Error updating accent color:", error);
@@ -408,7 +429,7 @@ export default function App() {
         <Layout 
           activeTab={activeTab} 
           setActiveTab={navigateTo}
-          currentCompany={currentCompany || { id: 'temp', name: 'Rumby HR', logo: 'R', accentColor: '#007AFF', plan: 'Pro', employeeCount: 0, status: 'Active', ownerUid: '' }}
+          currentCompany={currentCompany || { id: 'temp', name: 'ZivoHR', logo: 'Z', accentColor: '#007AFF', plan: 'Pro', employeeCount: 0, status: 'Active', ownerUid: '' }}
           userProfile={userProfile}
           onBack={viewHistory.length > 1 || selectedEmployee ? goBack : undefined}
           onGoHome={() => setView('landing')}

@@ -8,7 +8,7 @@ const STORIES = [
     id: 1,
     name: "Farai Mutasa",
     role: "Founder, ZimTech Solutions",
-    content: "Rumby HR transformed how we handle our growing team. The automated payroll and localized contracts saved us weeks of legal headaches. It's not just software; it's a partner in our growth.",
+    content: "ZivoHR transformed how we handle our growing team. The automated payroll and localized contracts saved us weeks of legal headaches. It's not just software; it's a partner in our growth.",
     image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&h=200&auto=format&fit=crop",
     rating: 5
   },
@@ -24,7 +24,7 @@ const STORIES = [
     id: 3,
     name: "Tendai Moyo",
     role: "Operations Manager, BuildIt SME",
-    content: "We used to struggle with labor disputes. Since using Rumby's AI HR Manager, we've resolved issues before they even started. The community forum is also a great place to share insights with other SME owners.",
+    content: "We used to struggle with labor disputes. Since using ZivoHR's AI HR Manager, we've resolved issues before they even started. The community forum is also a great place to share insights with other SME owners.",
     image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=200&h=200&auto=format&fit=crop",
     rating: 5
   }
@@ -65,7 +65,7 @@ export default function SuccessStories() {
             transition={{ delay: 0.2 }}
             className="text-gray-400 text-lg max-w-xl"
           >
-            Join hundreds of SMEs who have streamlined their operations and empowered their people with Rumby HR.
+            Join hundreds of SMEs who have streamlined their operations and empowered their people with ZivoHR.
           </motion.p>
         </div>
 

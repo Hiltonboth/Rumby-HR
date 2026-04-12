@@ -11,6 +11,7 @@ import {
 } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { cn } from '../lib/utils';
+import { handleFirestoreError, OperationType } from '../lib/firestoreErrorHandler';
 
 interface LoginPageProps {
   isSignup?: boolean;
@@ -68,7 +69,11 @@ export default function LoginPage({ isSignup: initialIsSignup = false, onSuccess
           employeeCount: 1
         };
 
-        await setDoc(doc(db, 'tenants', tenantId), tenantData);
+        try {
+          await setDoc(doc(db, 'tenants', tenantId), tenantData);
+        } catch (error) {
+          handleFirestoreError(error, OperationType.WRITE, 'tenants/' + tenantId);
+        }
 
         // 3. Create User Profile
         const profileData = {
@@ -79,7 +84,11 @@ export default function LoginPage({ isSignup: initialIsSignup = false, onSuccess
           fullName: fullName
         };
 
-        await setDoc(doc(db, 'profiles', firebaseUser.uid), profileData);
+        try {
+          await setDoc(doc(db, 'profiles', firebaseUser.uid), profileData);
+        } catch (error) {
+          handleFirestoreError(error, OperationType.WRITE, 'profiles/' + firebaseUser.uid);
+        }
 
       } else {
         await signInWithEmailAndPassword(auth, email, password);
@@ -129,10 +138,10 @@ export default function LoginPage({ isSignup: initialIsSignup = false, onSuccess
         className="w-full max-w-md space-y-8"
       >
         <div className="text-center space-y-2">
-          <div className="w-12 h-12 bg-accent rounded-2xl flex items-center justify-center text-white font-bold text-2xl mx-auto shadow-lg">R</div>
+          <div className="w-12 h-12 bg-accent rounded-2xl flex items-center justify-center text-white font-bold text-2xl mx-auto shadow-lg">Z</div>
           <h1 className="text-3xl font-bold tracking-tight">{isSignup ? 'Create your workspace' : 'Welcome back'}</h1>
           <p className="text-gray-500">
-            {isSignup ? 'Start your 14-day free trial today.' : 'Enter your credentials to access Rumby HR.'}
+            {isSignup ? 'Start your 14-day free trial today.' : 'Enter your credentials to access ZivoHR.'}
           </p>
         </div>
 

@@ -596,7 +596,7 @@ export default function EmployeeProfile({ employee, onBack }: EmployeeProfilePro
                   <Building className="w-5 h-5" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-space-gray">Rumby HR</p>
+                  <p className="text-sm font-bold text-space-gray">ZivoHR</p>
                   <p className="text-xs text-gray-500">2 years 4 months</p>
                 </div>
               </div>

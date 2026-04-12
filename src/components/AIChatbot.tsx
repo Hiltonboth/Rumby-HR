@@ -18,9 +18,10 @@ interface Message {
 
 export default function AIChatbot() {
   const [isOpen, setIsOpen] = useState(false);
+  const [isActionsOpen, setIsActionsOpen] = useState(false);
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<Message[]>([
-    { role: 'assistant', content: "Hello! I'm Your AI HR Manager. I'm here to help you with Zimbabwean labour laws, contracts, payroll, and any HR challenges your SME might face. How can I assist you today?" }
+    { role: 'assistant', content: "Hello! I'm ZivoHR AI. I'm here to help you with Zimbabwean labour laws, contracts, payroll, and any HR challenges your SME might face. How can I assist you today?" }
   ]);
   const [isLoading, setIsLoading] = useState(false);
   const [isScrolling, setIsScrolling] = useState(false);
@@ -48,13 +49,11 @@ export default function AIChatbot() {
     try {
       const apiKey = process.env.GEMINI_API_KEY;
       if (!apiKey) {
-        throw new Error('GEMINI_API_KEY is missing. Please add it to your Vercel environment variables.');
+        throw new Error('GEMINI_API_KEY is missing. Please add it to your environment variables.');
       }
 
       const ai = new GoogleGenAI({ apiKey });
       
-      // Filter out the initial assistant greeting from the history sent to the API
-      // as the API expects the conversation to start with a user message.
       const conversationHistory = messages.slice(1).map(m => ({
         role: m.role === 'assistant' ? 'model' : 'user',
         parts: [{ text: m.content }]
@@ -64,7 +63,7 @@ export default function AIChatbot() {
         model: "gemini-3-flash-preview",
         contents: [...conversationHistory, { role: 'user', parts: [{ text: userMessage }] }],
         config: {
-          systemInstruction: "You are 'Your AI HR Manager', an elite AI HR assistant for Rumby HR, a platform built for SMEs in Zimbabwe and Africa. You are an expert in the Zimbabwean Labour Act, NEC regulations, and local compliance (NSSA, PAYE, ZIMDEF). You are professional, helpful, and concise. You help with employee records, hiring, performance, and company policies. Always maintain a refined, Apple-style tone. If asked about specific laws, reference the Zimbabwean Labour Act where applicable.",
+          systemInstruction: "You are 'ZivoHR AI', an elite AI HR assistant for ZivoHR, a platform built for SMEs in Zimbabwe and Africa. You are an expert in the Zimbabwean Labour Act, NEC regulations, and local compliance (NSSA, PAYE, ZIMDEF). You are professional, helpful, and concise. You help with employee records, hiring, performance, and company policies. Always maintain a refined, Apple-style tone. If asked about specific laws, reference the Zimbabwean Labour Act where applicable.",
         }
       });
 
@@ -80,61 +79,74 @@ export default function AIChatbot() {
 
   const getWhatsAppMessage = () => {
     const path = window.location.hash || 'home';
-    return encodeURIComponent(`Hi! I'm looking at the ${path} section of Rumby HR and would like to chat with a human.`);
+    return encodeURIComponent(`Hi! I'm looking at the ${path} section of ZivoHR and would like to chat with a human.`);
   };
 
   return (
     <>
-      {/* Floating Actions Container */}
-      <motion.div 
-        animate={{ 
-          scale: isScrolling ? 0.85 : 1,
-          opacity: isScrolling ? 0.7 : 1,
-          y: isScrolling ? 10 : 0
-        }}
-        className="fixed bottom-8 right-8 flex flex-col items-end gap-3 z-[100] transition-all duration-300"
-      >
-        {/* WhatsApp Button */}
-        <a
-          href={`https://wa.me/1234567890?text=${getWhatsAppMessage()}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="w-12 h-12 bg-[#25D366] text-white rounded-full shadow-xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all group relative"
-        >
-          <WhatsAppIcon className="w-6 h-6" />
-          <span className="absolute right-14 top-1/2 -translate-y-1/2 bg-black/80 backdrop-blur-md text-white text-[10px] font-bold px-3 py-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-            Chat with us
-          </span>
-        </a>
+      {/* Consolidated Floating Actions */}
+      <div className="fixed bottom-8 right-8 z-[100] flex flex-col items-end gap-3">
+        <AnimatePresence>
+          {isActionsOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: 20, scale: 0.8 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 20, scale: 0.8 }}
+              className="flex flex-col items-end gap-3 mb-2"
+            >
+              {/* WhatsApp Button */}
+              <motion.a
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                href={`https://wa.me/1234567890?text=${getWhatsAppMessage()}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 bg-white border border-black/[0.05] shadow-xl rounded-2xl px-4 py-3 group hover:bg-apple-gray transition-all"
+              >
+                <span className="text-xs font-bold text-space-gray">Chat with Support</span>
+                <div className="w-10 h-10 bg-[#25D366] text-white rounded-xl flex items-center justify-center shadow-lg shadow-green-500/20">
+                  <WhatsAppIcon className="w-5 h-5" />
+                </div>
+              </motion.a>
 
-        {/* AI Search Bar Style Toggle */}
-        <div 
+              {/* AI Assistant Button */}
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => {
+                  setIsOpen(true);
+                  setIsActionsOpen(false);
+                }}
+                className="flex items-center gap-3 bg-white border border-black/[0.05] shadow-xl rounded-2xl px-4 py-3 group hover:bg-apple-gray transition-all"
+              >
+                <span className="text-xs font-bold text-space-gray">Ask ZivoHR AI</span>
+                <div className="w-10 h-10 bg-gradient-to-tr from-[#4285F4] via-[#9171E5] to-[#F06292] text-white rounded-xl flex items-center justify-center shadow-lg shadow-purple-500/20">
+                  <Sparkles className="w-5 h-5" />
+                </div>
+              </motion.button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Main Toggle Button */}
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => setIsActionsOpen(!isActionsOpen)}
           className={cn(
-            "flex items-center bg-white/80 backdrop-blur-xl border border-black/[0.05] shadow-2xl rounded-full transition-all duration-500 overflow-hidden",
-            isScrolling ? "w-12 h-12" : "w-64 h-12 px-1"
+            "w-14 h-14 rounded-2xl shadow-2xl flex items-center justify-center transition-all duration-500",
+            isActionsOpen ? "bg-space-gray text-white rotate-90" : "bg-accent text-white"
           )}
         >
-          {!isScrolling && (
-            <div 
-              onClick={() => setIsOpen(true)}
-              className="flex-1 flex items-center gap-2 px-3 cursor-text group"
-            >
-              <Search className="w-4 h-4 text-gray-400 group-hover:text-accent transition-colors" />
-              <span className="text-sm text-gray-400 font-medium select-none">Ask Your AI HR Manager...</span>
+          {isActionsOpen ? <X className="w-6 h-6" /> : (
+            <div className="flex flex-col items-center gap-0.5">
+              <div className="w-1.5 h-1.5 bg-white rounded-full" />
+              <div className="w-1.5 h-1.5 bg-white rounded-full" />
+              <div className="w-1.5 h-1.5 bg-white rounded-full" />
             </div>
           )}
-
-          <button
-            onClick={() => setIsOpen(!isOpen)}
-            className={cn(
-              "w-10 h-10 rounded-full flex items-center justify-center transition-all shrink-0",
-              "bg-gradient-to-tr from-[#4285F4] via-[#9171E5] to-[#F06292] text-white"
-            )}
-          >
-            {isOpen ? <X className="w-5 h-5" /> : <Sparkles className="w-5 h-5" />}
-          </button>
-        </div>
-      </motion.div>
+        </motion.button>
+      </div>
 
       {/* Chat Window */}
       <AnimatePresence>
@@ -143,7 +155,7 @@ export default function AIChatbot() {
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="fixed inset-0 sm:inset-auto sm:bottom-24 sm:right-8 w-full sm:w-[400px] h-full sm:h-[600px] bg-white/95 backdrop-blur-2xl sm:rounded-[2.5rem] shadow-2xl border-t sm:border border-black/[0.05] flex flex-col overflow-hidden z-[100]"
+            className="fixed inset-0 sm:inset-auto sm:bottom-24 sm:right-8 w-full sm:w-[400px] h-full sm:h-[600px] bg-white/95 backdrop-blur-2xl sm:rounded-[2.5rem] shadow-2xl border-t sm:border border-black/[0.05] flex flex-col overflow-hidden z-[110]"
           >
             {/* Header */}
             <div className="p-4 sm:p-6 border-b border-black/[0.03] flex items-center justify-between bg-apple-gray/30">
@@ -152,7 +164,7 @@ export default function AIChatbot() {
                   <Bot className="w-6 h-6" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-space-gray">Your AI HR Manager</h3>
+                  <h3 className="text-base font-bold text-space-gray">ZivoHR AI</h3>
                   <p className="text-[10px] text-green-500 font-bold uppercase tracking-widest flex items-center gap-1">
                     <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
                     Online • HQ: Harare
@@ -229,7 +241,7 @@ export default function AIChatbot() {
                   <button className="hover:text-space-gray transition-colors p-1"><Paperclip className="w-5 h-5" /></button>
                   <button className="hover:text-space-gray transition-colors p-1"><Mic className="w-5 h-5" /></button>
                 </div>
-                <p className="text-[10px] text-gray-400 font-medium">Powered by Rumby AI</p>
+                <p className="text-[10px] text-gray-400 font-medium">Powered by ZivoHR AI</p>
               </div>
             </div>
           </motion.div>

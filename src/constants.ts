@@ -51,8 +51,8 @@ export const MOCK_EMPLOYEES: Employee[] = [
 export const MOCK_COMPANIES: Company[] = [
   {
     id: 'c1',
-    name: "Rumby's",
-    logo: 'R',
+    name: "ZivoHR",
+    logo: 'Z',
     accentColor: '#007AFF',
     plan: 'Enterprise',
     employeeCount: 124,

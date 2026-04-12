@@ -20,6 +20,7 @@ import {
 import { cn } from '../lib/utils';
 import { auth, db } from '../firebase';
 import { doc, getDoc } from 'firebase/firestore';
+import { handleFirestoreError, OperationType } from '../lib/firestoreErrorHandler';
 
 interface OnboardingWizardProps {
   userId: string;
@@ -125,11 +126,17 @@ export default function OnboardingWizard({ userId, onComplete, onCancel }: Onboa
     // Fetch welcome message or user info if needed
     const fetchUserInfo = async () => {
       const profileRef = doc(db, 'profiles', userId);
-      const profileSnap = await getDoc(profileRef);
+      let profileSnap;
+      try {
+        profileSnap = await getDoc(profileRef);
+      } catch (error) {
+        handleFirestoreError(error, OperationType.GET, 'profiles/' + userId);
+        return;
+      }
       
       if (profileSnap.exists()) {
         const data = profileSnap.data();
-        setWelcomeMessage(`Welcome to the team, ${data.fullName}! We're thrilled to have you on board. This wizard will guide you through your first steps at Rumby HR.`);
+        setWelcomeMessage(`Welcome to the team, ${data.fullName}! We're thrilled to have you on board. This wizard will guide you through your first steps at ZivoHR.`);
       }
     };
     fetchUserInfo();

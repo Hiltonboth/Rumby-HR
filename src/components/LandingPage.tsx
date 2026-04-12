@@ -76,6 +76,20 @@ export default function LandingPage({ onGetStarted, onLogin, user, onGoToDashboa
     setIsMobileMenuOpen(false);
   };
 
+  const handleGetStarted = () => {
+    if (user) {
+      // If there was a checkout tab, we'd go there. 
+      // For now, let's assume onGetStarted handles the routing to checkout if logged in.
+      onGetStarted();
+    } else {
+      onLogin();
+    }
+  };
+
+  const handleTalkToSales = () => {
+    window.open('https://wa.me/263772240081?text=Hi!%20I%20want%20to%20talk%20to%20sales%20about%20ZivoHR.', '_blank');
+  };
+
   return (
     <div className="min-h-screen bg-white text-space-gray overflow-x-hidden">
       {/* Navigation */}
@@ -314,16 +328,16 @@ export default function LandingPage({ onGetStarted, onLogin, user, onGoToDashboa
             transition={{ delay: 0.3 }}
             className="flex items-center justify-center gap-4 pt-4"
           >
-            <button onClick={onGetStarted} className="btn-primary px-8 py-4 text-lg">Start Free Trial</button>
-            <button className="btn-secondary px-8 py-4 text-lg flex items-center gap-2">
-              Watch Demo
+            <button onClick={handleGetStarted} className="btn-primary px-8 py-4 text-lg">Start Free Trial</button>
+            <button onClick={handleTalkToSales} className="btn-secondary px-8 py-4 text-lg flex items-center gap-2">
+              Talk to Sales
               <ChevronRight className="w-5 h-5" />
             </button>
           </motion.div>
         </div>
       </section>
 
-      {/* Feature Sections - Tabbed Interface */}
+      {/* Features Section - Tabbed Interface */}
       <div className="px-6 pb-32">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12 space-y-4">
@@ -813,41 +827,99 @@ export default function LandingPage({ onGetStarted, onLogin, user, onGoToDashboa
         </div>
       </section>
 
-      {/* Testimonials Section */}
-      <section className="relative py-12 overflow-hidden">
-        {/* Top-notch blue background with Firebase colors integration */}
-        <div className="absolute inset-0 bg-[#0A192F]" />
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#FFCA28] via-[#F44336] to-[#FFCA28]" />
-        <div className="absolute -top-24 -left-24 w-96 h-96 bg-[#F44336]/10 rounded-full blur-[100px]" />
-        <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-[#FFCA28]/10 rounded-full blur-[100px]" />
-        
-        <div className="container mx-auto px-6 relative z-10">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* Trust & Credibility: Client Logos */}
+      <section className="py-20 border-t border-black/[0.03] bg-white">
+        <div className="max-w-7xl mx-auto px-6">
+          <p className="text-center text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-12">Trusted by leading African organizations</p>
+          <div className="flex flex-wrap justify-center items-center gap-12 md:gap-20">
             {[
-              {
-                quote: "ZivoHR transformed our recruitment. We found the right talent in half the time.",
-                author: "Tinashe M.",
-                role: "CEO, TechZim"
-              },
-              {
-                quote: "The compliance tools are a lifesaver. No more worrying about the Labour Act updates.",
-                author: "Farai G.",
-                role: "HR Manager, Delta Corp"
-              },
-              {
-                quote: "Finally, an HR platform that understands the Zimbabwean business landscape.",
-                author: "Nyasha C.",
-                role: "Founder, ZimSME"
-              }
-            ].map((t, i) => (
-              <div key={i} className="p-6 bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl">
-                <p className="text-white/80 italic mb-4 text-sm">"{t.quote}"</p>
-                <div>
-                  <p className="text-white font-bold text-sm">{t.author}</p>
-                  <p className="text-[#FFCA28] text-[10px] font-bold uppercase tracking-widest">{t.role}</p>
+              { name: 'EcoCash', color: 'text-blue-600' },
+              { name: 'Delta', color: 'text-red-600' },
+              { name: 'Old Mutual', color: 'text-green-700' },
+              { name: 'CBZ Bank', color: 'text-blue-800' },
+              { name: 'Simbisa', color: 'text-orange-600' }
+            ].map((company) => (
+              <div key={company.name} className="flex items-center gap-3 group cursor-pointer">
+                <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center text-white font-black text-sm shadow-lg group-hover:scale-110 transition-all", company.color.replace('text-', 'bg-'))}>
+                  {company.name[0]}
                 </div>
+                <span className={cn("text-xl font-bold tracking-tighter transition-colors", company.color)}>{company.name}</span>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Trust & Credibility: Testimonials & Case Studies */}
+      <section className="py-32 px-6 bg-apple-gray/10">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid lg:grid-cols-2 gap-20 items-start">
+            {/* Testimonials */}
+            <div className="space-y-12">
+              <div className="space-y-4">
+                <h2 className="text-4xl font-bold tracking-tight">Loved by HR Teams</h2>
+                <p className="text-xl text-gray-500">See why companies are switching to ZivoHR.</p>
+              </div>
+              
+              <div className="space-y-8">
+                {[
+                  {
+                    quote: "ZivoHR has completely transformed how we manage our payroll. What used to take days now takes minutes.",
+                    author: "Sarah Moyo",
+                    role: "HR Manager, TechZim",
+                    avatar: "https://picsum.photos/seed/sarah/100/100"
+                  },
+                  {
+                    quote: "The WhatsApp integration is a game-changer for our field staff. They can now access their payslips instantly.",
+                    author: "John Dube",
+                    role: "Operations Director, AgriGrow",
+                    avatar: "https://picsum.photos/seed/john/100/100"
+                  }
+                ].map((testimonial, i) => (
+                  <motion.div 
+                    key={i}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    className="p-8 rounded-[2rem] bg-white border border-black/[0.05] shadow-sm space-y-6 hover:shadow-xl transition-all"
+                  >
+                    <div className="flex gap-1">
+                      {[1, 2, 3, 4, 5].map(star => <Star key={star} className="w-4 h-4 fill-accent text-accent" />)}
+                    </div>
+                    <p className="text-lg font-medium text-space-gray leading-relaxed italic">"{testimonial.quote}"</p>
+                    <div className="flex items-center gap-4">
+                      <img src={testimonial.avatar} alt={testimonial.author} className="w-12 h-12 rounded-full object-cover" referrerPolicy="no-referrer" />
+                      <div>
+                        <p className="font-bold text-space-gray">{testimonial.author}</p>
+                        <p className="text-xs text-gray-500">{testimonial.role}</p>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+
+            {/* Case Studies */}
+            <div className="space-y-12">
+              <div className="space-y-4">
+                <h2 className="text-4xl font-bold tracking-tight text-right">Real Results</h2>
+                <p className="text-xl text-gray-500 text-right">How we help businesses scale efficiently.</p>
+              </div>
+
+              <div className="space-y-6">
+                <SuccessStories />
+                <div className="p-10 rounded-[3rem] bg-accent text-white space-y-6 relative overflow-hidden shadow-2xl shadow-accent/20">
+                  <div className="relative z-10 space-y-6">
+                    <h3 className="text-3xl font-bold leading-tight">Ready to write your <br /> success story?</h3>
+                    <p className="text-white/80 text-lg">Join 500+ companies managing their workforce with ZivoHR.</p>
+                    <button onClick={handleGetStarted} className="bg-white text-accent px-8 py-4 rounded-2xl font-bold text-lg hover:scale-105 transition-all shadow-xl">
+                      Get Started Now
+                    </button>
+                  </div>
+                  <Sparkles className="absolute -top-4 -right-4 w-32 h-32 text-white/10" />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>

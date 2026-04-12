@@ -77,8 +77,8 @@ export default function DocumentBuilder({ docName, onClose, onSave }: DocumentBu
       id: `field-${Date.now()}`,
       type,
       label,
-      x: 50,
-      y: 50,
+      x: 40 + (fields.length * 2), // Stagger initial positions
+      y: 40 + (fields.length * 2),
       signerEmail: signers[0].email
     };
     setFields([...fields, newField]);
@@ -222,19 +222,30 @@ export default function DocumentBuilder({ docName, onClose, onSave }: DocumentBu
                 ) : (
                   <div className="space-y-2">
                     {fields.map((field) => (
-                      <div key={field.id} className="flex items-center justify-between p-3 bg-white border border-black/[0.05] rounded-xl">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-accent/5 rounded-lg flex items-center justify-center text-accent">
-                            <PenTool className="w-4 h-4" />
-                          </div>
-                          <div>
+                      <div key={field.id} className="p-3 bg-white border border-black/[0.05] rounded-xl space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 bg-accent/5 rounded-lg flex items-center justify-center text-accent">
+                              <PenTool className="w-4 h-4" />
+                            </div>
                             <p className="text-xs font-bold text-space-gray">{field.label}</p>
-                            <p className="text-[10px] text-gray-500">Signer: {field.signerEmail.split('@')[0]}</p>
                           </div>
+                          <button onClick={() => setFields(fields.filter(f => f.id !== field.id))} className="p-1.5 hover:bg-red-50 text-gray-300 hover:text-red-500 rounded-lg">
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
                         </div>
-                        <button onClick={() => setFields(fields.filter(f => f.id !== field.id))} className="p-1.5 hover:bg-red-50 text-gray-300 hover:text-red-500 rounded-lg">
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                        <div className="space-y-1">
+                          <label className="text-[8px] font-black text-gray-400 uppercase px-1">Assigned To</label>
+                          <select 
+                            value={field.signerEmail}
+                            onChange={(e) => setFields(fields.map(f => f.id === field.id ? { ...f, signerEmail: e.target.value } : f))}
+                            className="w-full bg-apple-gray border-none rounded-lg px-3 py-2 text-[10px] font-bold outline-none focus:ring-1 focus:ring-accent/20"
+                          >
+                            {signers.map(s => (
+                              <option key={s.email} value={s.email}>{s.email}</option>
+                            ))}
+                          </select>
+                        </div>
                       </div>
                     ))}
                   </div>

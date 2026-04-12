@@ -82,10 +82,17 @@ export default function AIChatbot() {
     return encodeURIComponent(`Hi! I'm looking at the ${path} section of ZivoHR and would like to chat with a human.`);
   };
 
+  const { scrollYProgress } = useScroll();
+  const scale = useTransform(scrollYProgress, [0, 0.1], [1, 0.8]);
+  const opacity = useTransform(scrollYProgress, [0, 0.1], [1, 0.9]);
+
   return (
     <>
       {/* Consolidated Floating Actions */}
-      <div className="fixed bottom-8 right-8 z-[100] flex flex-col items-end gap-3">
+      <motion.div 
+        style={{ scale, opacity }}
+        className="fixed bottom-8 right-8 z-[100] flex flex-col items-end gap-3"
+      >
         <AnimatePresence>
           {isActionsOpen && (
             <motion.div
@@ -96,14 +103,14 @@ export default function AIChatbot() {
             >
               {/* WhatsApp Button */}
               <motion.a
-                whileHover={{ scale: 1.05 }}
+                whileHover={{ scale: 1.05, x: -5 }}
                 whileTap={{ scale: 0.95 }}
-                href={`https://wa.me/1234567890?text=${getWhatsAppMessage()}`}
+                href={`https://wa.me/263772240081?text=${getWhatsAppMessage()}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-3 bg-white border border-black/[0.05] shadow-xl rounded-2xl px-4 py-3 group hover:bg-apple-gray transition-all"
+                className="flex items-center gap-3 bg-white border border-black/[0.05] shadow-2xl rounded-2xl px-4 py-3 group hover:bg-apple-gray transition-all"
               >
-                <span className="text-xs font-bold text-space-gray">Chat with Support</span>
+                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Support</span>
                 <div className="w-10 h-10 bg-[#25D366] text-white rounded-xl flex items-center justify-center shadow-lg shadow-green-500/20">
                   <WhatsAppIcon className="w-5 h-5" />
                 </div>
@@ -111,15 +118,15 @@ export default function AIChatbot() {
 
               {/* AI Assistant Button */}
               <motion.button
-                whileHover={{ scale: 1.05 }}
+                whileHover={{ scale: 1.05, x: -5 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => {
                   setIsOpen(true);
                   setIsActionsOpen(false);
                 }}
-                className="flex items-center gap-3 bg-white border border-black/[0.05] shadow-xl rounded-2xl px-4 py-3 group hover:bg-apple-gray transition-all"
+                className="flex items-center gap-3 bg-white border border-black/[0.05] shadow-2xl rounded-2xl px-4 py-3 group hover:bg-apple-gray transition-all"
               >
-                <span className="text-xs font-bold text-space-gray">Ask ZivoHR AI</span>
+                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">ZivoHR AI</span>
                 <div className="w-10 h-10 bg-gradient-to-tr from-[#4285F4] via-[#9171E5] to-[#F06292] text-white rounded-xl flex items-center justify-center shadow-lg shadow-purple-500/20">
                   <Sparkles className="w-5 h-5" />
                 </div>
@@ -130,23 +137,23 @@ export default function AIChatbot() {
 
         {/* Main Toggle Button */}
         <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
           onClick={() => setIsActionsOpen(!isActionsOpen)}
           className={cn(
-            "w-14 h-14 rounded-2xl shadow-2xl flex items-center justify-center transition-all duration-500",
+            "w-12 h-12 rounded-2xl shadow-2xl flex items-center justify-center transition-all duration-500 border border-white/20",
             isActionsOpen ? "bg-space-gray text-white rotate-90" : "bg-accent text-white"
           )}
         >
-          {isActionsOpen ? <X className="w-6 h-6" /> : (
+          {isActionsOpen ? <X className="w-5 h-5" /> : (
             <div className="flex flex-col items-center gap-0.5">
-              <div className="w-1.5 h-1.5 bg-white rounded-full" />
-              <div className="w-1.5 h-1.5 bg-white rounded-full" />
-              <div className="w-1.5 h-1.5 bg-white rounded-full" />
+              <div className="w-1 h-1 bg-white rounded-full" />
+              <div className="w-1 h-1 bg-white rounded-full" />
+              <div className="w-1 h-1 bg-white rounded-full" />
             </div>
           )}
         </motion.button>
-      </div>
+      </motion.div>
 
       {/* Chat Window */}
       <AnimatePresence>

@@ -311,13 +311,52 @@ export default function ESignature() {
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-space-gray">E-Signatures</h2>
           <p className="text-gray-500 text-sm md:text-base">Securely sign documents and request signatures from others.</p>
         </div>
-        <button 
-          onClick={() => setShowUploadModal(true)}
-          className="btn-primary px-6 py-3 md:py-4 flex items-center justify-center gap-2 w-full md:w-auto"
-        >
-          <Upload className="w-5 h-5" />
-          Upload Document
-        </button>
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => setShowUploadModal(true)}
+            className="btn-primary px-6 py-3 md:py-4 flex items-center justify-center gap-2 w-full md:w-auto"
+          >
+            <Upload className="w-5 h-5" />
+            Upload Document
+          </button>
+        </div>
+      </div>
+
+      {/* Quick Upload Section */}
+      <div className="bg-accent/5 border border-accent/10 rounded-[2.5rem] p-8 md:p-12">
+        <div className="grid md:grid-cols-2 gap-8 items-center">
+          <div className="space-y-4">
+            <h3 className="text-2xl font-bold text-space-gray">Upload New Document</h3>
+            <p className="text-gray-500">Quickly upload a PDF or DOCX file to start the e-signature process.</p>
+            <div className="flex items-center gap-4">
+              <button 
+                onClick={() => fileInputRef.current?.click()}
+                className="btn-secondary px-6 py-3 flex items-center gap-2"
+              >
+                <Plus className="w-5 h-5" />
+                Select File
+              </button>
+              {newDocName && (
+                <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-black/[0.05] shadow-sm">
+                  <FileText className="w-4 h-4 text-accent" />
+                  <span className="text-sm font-bold text-space-gray truncate max-w-[150px]">{newDocName}</span>
+                  <button onClick={() => setNewDocName('')} className="p-1 hover:bg-red-50 text-red-400 rounded-lg">
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+          <div className="flex justify-end">
+            <button 
+              onClick={handleUpload}
+              disabled={!newDocName}
+              className="btn-primary px-10 py-4 shadow-xl shadow-accent/20 disabled:opacity-50 disabled:shadow-none"
+            >
+              Confirm & Start Building
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Stats & Filters */}
@@ -758,15 +797,22 @@ export default function ESignature() {
 
                   <div className="space-y-4">
                     <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Audit Trail</h4>
-                    <div className="space-y-6 relative before:absolute before:left-2 before:top-2 before:bottom-2 before:w-[1px] before:bg-black/[0.05]">
+                    <div className="space-y-4 relative before:absolute before:left-2 before:top-2 before:bottom-2 before:w-[1px] before:bg-black/[0.05]">
                       {viewingDoc.auditTrail.map((entry, i) => (
-                        <div key={i} className="relative pl-8">
-                          <div className="absolute left-0 top-1 w-4 h-4 rounded-full bg-white border-2 border-accent flex items-center justify-center">
+                        <div key={i} className="relative pl-8 group">
+                          <div className="absolute left-0 top-1 w-4 h-4 rounded-full bg-white border-2 border-accent flex items-center justify-center group-hover:scale-110 transition-transform">
                             <div className="w-1.5 h-1.5 bg-accent rounded-full" />
                           </div>
-                          <div>
+                          <div className="bg-apple-gray/30 p-3 rounded-2xl border border-black/[0.02] group-hover:bg-apple-gray/50 transition-colors">
                             <p className="text-xs font-bold text-space-gray">{entry.action}</p>
-                            <p className="text-[10px] text-gray-500">{entry.user} • {entry.timestamp}</p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <p className="text-[10px] text-gray-500 font-medium">{entry.user}</p>
+                              <span className="text-[10px] text-gray-300">•</span>
+                              <p className="text-[10px] text-gray-400">{entry.timestamp}</p>
+                            </div>
+                            {entry.ip && (
+                              <p className="text-[8px] text-gray-300 mt-1 font-mono uppercase tracking-widest">IP: {entry.ip}</p>
+                            )}
                           </div>
                         </div>
                       ))}

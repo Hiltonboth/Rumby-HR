@@ -326,10 +326,10 @@ export default function LandingPage({ onGetStarted, onLogin, user, onGoToDashboa
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="flex items-center justify-center gap-4 pt-4"
+            className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4"
           >
-            <button onClick={handleGetStarted} className="btn-primary px-8 py-4 text-lg">Start Free Trial</button>
-            <button onClick={handleTalkToSales} className="btn-secondary px-8 py-4 text-lg flex items-center gap-2">
+            <button onClick={handleGetStarted} className="w-full sm:w-auto btn-primary px-8 py-4 text-lg">Start Free Trial</button>
+            <button onClick={handleTalkToSales} className="w-full sm:w-auto btn-secondary px-8 py-4 text-lg flex items-center justify-center gap-2">
               Talk to Sales
               <ChevronRight className="w-5 h-5" />
             </button>
@@ -346,13 +346,13 @@ export default function LandingPage({ onGetStarted, onLogin, user, onGoToDashboa
           </div>
 
           {/* Tabs Navigation */}
-          <div className="flex flex-wrap justify-center gap-2 mb-16 bg-apple-gray/30 p-2 rounded-[2rem] w-fit mx-auto">
+          <div className="flex flex-wrap justify-center gap-2 mb-16 bg-apple-gray/30 p-2 rounded-[2rem] w-full max-w-4xl mx-auto">
             {featureTabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveFeatureTab(tab.id)}
                 className={cn(
-                  "flex items-center gap-2 px-6 py-3 rounded-2xl text-sm font-bold transition-all",
+                  "flex items-center gap-2 px-4 md:px-6 py-3 rounded-2xl text-xs md:text-sm font-bold transition-all",
                   activeFeatureTab === tab.id 
                     ? "bg-white text-accent shadow-lg shadow-accent/5 scale-105" 
                     : "text-gray-500 hover:text-space-gray hover:bg-white/50"
@@ -850,76 +850,26 @@ export default function LandingPage({ onGetStarted, onLogin, user, onGoToDashboa
         </div>
       </section>
 
-      {/* Trust & Credibility: Testimonials & Case Studies */}
-      <section className="py-32 px-6 bg-apple-gray/10">
+      {/* Testimonials Section */}
+      <SuccessStories />
+
+      {/* Final CTA Section */}
+      <section className="py-20 px-6 bg-apple-gray/10">
         <div className="max-w-7xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-20 items-start">
-            {/* Testimonials */}
-            <div className="space-y-12">
-              <div className="space-y-4">
-                <h2 className="text-4xl font-bold tracking-tight">Loved by HR Teams</h2>
-                <p className="text-xl text-gray-500">See why companies are switching to ZivoHR.</p>
-              </div>
-              
-              <div className="space-y-8">
-                {[
-                  {
-                    quote: "ZivoHR has completely transformed how we manage our payroll. What used to take days now takes minutes.",
-                    author: "Sarah Moyo",
-                    role: "HR Manager, TechZim",
-                    avatar: "https://picsum.photos/seed/sarah/100/100"
-                  },
-                  {
-                    quote: "The WhatsApp integration is a game-changer for our field staff. They can now access their payslips instantly.",
-                    author: "John Dube",
-                    role: "Operations Director, AgriGrow",
-                    avatar: "https://picsum.photos/seed/john/100/100"
-                  }
-                ].map((testimonial, i) => (
-                  <motion.div 
-                    key={i}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    className="p-8 rounded-[2rem] bg-white border border-black/[0.05] shadow-sm space-y-6 hover:shadow-xl transition-all"
-                  >
-                    <div className="flex gap-1">
-                      {[1, 2, 3, 4, 5].map(star => <Star key={star} className="w-4 h-4 fill-accent text-accent" />)}
-                    </div>
-                    <p className="text-lg font-medium text-space-gray leading-relaxed italic">"{testimonial.quote}"</p>
-                    <div className="flex items-center gap-4">
-                      <img src={testimonial.avatar} alt={testimonial.author} className="w-12 h-12 rounded-full object-cover" referrerPolicy="no-referrer" />
-                      <div>
-                        <p className="font-bold text-space-gray">{testimonial.author}</p>
-                        <p className="text-xs text-gray-500">{testimonial.role}</p>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
+          <div className="p-10 md:p-16 rounded-[3rem] bg-accent text-white space-y-8 relative overflow-hidden shadow-2xl shadow-accent/20">
+            <div className="relative z-10 max-w-2xl">
+              <h3 className="text-3xl md:text-5xl font-bold leading-tight mb-6">Ready to write your <br /> success story?</h3>
+              <p className="text-white/80 text-lg md:text-xl mb-8">Join 500+ companies managing their workforce with ZivoHR. Start your journey today.</p>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <button onClick={handleGetStarted} className="bg-white text-accent px-10 py-5 rounded-2xl font-bold text-lg hover:scale-105 transition-all shadow-xl">
+                  Get Started Now
+                </button>
+                <button onClick={handleTalkToSales} className="bg-accent-dark/20 backdrop-blur-md border border-white/20 text-white px-10 py-5 rounded-2xl font-bold text-lg hover:bg-white/10 transition-all">
+                  Talk to Sales
+                </button>
               </div>
             </div>
-
-            {/* Case Studies */}
-            <div className="space-y-12">
-              <div className="space-y-4">
-                <h2 className="text-4xl font-bold tracking-tight text-right">Real Results</h2>
-                <p className="text-xl text-gray-500 text-right">How we help businesses scale efficiently.</p>
-              </div>
-
-              <div className="space-y-6">
-                <SuccessStories />
-                <div className="p-10 rounded-[3rem] bg-accent text-white space-y-6 relative overflow-hidden shadow-2xl shadow-accent/20">
-                  <div className="relative z-10 space-y-6">
-                    <h3 className="text-3xl font-bold leading-tight">Ready to write your <br /> success story?</h3>
-                    <p className="text-white/80 text-lg">Join 500+ companies managing their workforce with ZivoHR.</p>
-                    <button onClick={handleGetStarted} className="bg-white text-accent px-8 py-4 rounded-2xl font-bold text-lg hover:scale-105 transition-all shadow-xl">
-                      Get Started Now
-                    </button>
-                  </div>
-                  <Sparkles className="absolute -top-4 -right-4 w-32 h-32 text-white/10" />
-                </div>
-              </div>
-            </div>
+            <Sparkles className="absolute -top-4 -right-4 w-48 h-48 text-white/10" />
           </div>
         </div>
       </section>

@@ -32,76 +32,51 @@ const STORIES = [
 
 export default function SuccessStories() {
   return (
-    <section className="py-24 bg-[#0A0C10] text-white overflow-hidden relative">
-      {/* Decorative Elements */}
-      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-        <div className="absolute -top-24 -left-24 w-96 h-96 bg-accent/10 rounded-full blur-[120px]" />
-        <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-accent/5 rounded-full blur-[120px]" />
-      </div>
-
+    <section className="py-16 bg-white text-space-gray overflow-hidden relative">
       <div className="container mx-auto px-6 relative z-10">
-        <div className="max-w-3xl mb-20">
-          <motion.span 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-accent font-bold tracking-[0.2em] uppercase text-xs mb-4 block"
-          >
-            Testimonials
-          </motion.span>
-          <motion.h2 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.1 }}
-            className="text-5xl md:text-6xl font-serif font-medium leading-tight mb-6"
-          >
-            Empowering the visionaries of <span className="italic text-accent">Zimbabwean</span> business.
-          </motion.h2>
-          <motion.p 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.2 }}
-            className="text-gray-400 text-lg max-w-xl"
-          >
-            Join hundreds of SMEs who have streamlined their operations and empowered their people with ZivoHR.
-          </motion.p>
+        <div className="flex items-center gap-3 mb-12">
+          <div className="w-10 h-10 bg-accent/10 rounded-full flex items-center justify-center text-accent">
+            <Quote className="w-5 h-5" />
+          </div>
+          <h2 className="text-2xl md:text-3xl font-bold text-accent">
+            Testimonials: Empowering the visionaries of Zimbabwean business.
+          </h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {STORIES.map((story, index) => (
             <motion.div
               key={story.id}
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.1 }}
-              className="group p-10 rounded-[2.5rem] bg-white/5 border border-white/10 hover:bg-white/[0.08] hover:border-white/20 transition-all duration-500 flex flex-col h-full"
+              className="p-8 rounded-[2.5rem] bg-white border border-black/[0.08] hover:border-accent/30 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex flex-col h-full group"
             >
-              <div className="flex gap-1 mb-8">
-                {[...Array(story.rating)].map((_, i) => (
-                  <Star key={i} className="w-4 h-4 fill-accent text-accent" />
-                ))}
-              </div>
+              <h4 className="text-lg font-bold text-space-gray mb-4 leading-tight">
+                {story.name}
+              </h4>
+              
+              <p className="text-sm text-gray-600 leading-relaxed mb-6 flex-1">
+                "{story.content}"
+              </p>
 
-              <div className="relative mb-8">
-                <Quote className="absolute -top-4 -left-4 w-12 h-12 text-accent/10 group-hover:text-accent/20 transition-colors" />
-                <p className="text-lg text-gray-300 leading-relaxed relative z-10 italic">
-                  "{story.content}"
-                </p>
-              </div>
-
-              <div className="mt-auto flex items-center gap-4 pt-8 border-t border-white/10">
-                <img 
-                  src={story.image} 
-                  alt={story.name} 
-                  className="w-14 h-14 rounded-2xl object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
-                  referrerPolicy="no-referrer"
-                />
-                <div>
-                  <h4 className="font-bold text-white text-lg">{story.name}</h4>
-                  <p className="text-accent text-xs font-medium uppercase tracking-wider">{story.role}</p>
+              <div className="flex items-center justify-between mt-auto pt-6 border-t border-black/[0.03]">
+                <div className="flex items-center gap-3">
+                  <img 
+                    src={story.image} 
+                    alt={story.name} 
+                    className="w-10 h-10 rounded-xl object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
+                    referrerPolicy="no-referrer"
+                  />
+                  <div>
+                    <p className="text-[10px] font-black text-accent uppercase tracking-widest">{story.role}</p>
+                  </div>
+                </div>
+                <div className="flex gap-0.5">
+                  {[...Array(story.rating)].map((_, i) => (
+                    <Star key={i} className="w-3 h-3 fill-accent text-accent" />
+                  ))}
                 </div>
               </div>
             </motion.div>
@@ -113,13 +88,11 @@ export default function SuccessStories() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ delay: 0.4 }}
-          className="mt-20 text-center"
+          className="mt-12 text-center"
         >
-          <button className="group inline-flex items-center gap-3 text-white font-bold text-lg hover:text-accent transition-colors">
+          <button className="group inline-flex items-center gap-2 text-accent font-bold hover:gap-3 transition-all">
             Read more success stories
-            <div className="w-12 h-12 rounded-full border border-white/20 flex items-center justify-center group-hover:border-accent group-hover:bg-accent transition-all">
-              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </div>
+            <ArrowRight className="w-4 h-4" />
           </button>
         </motion.div>
       </div>

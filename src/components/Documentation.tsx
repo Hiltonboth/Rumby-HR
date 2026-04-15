@@ -140,6 +140,62 @@ const DOC_SECTIONS = [
         ]
       }
     ]
+  },
+  {
+    title: 'Performance & Engagement',
+    icon: BarChart3,
+    items: [
+      {
+        id: 'performance-reviews',
+        title: 'Performance Reviews',
+        content: 'Move beyond annual reviews with continuous feedback. ZivoHR supports 360-degree feedback, OKRs, and goal tracking tailored for Zimbabwean business cycles.',
+        keyFeatures: [
+          { title: 'OKR Tracking', desc: 'Align individual goals with company objectives.' },
+          { title: '360 Feedback', desc: 'Collect insights from peers, managers, and direct reports.' },
+          { title: 'Review Templates', desc: 'Pre-built templates for probation, annual, and project reviews.' },
+          { title: 'Development Plans', desc: 'Track employee growth and skill acquisition over time.' }
+        ]
+      },
+      {
+        id: 'engagement',
+        title: 'Employee Engagement',
+        content: 'Build a vibrant company culture with Kudos and Surveys. Recognize top performers and gather honest feedback to improve your workplace.',
+        keyFeatures: [
+          { title: 'Kudos Wall', desc: 'A public space to celebrate wins and say thank you.' },
+          { title: 'Pulse Surveys', desc: 'Quick, anonymous surveys to gauge team sentiment.' },
+          { title: 'Rewards Integration', desc: 'Connect kudos to local rewards like airtime or vouchers.' },
+          { title: 'Anniversary Alerts', desc: 'Never miss a birthday or work anniversary again.' }
+        ]
+      }
+    ]
+  },
+  {
+    title: 'Resources & Security',
+    icon: Lock,
+    items: [
+      {
+        id: 'resource-library',
+        title: 'HR Resource Library',
+        content: 'Access a curated collection of templates and guides specifically for the Zimbabwean market. From the Labour Act to NEC handbooks, everything is at your fingertips.',
+        keyFeatures: [
+          { title: 'Labour Act Guide', desc: 'Simplified explanations of the Zimbabwean Labour Act.' },
+          { title: 'Contract Templates', desc: 'Legally vetted templates for various employment types.' },
+          { title: 'NEC Handbooks', desc: 'Access to the latest NEC regulations for your industry.' },
+          { title: 'Policy Templates', desc: 'Ready-to-use policies for remote work, leave, and conduct.' }
+        ]
+      },
+      {
+        id: 'security',
+        title: 'Security & Privacy',
+        content: 'Your data is protected with bank-grade encryption. We comply with international data protection standards and local privacy requirements.',
+        keyFeatures: [
+          { title: 'Data Encryption', desc: 'All data is encrypted at rest and in transit.' },
+          { title: 'Regular Backups', desc: 'Automated daily backups to ensure data persistence.' },
+          { title: 'Audit Trails', desc: 'Detailed logs of all administrative actions.' },
+          { title: 'Access Controls', desc: 'Role-based access to ensure data is only seen by authorized staff.' }
+        ]
+      }
+    ]
   }
 ];
 
@@ -281,13 +337,59 @@ export default function Documentation({ onBack }: DocumentationProps) {
         {/* Content */}
         <main className="flex-1 p-6 md:p-12 lg:max-w-3xl">
           <AnimatePresence mode="wait">
-            <motion.div
-              key={activeSection}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="space-y-8"
-            >
+            {searchTerm ? (
+              <motion.div
+                key="search-results"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="space-y-8"
+              >
+                <div className="space-y-4">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/5 text-accent text-[10px] font-black uppercase tracking-widest border border-accent/10">
+                    Search Results
+                  </div>
+                  <h1 className="text-3xl font-bold tracking-tight text-space-gray">
+                    Found {filteredItems.length} results for "{searchTerm}"
+                  </h1>
+                </div>
+
+                <div className="space-y-4">
+                  {filteredItems.length > 0 ? (
+                    filteredItems.map((item) => (
+                      <button
+                        key={item.id}
+                        onClick={() => {
+                          setActiveSection(item.id);
+                          setSearchTerm('');
+                        }}
+                        className="w-full text-left p-6 rounded-2xl bg-white border border-black/[0.05] hover:border-accent/30 hover:shadow-xl transition-all group"
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <h3 className="font-bold text-lg group-hover:text-accent transition-colors">{item.title}</h3>
+                          <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-accent transition-all group-hover:translate-x-1" />
+                        </div>
+                        <p className="text-sm text-gray-500 line-clamp-2">{item.content}</p>
+                      </button>
+                    ))
+                  ) : (
+                    <div className="text-center py-20 space-y-4">
+                      <div className="w-16 h-16 bg-apple-gray rounded-full flex items-center justify-center mx-auto text-gray-400">
+                        <Search className="w-8 h-8" />
+                      </div>
+                      <p className="text-gray-500 font-medium">No results found for your search.</p>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            ) : (
+              <motion.div
+                key={activeSection}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="space-y-8"
+              >
               <div className="space-y-4">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/5 text-accent text-[10px] font-black uppercase tracking-widest border border-accent/10">
                   Documentation
@@ -345,6 +447,7 @@ export default function Documentation({ onBack }: DocumentationProps) {
                 </button>
               </div>
             </motion.div>
+          )}
           </AnimatePresence>
         </main>
 

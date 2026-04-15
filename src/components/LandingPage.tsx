@@ -348,7 +348,7 @@ export default function LandingPage({ onGetStarted, onLogin, onDocumentation, us
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="text-4xl sm:text-6xl md:text-8xl font-bold tracking-tight text-space-gray max-w-5xl mx-auto leading-[0.95]"
+            className="text-4xl sm:text-6xl lg:text-8xl font-bold tracking-tight text-space-gray max-w-5xl mx-auto leading-[0.95]"
           >
             Your All-in-One <br />
             <span className="text-accent">HR Platform for SMEs</span>
@@ -468,7 +468,7 @@ export default function LandingPage({ onGetStarted, onLogin, onDocumentation, us
                       Get Started with Hiring <ChevronRight className="w-4 h-4" />
                     </button>
                   </div>
-                  <div className="bg-apple-gray/50 rounded-[2.5rem] p-8 aspect-square flex items-center justify-center border border-black/[0.03]">
+                  <div className="bg-apple-gray/50 rounded-[2.5rem] p-4 md:p-8 aspect-video md:aspect-square flex items-center justify-center border border-black/[0.03]">
                     <div className="w-full h-full bg-white rounded-3xl shadow-2xl border border-black/[0.05] p-6 space-y-4">
                       <div className="h-4 w-1/3 bg-apple-gray rounded-full" />
                       <div className="space-y-2">
@@ -486,7 +486,7 @@ export default function LandingPage({ onGetStarted, onLogin, onDocumentation, us
 
               {activeFeatureTab === 'core' && (
                 <div className="grid md:grid-cols-2 gap-16 items-center">
-                  <div className="order-2 md:order-1 bg-apple-gray/50 rounded-[2.5rem] p-8 aspect-square flex items-center justify-center border border-black/[0.03]">
+                  <div className="order-2 md:order-1 bg-apple-gray/50 rounded-[2.5rem] p-4 md:p-8 aspect-video md:aspect-square flex items-center justify-center border border-black/[0.03]">
                     <div className="w-full h-full bg-white rounded-3xl shadow-2xl border border-black/[0.05] p-6 space-y-6">
                       <div className="flex items-center justify-between">
                         <div className="h-4 w-1/4 bg-apple-gray rounded-full" />
@@ -524,7 +524,7 @@ export default function LandingPage({ onGetStarted, onLogin, onDocumentation, us
 
               {activeFeatureTab === 'payroll' && (
                 <div className="grid md:grid-cols-2 gap-16 items-center">
-                  <div className="order-2 md:order-1 bg-apple-gray/50 rounded-[2.5rem] p-8 aspect-square flex items-center justify-center border border-black/[0.03]">
+                  <div className="order-2 md:order-1 bg-apple-gray/50 rounded-[2.5rem] p-4 md:p-8 aspect-video md:aspect-square flex items-center justify-center border border-black/[0.03]">
                     <div className="w-full h-full bg-white rounded-3xl shadow-2xl border border-black/[0.05] p-6 space-y-6">
                       <div className="flex items-center gap-4">
                         <div className="w-12 h-12 rounded-2xl bg-green-50 flex items-center justify-center text-green-600">
@@ -590,7 +590,7 @@ export default function LandingPage({ onGetStarted, onLogin, onDocumentation, us
                       Boost Performance <ChevronRight className="w-4 h-4" />
                     </button>
                   </div>
-                  <div className="bg-apple-gray/50 rounded-[2.5rem] p-8 aspect-square flex items-center justify-center border border-black/[0.03]">
+                  <div className="bg-apple-gray/50 rounded-[2.5rem] p-4 md:p-8 aspect-video md:aspect-square flex items-center justify-center border border-black/[0.03]">
                     <div className="w-full h-full bg-white rounded-3xl shadow-2xl border border-black/[0.05] p-6 space-y-8">
                       <div className="space-y-2">
                         <div className="h-4 w-1/2 bg-apple-gray rounded-full" />
@@ -608,7 +608,7 @@ export default function LandingPage({ onGetStarted, onLogin, onDocumentation, us
 
               {activeFeatureTab === 'esignature' && (
                 <div className="grid md:grid-cols-2 gap-16 items-center">
-                  <div className="order-2 md:order-1 bg-apple-gray/50 rounded-[2.5rem] p-8 aspect-square flex items-center justify-center border border-black/[0.03]">
+                  <div className="order-2 md:order-1 bg-apple-gray/50 rounded-[2.5rem] p-4 md:p-8 aspect-video md:aspect-square flex items-center justify-center border border-black/[0.03]">
                     <div className="w-full max-w-sm bg-white rounded-3xl shadow-2xl border border-black/[0.05] p-8 space-y-6">
                       <div className="flex items-center justify-between">
                         <div className="w-12 h-12 bg-accent rounded-2xl flex items-center justify-center text-white">
@@ -671,7 +671,7 @@ export default function LandingPage({ onGetStarted, onLogin, onDocumentation, us
                       Engage Your People <ChevronRight className="w-4 h-4" />
                     </button>
                   </div>
-                  <div className="bg-apple-gray/50 rounded-[2.5rem] p-8 aspect-square flex items-center justify-center border border-black/[0.03]">
+                  <div className="bg-apple-gray/50 rounded-[2.5rem] p-4 md:p-8 aspect-video md:aspect-square flex items-center justify-center border border-black/[0.03]">
                     <div className="w-full h-full bg-white rounded-3xl shadow-2xl border border-black/[0.05] p-6 flex flex-col items-center justify-center space-y-6">
                       <div className="flex -space-x-4">
                         {[1, 2, 3, 4].map(i => (

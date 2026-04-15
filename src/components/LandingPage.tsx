@@ -2,8 +2,6 @@ import React, { useState } from 'react';
 import { Shield, Zap, Users, BarChart3, ChevronRight, Star, CheckCircle2, ChevronDown, CreditCard, Menu, X, MessageCircle, Sparkles, FileText, Heart, PenTool } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
-import ResourceLibrary from './ResourceLibrary';
-import Community from './Community';
 import SuccessStories from './SuccessStories';
 
 interface LandingPageProps {
@@ -44,10 +42,10 @@ const features = [
     id: 'engagement',
     subFeatures: ['Case Management', 'Internal Communications', 'Employee Surveys', 'Recognition'] 
   },
-  { name: 'Resource Library', id: 'library' },
-  { name: 'Community Forum', id: 'community' },
-  { name: 'Case Studies', id: 'case-studies' },
   { name: 'HR automation', id: 'automation' },
+  { name: 'HR Library', id: 'library' },
+  { name: 'Labor Cases', id: 'labor-cases' },
+  { name: 'FAQ', id: 'faq' },
   { name: 'Mobile app', id: 'mobile' },
 ];
 
@@ -141,14 +139,6 @@ export default function LandingPage({ onGetStarted, onLogin, user, onGoToDashboa
                           {feature.subFeatures && <ChevronRight className="w-3.5 h-3.5 opacity-50" />}
                         </button>
                       ))}
-                    </div>
-                    <div className="mt-2 pt-2 border-t border-black/[0.03]">
-                      <button 
-                        onClick={onGetStarted}
-                        className="w-full py-3 rounded-xl border border-accent/20 text-accent font-bold text-sm hover:bg-accent/5 transition-all"
-                      >
-                        Explore MVP Features
-                      </button>
                     </div>
                   </div>
 
@@ -295,32 +285,39 @@ export default function LandingPage({ onGetStarted, onLogin, user, onGoToDashboa
       </nav>
 
       {/* Hero Section */}
-      <section className="pt-32 pb-20 px-6">
-        <div className="max-w-7xl mx-auto text-center space-y-8">
+      <section className="relative pt-32 pb-20 px-6 overflow-hidden">
+        {/* Background Gradients */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full -z-10 pointer-events-none">
+          <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-accent/5 rounded-full blur-[120px]" />
+          <div className="absolute bottom-[10%] right-[-10%] w-[30%] h-[30%] bg-purple-500/5 rounded-full blur-[100px]" />
+        </div>
+
+        <div className="max-w-7xl mx-auto text-center space-y-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 text-accent text-sm font-bold"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/5 text-accent text-xs font-black uppercase tracking-widest border border-accent/10"
           >
-            <Zap className="w-4 h-4" />
+            <Sparkles className="w-3.5 h-3.5" />
             The Future of HR is Here
           </motion.div>
           <motion.h1 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="text-6xl md:text-7xl font-bold tracking-tight text-space-gray max-w-4xl mx-auto leading-[1.1]"
+            className="text-4xl sm:text-6xl md:text-8xl font-bold tracking-tight text-space-gray max-w-5xl mx-auto leading-[0.95]"
           >
-            Your All-in-One <br />
-            <span className="text-accent">HR Platform for SMEs</span>
+            The Operating System <br />
+            <span className="text-accent">for Modern Teams.</span>
           </motion.h1>
           <motion.p 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="text-xl text-gray-500 max-w-2xl mx-auto"
+            className="text-xl text-gray-500 max-w-2xl mx-auto leading-relaxed"
           >
-            We handle it all. The all-in-one HR platform built specifically for SMEs in Zimbabwe and Africa. From hiring to payroll, manage everything in one beautiful interface.
+            ZivoHR is the all-in-one platform built for SMEs in Zimbabwe. 
+            Manage hiring, payroll, and engagement in one beautiful workspace.
           </motion.p>
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
@@ -328,21 +325,42 @@ export default function LandingPage({ onGetStarted, onLogin, user, onGoToDashboa
             transition={{ delay: 0.3 }}
             className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4"
           >
-            <button onClick={handleGetStarted} className="w-full sm:w-auto btn-primary px-8 py-4 text-lg">Start Free Trial</button>
-            <button onClick={handleTalkToSales} className="w-full sm:w-auto btn-secondary px-8 py-4 text-lg flex items-center justify-center gap-2">
-              Talk to Sales
+            <button onClick={handleGetStarted} className="w-full sm:w-auto btn-primary px-10 py-5 text-lg shadow-2xl shadow-accent/20">Start Free Trial</button>
+            <button onClick={handleTalkToSales} className="w-full sm:w-auto btn-secondary px-10 py-5 text-lg flex items-center justify-center gap-2">
+              Book a Demo
               <ChevronRight className="w-5 h-5" />
             </button>
           </motion.div>
         </div>
       </section>
 
-      {/* Features Section - Tabbed Interface */}
-      <div className="px-6 pb-32">
+      {/* Trusted By Section - Modernized */}
+      <section className="py-24 px-6 border-y border-black/[0.03] bg-apple-gray/5">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12 space-y-4">
-            <h2 className="text-4xl font-bold tracking-tight">Everything you need in one place</h2>
-            <p className="text-xl text-gray-500">Click a tab to explore our powerful HR tools.</p>
+          <motion.p 
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            className="text-center text-[11px] font-black text-gray-400 uppercase tracking-[0.4em] mb-16"
+          >
+            Trusted by leading African organizations
+          </motion.p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-8 md:gap-12 items-center justify-items-center transition-all duration-700">
+            <div className="text-xl md:text-2xl font-black tracking-tighter">
+              <span className="text-[#0056b3]">Eco</span><span className="text-[#ed1c24]">Cash</span>
+            </div>
+            <div className="text-xl md:text-2xl font-black tracking-tighter text-[#c8102e]">DELTA</div>
+            <div className="text-xl md:text-2xl font-black tracking-tighter text-[#006747]">OLD MUTUAL</div>
+            <div className="text-xl md:text-2xl font-black tracking-tighter text-[#0033a0]">CBZ BANK</div>
+            <div className="text-xl md:text-2xl font-black tracking-tighter text-[#f47920]">SIMBISA</div>
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section - Tabbed Interface */}
+      <div className="px-6 py-32 bg-white">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-12 md:mb-20 space-y-4">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight">Everything you need. <br /> <span className="text-gray-400">Nothing you don't.</span></h2>
           </div>
 
           {/* Tabs Navigation */}
@@ -621,116 +639,94 @@ export default function LandingPage({ onGetStarted, onLogin, user, onGoToDashboa
 
       {/* WhatsApp Integration Banner */}
       <section className="px-6 pb-32">
-        <div className="max-w-7xl mx-auto bg-accent rounded-[3rem] p-12 md:p-20 text-white overflow-hidden relative">
-          <div className="relative z-10 grid md:grid-cols-2 gap-12 items-center">
+        <div className="max-w-7xl mx-auto bg-[#075E54] rounded-[2.5rem] md:rounded-[3rem] p-6 md:p-20 text-white overflow-hidden relative">
+          <div className="relative z-10 grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-8">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 text-white text-sm font-bold">
-                <MessageCircle className="w-4 h-4" />
+                <img 
+                  src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" 
+                  alt="WhatsApp" 
+                  className="w-5 h-5"
+                  referrerPolicy="no-referrer"
+                />
                 WhatsApp Integration
               </div>
-              <h2 className="text-5xl font-bold leading-tight tracking-tight">Manage HR directly <br /> from WhatsApp.</h2>
-              <p className="text-xl text-white/80 leading-relaxed">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold leading-tight tracking-tight">Manage HR directly <br /> from WhatsApp.</h2>
+              <p className="text-base md:text-xl text-white/80 leading-relaxed">
                 Approve leave, view payslips, and answer employee queries without leaving your favorite chat app. Built for the way Africa works.
               </p>
               <div className="flex flex-wrap gap-4">
                 <button 
                   onClick={() => window.open('https://wa.me/263772240081?text=Hi!%20I%20want%20to%20manage%20my%20HR%20via%20WhatsApp.', '_blank')}
-                  className="bg-white text-accent px-8 py-4 rounded-2xl font-bold text-lg hover:scale-105 transition-all"
+                  className="w-full sm:w-auto bg-[#25D366] text-white px-8 py-4 rounded-2xl font-bold text-lg hover:scale-105 transition-all shadow-lg"
                 >
                   Chat with Us
                 </button>
-                <button className="bg-white/10 text-white border border-white/20 px-8 py-4 rounded-2xl font-bold text-lg hover:bg-white/20 transition-all">
+                <button className="w-full sm:w-auto bg-white/10 text-white border border-white/20 px-8 py-4 rounded-2xl font-bold text-lg hover:bg-white/20 transition-all">
                   Learn More
                 </button>
               </div>
             </div>
             <div className="relative">
-              <div className="bg-white/10 backdrop-blur-3xl rounded-[2.5rem] p-8 border border-white/20 shadow-2xl">
-                <div className="space-y-4">
+              <div className="bg-[#E5DDD5] rounded-[2rem] overflow-hidden border border-white/20 shadow-2xl max-w-md mx-auto aspect-[4/5] md:aspect-auto">
+                {/* WhatsApp Header */}
+                <div className="bg-[#075E54] p-4 flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center overflow-hidden">
+                    <img src="https://picsum.photos/seed/avatar/100/100" alt="Avatar" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-sm">ZivoHR Assistant</p>
+                    <p className="text-[10px] text-white/60">Online</p>
+                  </div>
+                </div>
+                {/* Chat Area */}
+                <div className="p-4 md:p-6 space-y-4 min-h-[300px] flex flex-col justify-end bg-[url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png')] bg-repeat">
                   {[
-                    { sender: 'Employee', text: 'Hi, can I get my payslip for March?' },
+                    { sender: 'Employee', text: 'Hi, can I get my payslip for March?', isSent: true },
                     { sender: 'ZivoHR AI', text: 'Sure! Here is your March payslip in PDF format.', isBot: true },
-                    { sender: 'Employee', text: 'Thanks! Also, how many leave days do I have left?' }
+                    { sender: 'Employee', text: 'Thanks! Also, how many leave days do I have left?', isSent: true }
                   ].map((msg, i) => (
                     <div key={i} className={cn(
-                      "p-4 rounded-2xl max-w-[85%] text-sm font-medium",
-                      msg.isBot ? "bg-white text-accent self-start" : "bg-white/20 text-white self-end ml-auto"
+                      "p-3 rounded-xl max-w-[85%] text-[13px] md:text-sm relative shadow-sm",
+                      msg.isBot 
+                        ? "bg-white text-gray-800 self-start rounded-tl-none" 
+                        : "bg-[#DCF8C6] text-gray-800 self-end rounded-tr-none"
                     )}>
-                      <p className="text-[10px] opacity-60 uppercase tracking-widest mb-1">{msg.sender}</p>
+                      {/* Bubble Tail */}
+                      <div className={cn(
+                        "absolute top-0 w-3 h-3",
+                        msg.isBot 
+                          ? "left-[-8px] bg-white [clip-path:polygon(100%_0,0_0,100%_100%)]" 
+                          : "right-[-8px] bg-[#DCF8C6] [clip-path:polygon(0_0,100%_0,0_100%)]"
+                      )} />
+                      
+                      <p className="text-[10px] font-bold mb-1 text-[#075E54]">{msg.sender}</p>
                       {msg.text}
+                      <p className="text-[9px] text-gray-400 text-right mt-1">10:45 AM</p>
                     </div>
                   ))}
+                </div>
+                {/* Input Area */}
+                <div className="bg-[#F0F2F5] p-3 flex gap-2 items-center">
+                  <div className="flex-1 bg-white rounded-full px-4 py-2 text-xs text-gray-400">Type a message...</div>
+                  <div className="w-9 h-9 bg-[#075E54] rounded-full flex items-center justify-center shrink-0">
+                    <ChevronRight className="w-5 h-5 text-white" />
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-          {/* Decorative circles */}
-          <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
+          {/* Decorative elements */}
+          <div className="absolute top-0 right-0 w-96 h-96 bg-[#25D366]/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
           <div className="absolute bottom-0 left-0 w-64 h-64 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2 blur-3xl" />
         </div>
       </section>
 
-      {/* Resource Library & Community */}
-      <div className="space-y-32 pb-32">
-        <section id="library" className="px-6 scroll-mt-24">
-          <div className="max-w-7xl mx-auto">
-            <ResourceLibrary />
-          </div>
-        </section>
-
-        <section id="community" className="px-6 scroll-mt-24">
-          <div className="max-w-7xl mx-auto">
-            <Community />
-          </div>
-        </section>
-      </div>
-
-      {/* Support & Advice */}
-      <section className="px-6 pb-32">
-        <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-8">
-          <div className="p-12 rounded-[2.5rem] bg-white border border-black/[0.05] space-y-6 hover:border-accent/30 transition-all">
-            <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600">
-              <Zap className="w-6 h-6" />
-            </div>
-            <h3 className="text-3xl font-bold">Technical Challenges?</h3>
-            <p className="text-gray-500">Our technical team is ready to help you with any platform-related issues or integrations.</p>
-            <button 
-              onClick={() => window.open('https://wa.me/263772240081?text=I%20need%20technical%20support%20with%20the%20platform.', '_blank')}
-              className="text-accent font-bold flex items-center gap-2 hover:gap-3 transition-all"
-            >
-              Speak to Technical Team <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
-          <div className="p-12 rounded-[2.5rem] bg-white border border-black/[0.05] space-y-6 hover:border-accent/30 transition-all">
-            <div className="w-12 h-12 bg-purple-50 rounded-2xl flex items-center justify-center text-purple-600">
-              <Users className="w-6 h-6" />
-            </div>
-            <h3 className="text-3xl font-bold">Need HR Advice?</h3>
-            <p className="text-gray-500">Connect with our experienced HR consultants for advice on labor laws, disputes, or strategy.</p>
-            <button 
-              onClick={() => window.open('https://wa.me/263772240081?text=I%20need%20expert%20HR%20advice.', '_blank')}
-              className="text-accent font-bold flex items-center gap-2 hover:gap-3 transition-all"
-            >
-              Speak to HR Team <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* Hashtag Banner */}
-      <section className="px-6 pb-32">
-        <div className="max-w-7xl mx-auto text-center py-12 border-y border-black/[0.03]">
-          <p className="text-2xl md:text-3xl font-bold text-gray-400 italic">
-            #WeCombineHRExpertise + AI + simpleToolsToManageYourWorkforce
-          </p>
-        </div>
-      </section>
-
       {/* Pricing Section */}
-      <section id="pricing" className="px-6 scroll-mt-24">
+      <section id="pricing" className="px-6 py-32 scroll-mt-24 bg-apple-gray/10 border-y border-black/[0.03]">
         <div className="max-w-7xl mx-auto space-y-16">
           <div className="text-center space-y-4">
-            <h2 className="text-4xl font-bold tracking-tight">Simple, Transparent Pricing</h2>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight">Simple, Transparent Pricing</h2>
             <p className="text-xl text-gray-500">Choose the plan that's right for your growing team.</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -828,22 +824,153 @@ export default function LandingPage({ onGetStarted, onLogin, user, onGoToDashboa
       </section>
 
       {/* Trust & Credibility: Client Logos */}
-      <section className="py-20 border-t border-black/[0.03] bg-white">
+      <section className="py-24 border-t border-black/[0.03] bg-white">
         <div className="max-w-7xl mx-auto px-6">
-          <p className="text-center text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-12">Trusted by leading African organizations</p>
-          <div className="flex flex-wrap justify-center items-center gap-12 md:gap-20">
+          <div className="text-center mb-16">
+            <h2 className="text-sm md:text-base font-black text-space-gray uppercase tracking-[0.3em] mb-2">Trusted by leading African organizations</h2>
+            <div className="w-20 h-1 bg-accent mx-auto rounded-full opacity-20" />
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-12 md:gap-20 items-center justify-items-center">
             {[
-              { name: 'EcoCash', color: 'text-blue-600' },
-              { name: 'Delta', color: 'text-red-600' },
-              { name: 'Old Mutual', color: 'text-green-700' },
-              { name: 'CBZ Bank', color: 'text-blue-800' },
-              { name: 'Simbisa', color: 'text-orange-600' }
+              { name: 'EcoCash', color: 'text-[#0056b3]', secondPart: 'Cash', secondColor: 'text-[#ed1c24]' },
+              { name: 'DELTA', color: 'text-[#c8102e]' },
+              { name: 'OLD MUTUAL', color: 'text-[#006747]' },
+              { name: 'CBZ BANK', color: 'text-[#0033a0]' },
+              { name: 'SIMBISA', color: 'text-[#f47920]' }
             ].map((company) => (
-              <div key={company.name} className="flex items-center gap-3 group cursor-pointer">
-                <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center text-white font-black text-sm shadow-lg group-hover:scale-110 transition-all", company.color.replace('text-', 'bg-'))}>
-                  {company.name[0]}
+              <div key={company.name} className="flex flex-col items-center gap-4 group cursor-pointer">
+                <div className="text-xl md:text-2xl font-black tracking-tighter transition-all duration-500 group-hover:scale-110">
+                  {company.name === 'EcoCash' ? (
+                    <>
+                      <span className={company.color}>Eco</span>
+                      <span className={company.secondColor}>Cash</span>
+                    </>
+                  ) : (
+                    <span className={company.color}>{company.name}</span>
+                  )}
                 </div>
-                <span className={cn("text-xl font-bold tracking-tighter transition-colors", company.color)}>{company.name}</span>
+                <span className="text-[10px] font-black text-gray-400 group-hover:text-space-gray transition-colors tracking-[0.2em] uppercase">{company.name}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Zimbabwean HR Library Section */}
+      <section id="library" className="px-6 py-32 bg-apple-gray/10">
+        <div className="max-w-7xl mx-auto space-y-16">
+          <div className="text-center space-y-4">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/5 text-accent text-xs font-black uppercase tracking-widest border border-accent/10">
+              <FileText className="w-3.5 h-3.5" />
+              Resources
+            </div>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-space-gray">Zimbabwean HR Library</h2>
+            <p className="text-xl text-gray-500 max-w-2xl mx-auto">
+              Access a comprehensive collection of HR templates, policies, and guides tailored for the Zimbabwean legal landscape.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {[
+              { title: 'Employment Contracts', desc: 'Standard and fixed-term contract templates compliant with the Labor Act.', icon: FileText },
+              { title: 'HR Policy Manual', desc: 'A complete guide to workplace policies, from leave to disciplinary procedures.', icon: Shield },
+              { title: 'Performance Review', desc: 'Templates and frameworks for effective employee evaluations.', icon: BarChart3 },
+              { title: 'Disciplinary Code', desc: 'Step-by-step guides for handling workplace misconduct fairly.', icon: Zap },
+            ].map((item, i) => (
+              <div key={i} className="bg-white p-8 rounded-[2.5rem] border border-black/[0.05] space-y-4 hover:shadow-xl transition-all group">
+                <div className="w-12 h-12 bg-accent/5 rounded-2xl flex items-center justify-center text-accent group-hover:scale-110 transition-transform">
+                  <item.icon className="w-6 h-6" />
+                </div>
+                <h3 className="text-xl font-bold text-space-gray">{item.title}</h3>
+                <p className="text-sm text-gray-500 leading-relaxed">{item.desc}</p>
+                <button className="text-accent text-sm font-bold flex items-center gap-2 group-hover:gap-3 transition-all">
+                  View Template <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Labor Case Analysis Section */}
+      <section id="labor-cases" className="px-6 py-32 bg-white">
+        <div className="max-w-7xl mx-auto space-y-16">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
+            <div className="space-y-4">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-500/5 text-purple-600 text-xs font-black uppercase tracking-widest border border-purple-500/10">
+                <Shield className="w-3.5 h-3.5" />
+                Legal Insights
+              </div>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-space-gray">Labor Case Analysis</h2>
+              <p className="text-xl text-gray-500 max-w-2xl">
+                Stay informed with expert analysis of landmark Zimbabwean labor cases and their implications for your business.
+              </p>
+            </div>
+            <button className="btn-secondary px-8 py-4 rounded-2xl font-bold flex items-center gap-2">
+              View All Cases <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[
+              { 
+                title: 'Retrenchment Procedures', 
+                case: 'Nyamande & Anor v Zuva Petroleum', 
+                desc: 'Understanding the landmark ruling on termination on notice and subsequent legislative changes.',
+                tag: 'Termination'
+              },
+              { 
+                title: 'Fixed Term Contracts', 
+                case: 'Magodora & Ors v Care International', 
+                desc: 'Key insights into the legitimate expectation of renewal in fixed-term employment contracts.',
+                tag: 'Contracts'
+              },
+              { 
+                title: 'Unfair Dismissal', 
+                case: 'Zimasco v Marikano', 
+                desc: 'Analyzing the requirements for procedural and substantive fairness in disciplinary hearings.',
+                tag: 'Discipline'
+              },
+            ].map((item, i) => (
+              <div key={i} className="group relative bg-apple-gray/30 rounded-[2.5rem] p-8 space-y-6 border border-black/[0.03] hover:bg-white hover:shadow-2xl transition-all">
+                <span className="px-3 py-1 bg-white rounded-full text-[10px] font-black text-gray-400 uppercase tracking-widest border border-black/[0.05]">{item.tag}</span>
+                <div className="space-y-2">
+                  <h3 className="text-2xl font-bold text-space-gray leading-tight">{item.title}</h3>
+                  <p className="text-xs font-black text-accent uppercase tracking-widest">{item.case}</p>
+                </div>
+                <p className="text-sm text-gray-500 leading-relaxed">{item.desc}</p>
+                <button className="w-full py-4 rounded-2xl bg-white border border-black/[0.05] font-bold text-sm group-hover:bg-accent group-hover:text-white group-hover:border-accent transition-all">
+                  Read Analysis
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section id="faq" className="px-6 py-32 bg-apple-gray/5">
+        <div className="max-w-3xl mx-auto space-y-16">
+          <div className="text-center space-y-4">
+            <h2 className="text-5xl font-bold tracking-tight text-space-gray">Frequently Asked Questions</h2>
+            <p className="text-xl text-gray-500">Everything you need to know about ZivoHR.</p>
+          </div>
+          <div className="space-y-4">
+            {[
+              { q: 'Is ZivoHR compliant with Zimbabwean labor laws?', a: 'Yes, ZivoHR is specifically built for the Zimbabwean market. Our payroll engine handles ZIMRA, NSSA, and NEC calculations automatically, and our document templates are vetted by local labor experts.' },
+              { q: 'How long does it take to get started?', a: 'You can sign up and have your basic company profile ready in minutes. Full implementation, including importing employee data and setting up payroll, typically takes 1-3 business days depending on your team size.' },
+              { q: 'Is my data secure?', a: 'Absolutely. We use industry-standard encryption and secure cloud infrastructure. Your data is backed up daily and protected by strict access controls.' },
+              { q: 'Do you offer training for our HR team?', a: 'Yes, we provide comprehensive onboarding training for your HR and Finance teams, as well as ongoing support via chat, email, and WhatsApp.' },
+              { q: 'Can I cancel my subscription at any time?', a: 'Yes, ZivoHR is a month-to-month service. You can upgrade, downgrade, or cancel your subscription at any time without any hidden fees.' },
+            ].map((faq, i) => (
+              <div key={i} className="bg-white rounded-3xl border border-black/[0.05] overflow-hidden">
+                <details className="group">
+                  <summary className="flex items-center justify-between p-6 cursor-pointer list-none">
+                    <span className="font-bold text-space-gray">{faq.q}</span>
+                    <ChevronDown className="w-5 h-5 text-gray-400 group-open:rotate-180 transition-transform" />
+                  </summary>
+                  <div className="px-6 pb-6 text-gray-500 text-sm leading-relaxed">
+                    {faq.a}
+                  </div>
+                </details>
               </div>
             ))}
           </div>

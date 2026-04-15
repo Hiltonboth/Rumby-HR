@@ -42,7 +42,8 @@ import {
   Plane,
   GraduationCap,
   LayoutGrid,
-  Briefcase as BriefcaseIcon
+  Briefcase as BriefcaseIcon,
+  BookOpen
 } from 'lucide-react';
 import { MOCK_TASKS } from '../constants';
 import { cn } from '../lib/utils';
@@ -92,6 +93,9 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
     { id: 'pay', title: 'Travel & Expense', icon: Plane, description: 'Claims and reimbursements', color: 'bg-rose-500' },
     { id: 'engagement', title: 'Engagement', icon: Heart, description: 'Surveys and kudos', color: 'bg-red-500' },
     { id: 'payroll', title: 'Payroll', icon: DollarSign, description: 'Process salaries and compliance', color: 'bg-green-600' },
+    { id: 'community', title: 'Community', icon: MessageCircle, description: 'Connect with HR professionals', color: 'bg-indigo-600' },
+    { id: 'library', title: 'HR Library', icon: BookOpen, description: 'Templates and resources', color: 'bg-blue-600' },
+    { id: 'jobs', title: 'Jobs', icon: BriefcaseIcon, description: 'Discover new opportunities', color: 'bg-emerald-600' },
     { id: 'workflows', title: 'Workflows', icon: Zap, description: 'Automate HR processes', color: 'bg-yellow-500' },
   ];
 

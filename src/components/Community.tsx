@@ -143,7 +143,7 @@ const ALL_JOBS: Job[] = [
   }
 ];
 
-export default function Community() {
+export default function Community({ initialView = 'feed' }: { initialView?: 'feed' | 'jobs' }) {
   const [posts, setPosts] = useState<Post[]>(INITIAL_POSTS);
   const [newPostContent, setNewPostContent] = useState('');
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
@@ -154,10 +154,11 @@ export default function Community() {
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [signature, setSignature] = useState<string | null>(null);
   const [isSigning, setIsSigning] = useState(false);
-  const [showAllJobs, setShowAllJobs] = useState(false);
+  const [showAllJobs, setShowAllJobs] = useState(initialView === 'jobs');
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [showCreatePost, setShowCreatePost] = useState(false);
   const [activeTab, setActiveTab] = useState<'feed' | 'activity'>('feed');
+  const [mobileTab, setMobileTab] = useState<'feed' | 'jobs'>(initialView === 'jobs' ? 'jobs' : 'feed');
   const [searchTerm, setSearchTerm] = useState('');
   const [showCVBuilder, setShowCVBuilder] = useState(false);
 
@@ -291,10 +292,34 @@ export default function Community() {
   };
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-8 md:space-y-12">
+      {/* Mobile Tab Switcher */}
+      <div className="flex lg:hidden bg-apple-gray/50 p-1 rounded-2xl border border-black/[0.03] w-full">
+        <button 
+          onClick={() => setMobileTab('feed')}
+          className={cn(
+            "flex-1 py-3 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2",
+            mobileTab === 'feed' ? "bg-white text-accent shadow-sm" : "text-gray-400"
+          )}
+        >
+          <MessageCircle className="w-4 h-4" />
+          Feed
+        </button>
+        <button 
+          onClick={() => setMobileTab('jobs')}
+          className={cn(
+            "flex-1 py-3 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2",
+            mobileTab === 'jobs' ? "bg-white text-accent shadow-sm" : "text-gray-400"
+          )}
+        >
+          <Briefcase className="w-4 h-4" />
+          Jobs
+        </button>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Main Feed - Chat Style */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className={cn("lg:col-span-2 space-y-6", mobileTab === 'jobs' ? "hidden lg:block" : "block")}>
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-2">
             <div className="flex items-center gap-4">
               <h2 className="text-2xl font-bold text-space-gray">Community</h2>
@@ -404,7 +429,7 @@ export default function Community() {
         </div>
 
         {/* Sidebar: Jobs & AI */}
-        <div className="space-y-8">
+        <div className={cn("space-y-8", mobileTab === 'feed' ? "hidden lg:block" : "block")}>
           <div className="p-8 bg-accent/5 rounded-[2.5rem] border border-accent/10 space-y-6">
             <div className="flex items-center justify-between">
               <h3 className="text-xl font-bold text-space-gray">Discover your next job</h3>

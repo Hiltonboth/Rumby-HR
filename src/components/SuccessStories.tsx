@@ -33,7 +33,7 @@ const STORIES = [
 export default function SuccessStories() {
   return (
     <section className="py-16 bg-white text-space-gray overflow-hidden relative">
-      <div className="container mx-auto px-6 relative z-10">
+      <div className="max-w-7xl mx-auto px-6 relative z-10">
         <div className="flex items-center gap-3 mb-12">
           <div className="w-10 h-10 bg-accent/10 rounded-full flex items-center justify-center text-accent">
             <Quote className="w-5 h-5" />

@@ -90,5 +90,10 @@ service cloud.firestore {
       allow create: if isAuthenticated() && request.auth.uid == uid;
       allow update: if isOwner(uid) || isPlatformOwner();
     }
+
+    // Allow read access to the connection test document
+    match /_connection_test_/init {
+      allow read: if true;
+    }
   }
 }

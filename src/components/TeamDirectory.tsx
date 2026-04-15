@@ -152,37 +152,53 @@ export default function TeamDirectory({ onSelectEmployee }: TeamDirectoryProps) 
                 <div 
                   key={employee.id}
                   onClick={() => onSelectEmployee(employee)}
-                  className="p-4 space-y-4 active:bg-apple-gray/20 transition-colors"
+                  className="p-5 space-y-4 active:bg-apple-gray/20 transition-colors"
                 >
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-4">
                       <img 
                         src={employee.avatar} 
                         alt={employee.name} 
-                        className="w-12 h-12 rounded-xl object-cover border border-black/[0.05]"
+                        className="w-14 h-14 rounded-2xl object-cover border border-black/[0.05] shadow-sm"
                         referrerPolicy="no-referrer"
                       />
                       <div>
-                        <p className="font-bold text-space-gray">{employee.name}</p>
-                        <p className="text-xs text-gray-500">{employee.role}</p>
+                        <p className="font-bold text-space-gray text-lg leading-tight">{employee.name}</p>
+                        <p className="text-xs font-medium text-accent uppercase tracking-wider mt-0.5">{employee.role}</p>
                       </div>
                     </div>
                     <span className={cn(
-                      "px-2 py-1 text-[10px] font-bold uppercase tracking-widest rounded-md",
-                      employee.status === 'Active' ? "bg-green-50 text-green-600" : "bg-orange-50 text-orange-600"
+                      "px-2.5 py-1 text-[10px] font-black uppercase tracking-widest rounded-lg",
+                      employee.status === 'Active' ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"
                     )}>
                       {employee.status}
                     </span>
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-4 pt-2">
-                    <div className="flex items-center gap-2 text-xs text-gray-500">
-                      <Building className="w-3.5 h-3.5" />
-                      {employee.department}
+                  <div className="grid grid-cols-1 gap-3 pt-2">
+                    <div className="flex items-center gap-3 text-sm text-gray-600">
+                      <div className="w-8 h-8 rounded-lg bg-apple-gray/50 flex items-center justify-center flex-shrink-0">
+                        <Building className="w-4 h-4 text-gray-400" />
+                      </div>
+                      <span className="font-medium">{employee.department}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-xs text-gray-500">
-                      <MapPin className="w-3.5 h-3.5" />
-                      {employee.location}
+                    <div className="flex items-center gap-3 text-sm text-gray-600">
+                      <div className="w-8 h-8 rounded-lg bg-apple-gray/50 flex items-center justify-center flex-shrink-0">
+                        <Mail className="w-4 h-4 text-gray-400" />
+                      </div>
+                      <span className="truncate">{employee.email}</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-sm text-gray-600">
+                      <div className="w-8 h-8 rounded-lg bg-apple-gray/50 flex items-center justify-center flex-shrink-0">
+                        <Phone className="w-4 h-4 text-gray-400" />
+                      </div>
+                      <span>+263 77 000 0000</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-sm text-gray-600">
+                      <div className="w-8 h-8 rounded-lg bg-apple-gray/50 flex items-center justify-center flex-shrink-0">
+                        <MapPin className="w-4 h-4 text-gray-400" />
+                      </div>
+                      <span>{employee.location}</span>
                     </div>
                   </div>
                 </div>

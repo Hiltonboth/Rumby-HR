@@ -11,6 +11,8 @@ import LandingPage from './components/LandingPage';
 import LoginPage from './components/LoginPage';
 import Payroll from './components/Payroll';
 import ESignature from './components/ESignature';
+import Community from './components/Community';
+import ResourceLibrary from './components/ResourceLibrary';
 import { auth, db } from './firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { doc, getDoc, onSnapshot, updateDoc } from 'firebase/firestore';
@@ -120,34 +122,58 @@ export default function App() {
   };
 
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+  const [logoUploadError, setLogoUploadError] = useState<string | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !currentCompany) return;
 
+    // Validation
+    const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml'];
+    if (!validTypes.includes(file.type)) {
+      setLogoUploadError('Please upload a valid image (PNG, JPG, or SVG)');
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) { // 2MB limit
+      setLogoUploadError('Logo file size must be less than 2MB');
+      return;
+    }
+
+    setLogoUploadError(null);
     setIsUploadingLogo(true);
-    // Simulate upload
-    setTimeout(async () => {
-      try {
-        // In a real app, we'd upload to Storage and get a URL
-        // Here we'll just use a placeholder or the first letter as requested if it "fails"
-        // But the user said "simulate an upload process and then display the first letter... as a fallback if the upload fails"
-        // Let's assume it "succeeds" with a mock URL for now, or just updates the state.
-        const mockUrl = URL.createObjectURL(file);
+
+    // Simulate upload process with progress feedback
+    try {
+      // In a real app, we'd use uploadBytesResumable from firebase/storage
+      // For this demo, we'll convert to base64 to simulate a "real" persistent change in Firestore
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const base64String = reader.result as string;
+        
         const tenantRef = doc(db, 'tenants', currentCompany.id);
         try {
-          await updateDoc(tenantRef, { logo: mockUrl });
+          await updateDoc(tenantRef, { logo: base64String });
+          setCurrentCompany(prev => prev ? { ...prev, logo: base64String } : null);
+          alert('Company logo updated successfully!');
         } catch (error) {
           handleFirestoreError(error, OperationType.UPDATE, 'tenants/' + currentCompany.id);
+          setLogoUploadError('Failed to save logo to database');
+        } finally {
+          setIsUploadingLogo(false);
         }
-        setCurrentCompany(prev => prev ? { ...prev, logo: mockUrl } : null);
-      } catch (error) {
-        console.error("Error uploading logo:", error);
-      } finally {
+      };
+      reader.onerror = () => {
+        setLogoUploadError('Failed to read file');
         setIsUploadingLogo(false);
-      }
-    }, 1500);
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      console.error("Error uploading logo:", error);
+      setLogoUploadError('An unexpected error occurred during upload');
+      setIsUploadingLogo(false);
+    }
   };
 
   const renderContent = () => {
@@ -230,6 +256,12 @@ export default function App() {
         return <Payroll />;
       case 'esignature':
         return <ESignature />;
+      case 'community':
+        return <Community initialView="feed" />;
+      case 'jobs':
+        return <Community initialView="jobs" />;
+      case 'library':
+        return <ResourceLibrary />;
       case 'onboarding':
         return (
           <OnboardingWizard 
@@ -302,7 +334,10 @@ export default function App() {
                       <div className="flex-1 space-y-4">
                         <div className="space-y-2">
                           <p className="text-sm font-bold text-space-gray">Company Logo</p>
-                          <p className="text-xs text-gray-500">Upload a square logo for your company. PNG or JPG preferred.</p>
+                          <p className="text-xs text-gray-500">Upload a square logo for your company. PNG, JPG or SVG (Max 2MB).</p>
+                          {logoUploadError && (
+                            <p className="text-xs font-bold text-red-500 bg-red-50 p-2 rounded-lg border border-red-100">{logoUploadError}</p>
+                          )}
                         </div>
                         <div className="space-y-2">
                           <p className="text-sm font-medium">Accent Color</p>

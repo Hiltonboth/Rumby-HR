@@ -26,12 +26,14 @@ import {
   CheckCircle2,
   AlertCircle,
   FileUp,
-  ShieldCheck
+  ShieldCheck,
+  Trash
 } from 'lucide-react';
 import { Employee } from '../types';
 import { cn, formatCurrency } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 import DocumentBuilder from './DocumentBuilder';
+import ConfirmationModal from './ConfirmationModal';
 
 interface EmployeeProfileProps {
   employee: Employee;
@@ -63,6 +65,7 @@ export default function EmployeeProfile({ employee, onBack }: EmployeeProfilePro
   const [bio, setBio] = useState(employee.bio || '<p>Kofi is a highly experienced software engineer with a passion for building scalable web applications. He has a strong background in React, Node.js, and cloud infrastructure.</p>');
   const [isEditingBio, setIsEditingBio] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -138,6 +141,13 @@ export default function EmployeeProfile({ employee, onBack }: EmployeeProfilePro
           >
             <Edit3 className="w-4 h-4" />
             Edit Profile
+          </button>
+          <button 
+            onClick={() => setShowDeleteConfirm(true)}
+            className="flex-1 sm:flex-none px-4 py-2.5 bg-red-50 text-red-600 rounded-xl text-sm font-bold hover:bg-red-100 transition-all flex items-center justify-center gap-2"
+          >
+            <Trash2 className="w-4 h-4" />
+            Delete
           </button>
           <button className="flex-1 sm:flex-none btn-primary py-2.5 px-4 text-sm">Actions</button>
         </div>
@@ -689,6 +699,19 @@ export default function EmployeeProfile({ employee, onBack }: EmployeeProfilePro
           />
         )}
       </AnimatePresence>
+
+      <ConfirmationModal
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={() => {
+          alert(`Employee ${employee.name} deleted successfully! (Simulation)`);
+          onBack();
+        }}
+        title="Delete Employee"
+        message={`Are you sure you want to delete ${employee.name}? This action cannot be undone and all associated data will be permanently removed.`}
+        confirmText="Delete Employee"
+        type="danger"
+      />
     </div>
   );
 }

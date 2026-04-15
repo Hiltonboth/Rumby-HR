@@ -350,8 +350,8 @@ export default function LandingPage({ onGetStarted, onLogin, onDocumentation, us
             transition={{ delay: 0.1 }}
             className="text-4xl sm:text-6xl md:text-8xl font-bold tracking-tight text-space-gray max-w-5xl mx-auto leading-[0.95]"
           >
-            The Operating System <br />
-            <span className="text-accent">for Modern Teams.</span>
+            Your All-in-One <br />
+            <span className="text-accent">HR Platform for SMEs</span>
           </motion.h1>
           <motion.p 
             initial={{ opacity: 0, y: 20 }}
@@ -407,7 +407,7 @@ export default function LandingPage({ onGetStarted, onLogin, onDocumentation, us
           </div>
 
           {/* Tabs Navigation */}
-          <div className="flex flex-wrap justify-center gap-2 mb-16 bg-apple-gray/30 p-2 rounded-[2rem] w-full max-w-4xl mx-auto">
+          <div className="flex overflow-x-auto pb-4 md:pb-0 md:flex-wrap justify-start md:justify-center gap-2 mb-16 bg-apple-gray/30 p-2 rounded-[2rem] w-full max-w-4xl mx-auto scrollbar-hide">
             {featureTabs.map((tab) => (
               <button
                 key={tab.id}
@@ -416,7 +416,7 @@ export default function LandingPage({ onGetStarted, onLogin, onDocumentation, us
                   setProgress(0);
                 }}
                 className={cn(
-                  "relative flex items-center gap-2 px-4 md:px-6 py-3 rounded-2xl text-xs md:text-sm font-bold transition-all overflow-hidden",
+                  "relative flex-shrink-0 flex items-center gap-2 px-4 md:px-6 py-3 rounded-2xl text-xs md:text-sm font-bold transition-all overflow-hidden whitespace-nowrap",
                   activeFeatureTab === tab.id 
                     ? "bg-white text-accent shadow-lg shadow-accent/5 scale-105" 
                     : "text-gray-500 hover:text-space-gray hover:bg-white/50"

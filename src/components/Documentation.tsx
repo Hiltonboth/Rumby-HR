@@ -18,7 +18,9 @@ import {
   Smartphone,
   Globe,
   Settings,
-  Sparkles
+  Sparkles,
+  Menu,
+  X
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 
@@ -144,6 +146,7 @@ const DOC_SECTIONS = [
 export default function Documentation({ onBack }: DocumentationProps) {
   const [activeSection, setActiveSection] = React.useState('intro');
   const [searchTerm, setSearchTerm] = React.useState('');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
 
   const allItems = DOC_SECTIONS.flatMap(s => s.items);
   const filteredItems = allItems.filter(item => 
@@ -170,17 +173,79 @@ export default function Documentation({ onBack }: DocumentationProps) {
           </div>
         </div>
         
-        <div className="relative hidden md:block">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-          <input 
-            type="text"
-            placeholder="Search documentation..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="bg-apple-gray/50 border border-black/[0.05] rounded-xl pl-10 pr-4 py-2 text-sm outline-none focus:ring-2 focus:ring-accent/20 w-64"
-          />
+        <div className="flex items-center gap-2">
+          <div className="relative hidden md:block">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input 
+              type="text"
+              placeholder="Search documentation..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="bg-apple-gray/50 border border-black/[0.05] rounded-xl pl-10 pr-4 py-2 text-sm outline-none focus:ring-2 focus:ring-accent/20 w-64"
+            />
+          </div>
+          <button 
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="lg:hidden p-2 hover:bg-apple-gray rounded-xl transition-all text-gray-500"
+          >
+            {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
         </div>
       </nav>
+
+      {/* Mobile Menu Overlay */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="fixed inset-0 z-40 lg:hidden pt-20 bg-white overflow-y-auto"
+          >
+            <div className="p-6 space-y-8">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input 
+                  type="text"
+                  placeholder="Search documentation..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full bg-apple-gray/50 border border-black/[0.05] rounded-xl pl-10 pr-4 py-3 text-sm outline-none focus:ring-2 focus:ring-accent/20"
+                />
+              </div>
+              <div className="space-y-8">
+                {DOC_SECTIONS.map((section) => (
+                  <div key={section.title} className="space-y-3">
+                    <div className="flex items-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                      <section.icon className="w-3 h-3" />
+                      {section.title}
+                    </div>
+                    <div className="space-y-1">
+                      {section.items.map((item) => (
+                        <button
+                          key={item.id}
+                          onClick={() => {
+                            setActiveSection(item.id);
+                            setIsMobileMenuOpen(false);
+                          }}
+                          className={cn(
+                            "w-full text-left px-4 py-3 rounded-xl text-sm font-bold transition-all",
+                            activeSection === item.id 
+                              ? "bg-accent/5 text-accent" 
+                              : "text-gray-500 hover:text-space-gray hover:bg-apple-gray/50"
+                          )}
+                        >
+                          {item.title}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="pt-24 flex max-w-7xl mx-auto min-h-screen">
         {/* Sidebar */}
@@ -214,7 +279,7 @@ export default function Documentation({ onBack }: DocumentationProps) {
         </aside>
 
         {/* Content */}
-        <main className="flex-1 p-6 md:p-12 max-w-3xl">
+        <main className="flex-1 p-6 md:p-12 lg:max-w-3xl">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeSection}

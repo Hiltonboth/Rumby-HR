@@ -54,6 +54,15 @@ export default function Layout({ children, activeTab, setActiveTab, currentCompa
     }, 2000);
   };
 
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 1024);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 10);
     window.addEventListener('scroll', handleScroll);
@@ -85,7 +94,7 @@ export default function Layout({ children, activeTab, setActiveTab, currentCompa
   }
 
   return (
-    <div className="min-h-screen bg-apple-gray/20 flex">
+    <div className="min-h-screen bg-apple-gray/20 flex overflow-x-hidden">
       {/* Sidebar */}
       <motion.aside 
         initial={false}
@@ -221,7 +230,7 @@ export default function Layout({ children, activeTab, setActiveTab, currentCompa
       {/* Main Content */}
       <motion.main 
         initial={false}
-        animate={{ paddingLeft: isSidebarCollapsed ? 80 : 256 }}
+        animate={{ paddingLeft: isMobile ? 0 : (isSidebarCollapsed ? 80 : 256) }}
         className="flex-1"
       >
         {/* Header */}

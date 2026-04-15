@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Shield, Zap, Users, BarChart3, ChevronRight, Star, CheckCircle2, ChevronDown, CreditCard, Menu, X, MessageCircle, Sparkles, FileText, Heart, PenTool } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Shield, Zap, Users, BarChart3, ChevronRight, Star, CheckCircle2, ChevronDown, CreditCard, Menu, X, MessageCircle, Sparkles, FileText, Heart, PenTool, Book } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
 import SuccessStories from './SuccessStories';
@@ -7,6 +7,7 @@ import SuccessStories from './SuccessStories';
 interface LandingPageProps {
   onGetStarted: () => void;
   onLogin: () => void;
+  onDocumentation: () => void;
   user?: any;
   onGoToDashboard?: () => void;
 }
@@ -49,12 +50,13 @@ const features = [
   { name: 'Mobile app', id: 'mobile' },
 ];
 
-export default function LandingPage({ onGetStarted, onLogin, user, onGoToDashboard }: LandingPageProps) {
+export default function LandingPage({ onGetStarted, onLogin, onDocumentation, user, onGoToDashboard }: LandingPageProps) {
   const [isFeaturesOpen, setIsFeaturesOpen] = useState(false);
   const [activeSubMenu, setActiveSubMenu] = useState<string | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [mobileExpandedFeature, setMobileExpandedFeature] = useState<string | null>(null);
   const [activeFeatureTab, setActiveFeatureTab] = useState('hiring');
+  const [progress, setProgress] = useState(0);
 
   const featureTabs = [
     { id: 'hiring', label: 'Hiring', icon: Users },
@@ -64,6 +66,37 @@ export default function LandingPage({ onGetStarted, onLogin, user, onGoToDashboa
     { id: 'esignature', label: 'E-Signature', icon: PenTool },
     { id: 'engagement', label: 'Engagement', icon: Star },
   ];
+
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const TAB_DURATION = 5000; // 5 seconds per tab
+
+  useEffect(() => {
+    const startTimer = () => {
+      setProgress(0);
+      
+      if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
+      progressIntervalRef.current = setInterval(() => {
+        setProgress(prev => Math.min(prev + (100 / (TAB_DURATION / 100)), 100));
+      }, 100);
+
+      if (timerRef.current) clearTimeout(timerRef.current);
+      timerRef.current = setTimeout(() => {
+        setActiveFeatureTab(prev => {
+          const currentIndex = featureTabs.findIndex(t => t.id === prev);
+          const nextIndex = (currentIndex + 1) % featureTabs.length;
+          return featureTabs[nextIndex].id;
+        });
+      }, TAB_DURATION);
+    };
+
+    startTimer();
+
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+      if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
+    };
+  }, [activeFeatureTab]);
 
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id);
@@ -173,6 +206,7 @@ export default function LandingPage({ onGetStarted, onLogin, user, onGoToDashboa
             </AnimatePresence>
           </div>
           <a href="#pricing" className="hover:text-space-gray transition-colors font-bold">Pricing</a>
+          <button onClick={onDocumentation} className="hover:text-space-gray transition-colors font-bold">Documentation</button>
           <div className="h-6 w-[1px] bg-black/[0.05]" />
           {user ? (
             <button 
@@ -269,6 +303,15 @@ export default function LandingPage({ onGetStarted, onLogin, user, onGoToDashboa
                 </div>
                 
                 <div className="pt-6 border-t border-black/[0.05] space-y-4">
+                  <button 
+                    onClick={() => {
+                      onDocumentation();
+                      setIsMobileMenuOpen(false);
+                    }} 
+                    className="w-full p-3 text-left font-bold text-gray-600 hover:bg-apple-gray/50 rounded-xl"
+                  >
+                    Documentation
+                  </button>
                   {user ? (
                     <button onClick={onGoToDashboard} className="w-full btn-primary py-4">Go to Dashboard</button>
                   ) : (
@@ -368,14 +411,25 @@ export default function LandingPage({ onGetStarted, onLogin, user, onGoToDashboa
             {featureTabs.map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveFeatureTab(tab.id)}
+                onClick={() => {
+                  setActiveFeatureTab(tab.id);
+                  setProgress(0);
+                }}
                 className={cn(
-                  "flex items-center gap-2 px-4 md:px-6 py-3 rounded-2xl text-xs md:text-sm font-bold transition-all",
+                  "relative flex items-center gap-2 px-4 md:px-6 py-3 rounded-2xl text-xs md:text-sm font-bold transition-all overflow-hidden",
                   activeFeatureTab === tab.id 
                     ? "bg-white text-accent shadow-lg shadow-accent/5 scale-105" 
                     : "text-gray-500 hover:text-space-gray hover:bg-white/50"
                 )}
               >
+                {activeFeatureTab === tab.id && (
+                  <motion.div 
+                    className="absolute bottom-0 left-0 h-1 bg-accent/20"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${progress}%` }}
+                    transition={{ ease: "linear" }}
+                  />
+                )}
                 <tab.icon className="w-4 h-4" />
                 {tab.label}
               </button>

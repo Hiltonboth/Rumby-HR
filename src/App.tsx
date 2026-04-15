@@ -13,6 +13,7 @@ import Payroll from './components/Payroll';
 import ESignature from './components/ESignature';
 import Community from './components/Community';
 import ResourceLibrary from './components/ResourceLibrary';
+import Documentation from './components/Documentation';
 import { auth, db } from './firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { doc, getDoc, onSnapshot, updateDoc } from 'firebase/firestore';
@@ -25,7 +26,7 @@ export default function App() {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [currentCompany, setCurrentCompany] = useState<Company | null>(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
-  const [view, setView] = useState<'landing' | 'login' | 'signup' | 'app'>('landing');
+  const [view, setView] = useState<'landing' | 'login' | 'signup' | 'app' | 'documentation'>('landing');
   const [activeTab, setActiveTab] = useState('dashboard');
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [viewHistory, setViewHistory] = useState<string[]>(['dashboard']);
@@ -455,9 +456,12 @@ export default function App() {
         <LandingPage 
           onGetStarted={() => setView('signup')} 
           onLogin={() => setView('login')} 
+          onDocumentation={() => setView('documentation')}
           user={user}
           onGoToDashboard={() => setView('app')}
         />
+      ) : view === 'documentation' ? (
+        <Documentation onBack={() => setView('landing')} />
       ) : view === 'login' || view === 'signup' ? (
         <LoginPage isSignup={view === 'signup'} onBackToHome={() => setView('landing')} onSuccess={() => setView('app')} />
       ) : (

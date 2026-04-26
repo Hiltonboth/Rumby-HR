@@ -32,7 +32,7 @@ export const generatePayslipPDF = (
   
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(10);
-  doc.text(`Name: ${employee.name}`, 20, 52);
+  doc.text(`Name: ${employee.firstName} ${employee.lastName}`, 20, 52);
   doc.text(`Employee ID: ${profile.employeeNumber}`, 20, 58);
   doc.text(`Role: ${employee.role}`, 20, 64);
   doc.text(`Department: ${employee.department}`, 20, 70);
@@ -97,5 +97,5 @@ export const generatePayslipPDF = (
   doc.text('This is a computer-generated document and does not require a signature.', pageWidth / 2, finalY, { align: 'center' });
   doc.text('ZivoHR - The Minimalist HR Platform for Zimbabwe', pageWidth / 2, finalY + 5, { align: 'center' });
 
-  doc.save(`Payslip_${employee.name.replace(/\s+/g, '_')}_${period.replace(/\s+/g, '_')}.pdf`);
+  doc.save(`Payslip_${employee.firstName}_${employee.lastName}_${period.replace(/\s+/g, '_')}.pdf`);
 };

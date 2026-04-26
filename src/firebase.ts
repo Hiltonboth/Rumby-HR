@@ -18,17 +18,14 @@ export const db = firestoreDb;
 async function testConnection() {
   // Wait a bit for the SDK to initialize
   await new Promise(resolve => setTimeout(resolve, 2000));
-  console.log("Testing Firestore connection to database:", firebaseConfig.firestoreDatabaseId || '(default)');
   try {
-    // We use a dummy path to test the connection
+    // Quiet connection test
     await getDocFromServer(doc(db, '_connection_test_', 'init'));
-    console.log("Firestore connection successful");
   } catch (error) {
-    console.error("Firestore connection test failed:", error);
+    // Firestore might be offline if keys are missing or project is starting up. 
+    // We log it as a warning only to prevent confusing "Failed to fetch" alerts in some environments.
     if (error instanceof Error && error.message.includes('the client is offline')) {
-      console.error("CRITICAL: Firestore is offline. This usually means the database ID is wrong or the database is not provisioned.");
-      console.log("Current Database ID:", firebaseConfig.firestoreDatabaseId);
-      console.log("Current Project ID:", firebaseConfig.projectId);
+      console.warn("Firestore is in offline mode. This is expected if initialization is pending.");
     }
   }
 }

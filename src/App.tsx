@@ -10,86 +10,85 @@ import AIChatbot from './components/AIChatbot';
 import LandingPage from './components/LandingPage';
 import LoginPage from './components/LoginPage';
 import Payroll from './components/Payroll';
-import ESignature from './components/ESignature';
+import ESignaturesHub from './components/ESignaturesHub';
 import Community from './components/Community';
 import ResourceLibrary from './components/ResourceLibrary';
 import Documentation from './components/Documentation';
-import { auth, db } from './firebase';
-import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { doc, getDoc, onSnapshot, updateDoc } from 'firebase/firestore';
+import LeaveTracker from './components/LeaveTracker';
+import Attendance from './components/Attendance';
+import SelfService from './components/SelfService';
+import DocumentVault from './components/DocumentVault';
+import AssetTracker from './components/AssetTracker';
+import WorkspaceSetup from './components/WorkspaceSetup';
+import CompanySettings from './components/CompanySettings';
+import Treasury from './components/Treasury';
+import { supabase } from './lib/supabase';
 import { Employee, Company, UserProfile } from './types';
 import { cn } from './lib/utils';
-import { handleFirestoreError, OperationType } from './lib/firestoreErrorHandler';
+// Note: handleFirestoreError will be replaced/removed as we move to Supabase
+
+import JobPortal from './components/JobPortal';
+import { ThemeProvider } from './components/ThemeContext';
+import { useAuth } from './contexts/AuthContext';
 
 export default function App() {
-  const [user, setUser] = useState<any>(null);
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const { user, userProfile, loading: isAuthLoading } = useAuth();
   const [currentCompany, setCurrentCompany] = useState<Company | null>(null);
-  const [isAuthReady, setIsAuthReady] = useState(false);
-  const [view, setView] = useState<'landing' | 'login' | 'signup' | 'app' | 'documentation'>('landing');
+  const [view, setView] = useState<'landing' | 'login' | 'signup' | 'app' | 'documentation' | 'careers'>('landing');
   const [activeTab, setActiveTab] = useState('dashboard');
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [viewHistory, setViewHistory] = useState<string[]>(['dashboard']);
+  const [portalCompanyId, setPortalCompanyId] = useState<string | null>(null);
 
   useEffect(() => {
-    // Listen for auth changes
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      handleAuthChange(firebaseUser);
-    });
-
-    return () => unsubscribe();
+    // Check for Careers Portal URL
+    const path = window.location.pathname;
+    const careersMatch = path.match(/\/careers\/([a-zA-Z0-9-]+)/);
+    if (careersMatch) {
+      setPortalCompanyId(careersMatch[1]);
+      setView('careers');
+    }
   }, []);
 
-  const handleAuthChange = async (firebaseUser: any) => {
-    if (firebaseUser) {
-      setUser(firebaseUser);
-      
-      // Fetch user profile from Firestore 'profiles' collection
-      const profileRef = doc(db, 'profiles', firebaseUser.uid);
-      let profileSnap;
-      try {
-        profileSnap = await getDoc(profileRef);
-      } catch (error) {
-        handleFirestoreError(error, OperationType.GET, 'profiles/' + firebaseUser.uid);
-        return;
-      }
-
-      if (profileSnap.exists()) {
-        const profile = profileSnap.data() as UserProfile;
-        setUserProfile(profile);
-        
-        // Fetch company data
-        const tenantRef = doc(db, 'tenants', profile.tenantId);
-        let tenantSnap;
-        try {
-          tenantSnap = await getDoc(tenantRef);
-        } catch (error) {
-          handleFirestoreError(error, OperationType.GET, 'tenants/' + profile.tenantId);
-          return;
-        }
-
-        if (tenantSnap.exists()) {
-          setCurrentCompany({ id: tenantSnap.id, ...tenantSnap.data() } as Company);
-        }
-        
+  // Update view and fetch company when auth state changes
+  useEffect(() => {
+    if (userProfile) {
+      if (view === 'landing' || view === 'login' || view === 'signup') {
         setView('app');
-      } else {
-        // Handle platform owner or incomplete signup
-        if (firebaseUser.email === 'hmarumure@gmail.com') {
-           setUserProfile({ uid: firebaseUser.uid, role: 'platform_owner', tenantId: 'global', email: firebaseUser.email! });
-           setView('app');
-        } else {
-           setView('login');
-        }
       }
-    } else {
-      setUser(null);
-      setUserProfile(null);
+      
+      // Fetch company data if missing or changed
+      if (userProfile.companyId && userProfile.companyId !== 'global' && (!currentCompany || currentCompany.id !== userProfile.companyId)) {
+        supabase
+          .from('companies')
+          .select('*')
+          .eq('id', userProfile.companyId)
+          .single()
+          .then(({ data: company, error: companyError }) => {
+            if (companyError) {
+              console.error("Error fetching company:", companyError);
+            } else if (company) {
+              setCurrentCompany({
+                id: company.id,
+                name: company.name,
+                logoUrl: company.logo_url,
+                accentColor: company.accent_color,
+                plan: company.plan,
+                industry: company.industry,
+                country: company.country,
+                currency: company.currency,
+                status: company.status
+              } as Company);
+            }
+          });
+      }
+    } else if (!isAuthLoading) {
+      if (view === 'app' || view === 'onboarding') {
+        setView('landing');
+      }
       setCurrentCompany(null);
-      if (view === 'app') setView('landing');
     }
-    setIsAuthReady(true);
-  };
+  }, [userProfile, isAuthLoading]);
 
   useEffect(() => {
     if (currentCompany?.accentColor) {
@@ -118,7 +117,7 @@ export default function App() {
   };
 
   const handleLogout = async () => {
-    await signOut(auth);
+    await supabase.auth.signOut();
     setView('landing');
   };
 
@@ -147,23 +146,23 @@ export default function App() {
 
     // Simulate upload process with progress feedback
     try {
-      // In a real app, we'd use uploadBytesResumable from firebase/storage
-      // For this demo, we'll convert to base64 to simulate a "real" persistent change in Firestore
       const reader = new FileReader();
       reader.onloadend = async () => {
         const base64String = reader.result as string;
         
-        const tenantRef = doc(db, 'tenants', currentCompany.id);
-        try {
-          await updateDoc(tenantRef, { logo: base64String });
-          setCurrentCompany(prev => prev ? { ...prev, logo: base64String } : null);
-          alert('Company logo updated successfully!');
-        } catch (error) {
-          handleFirestoreError(error, OperationType.UPDATE, 'tenants/' + currentCompany.id);
+        const { error: updateError } = await supabase
+          .from('companies')
+          .update({ logo_url: base64String })
+          .eq('id', currentCompany.id);
+
+        if (updateError) {
+          console.error("Error updating logo:", updateError);
           setLogoUploadError('Failed to save logo to database');
-        } finally {
-          setIsUploadingLogo(false);
+        } else {
+          setCurrentCompany(prev => prev ? { ...prev, logoUrl: base64String } : null);
+          alert('Company logo updated successfully!');
         }
+        setIsUploadingLogo(false);
       };
       reader.onerror = () => {
         setLogoUploadError('Failed to read file');
@@ -234,7 +233,8 @@ export default function App() {
     if (selectedEmployee) {
       return (
         <EmployeeProfile 
-          employee={selectedEmployee} 
+          employeeId={selectedEmployee.id}
+          userProfile={userProfile}
           onBack={goBack} 
         />
       );
@@ -242,33 +242,41 @@ export default function App() {
 
     switch (activeTab) {
       case 'dashboard':
-        return <Dashboard onNavigate={navigateTo} />;
+        return <Dashboard onNavigate={navigateTo} userProfile={userProfile} />;
       case 'team':
       case 'self_service':
+        return <SelfService userProfile={userProfile} />;
       case 'leave':
-      case 'time':
+        return <LeaveTracker userProfile={userProfile} />;
       case 'attendance':
+      case 'time':
+        return <Attendance userProfile={userProfile} />;
       case 'engagement':
       case 'workflows':
-        return <TeamDirectory onSelectEmployee={setSelectedEmployee} />;
+        return <TeamDirectory onSelectEmployee={setSelectedEmployee} userProfile={userProfile} />;
       case 'hiring':
-        return <HiringPipeline />;
+        return <HiringPipeline userProfile={userProfile} />;
       case 'payroll':
-        return <Payroll />;
+        return <Payroll userProfile={userProfile} />;
+      case 'treasury':
+        return <Treasury userProfile={userProfile} />;
       case 'esignature':
-        return <ESignature />;
+        return <ESignaturesHub userProfile={userProfile} />;
       case 'community':
         return <Community initialView="feed" />;
       case 'jobs':
         return <Community initialView="jobs" />;
       case 'library':
         return <ResourceLibrary />;
+      case 'vault':
+        return <DocumentVault userProfile={userProfile} />;
+      case 'assets':
+        return <AssetTracker userProfile={userProfile} />;
       case 'onboarding':
         return (
           <OnboardingWizard 
-            userId={user?.id || ''} 
-            onComplete={() => navigateTo('dashboard')}
-            onCancel={() => navigateTo('dashboard')}
+            userProfile={userProfile} 
+            onNavigate={navigateTo}
           />
         );
       case 'performance':
@@ -282,6 +290,9 @@ export default function App() {
           </div>
         );
       case 'settings':
+        if (['owner', 'admin'].includes(userProfile?.role || '')) {
+          return <CompanySettings userProfile={userProfile} />;
+        }
         return (
           <div className="max-w-2xl space-y-8">
             <div className="flex items-center justify-between">
@@ -312,8 +323,8 @@ export default function App() {
                         >
                           {isUploadingLogo ? (
                             <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                          ) : currentCompany.logo ? (
-                            <img src={currentCompany.logo} alt="Logo" className="w-full h-full object-cover" />
+                          ) : currentCompany.logoUrl ? (
+                            <img src={currentCompany.logoUrl} alt="Logo" className="w-full h-full object-cover" />
                           ) : (
                             currentCompany.name.charAt(0)
                           )}
@@ -348,13 +359,16 @@ export default function App() {
                                 key={color}
                                 onClick={async () => {
                                   try {
-                                    const tenantRef = doc(db, 'tenants', currentCompany.id);
-                                    try {
-                                      await updateDoc(tenantRef, { accentColor: color });
-                                    } catch (error) {
-                                      handleFirestoreError(error, OperationType.UPDATE, 'tenants/' + currentCompany.id);
+                                    const { error: colorError } = await supabase
+                                      .from('companies')
+                                      .update({ accent_color: color })
+                                      .eq('id', currentCompany.id);
+
+                                    if (colorError) {
+                                      console.error("Error updating accent color:", colorError);
+                                    } else {
+                                      setCurrentCompany(prev => prev ? { ...prev, accentColor: color } : null);
                                     }
-                                    setCurrentCompany(prev => prev ? { ...prev, accentColor: color } : null);
                                   } catch (error) {
                                     console.error("Error updating accent color:", error);
                                   }
@@ -438,11 +452,11 @@ export default function App() {
         </div>
       );
       default:
-        return <Dashboard onNavigate={navigateTo} />;
+        return <Dashboard onNavigate={navigateTo} userProfile={userProfile} />;
     }
   };
 
-  if (!isAuthReady) {
+  if (isAuthLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="w-8 h-8 border-4 border-accent border-t-transparent rounded-full animate-spin" />
@@ -451,8 +465,10 @@ export default function App() {
   }
 
   return (
-    <>
-      {view === 'landing' ? (
+    <ThemeProvider>
+      {view === 'careers' && portalCompanyId ? (
+        <JobPortal companyId={portalCompanyId} />
+      ) : view === 'landing' ? (
         <LandingPage 
           onGetStarted={() => setView('signup')} 
           onLogin={() => setView('login')} 
@@ -464,11 +480,19 @@ export default function App() {
         <Documentation onBack={() => setView('landing')} />
       ) : view === 'login' || view === 'signup' ? (
         <LoginPage isSignup={view === 'signup'} onBackToHome={() => setView('landing')} onSuccess={() => setView('app')} />
+      ) : userProfile && !userProfile.companyId && userProfile.role !== 'platform_owner' ? (
+        <WorkspaceSetup 
+          userProfile={userProfile} 
+          onComplete={() => {
+            // Re-fetch profile or just reload
+            window.location.reload(); 
+          }} 
+        />
       ) : (
         <Layout 
           activeTab={activeTab} 
           setActiveTab={navigateTo}
-          currentCompany={currentCompany || { id: 'temp', name: 'ZivoHR', logo: 'Z', accentColor: '#007AFF', plan: 'Pro', employeeCount: 0, status: 'Active', ownerUid: '' }}
+          currentCompany={currentCompany || { id: 'temp', name: 'ZivoHR', logoUrl: '', accentColor: '#007AFF', plan: 'pro', country: 'Zimbabwe', currency: 'USD' }}
           userProfile={userProfile}
           onBack={viewHistory.length > 1 || selectedEmployee ? goBack : undefined}
           onGoHome={() => setView('landing')}
@@ -477,6 +501,6 @@ export default function App() {
         </Layout>
       )}
       <AIChatbot />
-    </>
+    </ThemeProvider>
   );
 }

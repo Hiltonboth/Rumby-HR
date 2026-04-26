@@ -1,17 +1,11 @@
 import React, { useState } from 'react';
 import { Mail, Lock, ArrowRight, Github, Chrome, AlertCircle, Building, User, ArrowLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { auth, db } from '../firebase';
-import { 
-  createUserWithEmailAndPassword, 
-  signInWithEmailAndPassword, 
-  signInWithPopup, 
-  GoogleAuthProvider,
-  updateProfile
-} from 'firebase/auth';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { supabase } from '../lib/supabase';
 import { cn } from '../lib/utils';
-import { handleFirestoreError, OperationType } from '../lib/firestoreErrorHandler';
+
+import { useTheme } from './ThemeContext';
+import { Logo } from './Logo';
 
 interface LoginPageProps {
   isSignup?: boolean;
@@ -35,6 +29,8 @@ const GithubIcon = () => (
 );
 
 export default function LoginPage({ isSignup: initialIsSignup = false, onSuccess, onBackToHome }: LoginPageProps) {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
   const [isSignup, setIsSignup] = useState(initialIsSignup);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -50,62 +46,45 @@ export default function LoginPage({ isSignup: initialIsSignup = false, onSuccess
 
     try {
       if (isSignup) {
-        // 1. Sign up user
-        const { user: firebaseUser } = await createUserWithEmailAndPassword(auth, email, password);
-        
-        if (!firebaseUser) throw new Error('Signup failed');
-
-        // Update display name
-        await updateProfile(firebaseUser, { displayName: fullName });
-
-        // 2. Create Tenant
-        const tenantId = Math.random().toString(36).substring(7);
-        const tenantData = {
-          name: companyName,
-          ownerUid: firebaseUser.uid,
-          accentColor: '#007AFF',
-          plan: 'Pro',
-          status: 'Active',
-          employeeCount: 1
-        };
-
-        try {
-          await setDoc(doc(db, 'tenants', tenantId), tenantData);
-        } catch (error) {
-          handleFirestoreError(error, OperationType.WRITE, 'tenants/' + tenantId);
-        }
-
-        // 3. Create User Profile
-        const profileData = {
-          uid: firebaseUser.uid,
+        // 1. Sign up user with Supabase
+        const { data: authData, error: signupError } = await supabase.auth.signUp({
           email,
-          role: 'admin',
-          tenantId: tenantId,
-          fullName: fullName
-        };
-
-        try {
-          await setDoc(doc(db, 'profiles', firebaseUser.uid), profileData);
-        } catch (error) {
-          handleFirestoreError(error, OperationType.WRITE, 'profiles/' + firebaseUser.uid);
+          password,
+          options: {
+            data: {
+              full_name: fullName,
+            }
+          }
+        });
+        
+        if (signupError) throw signupError;
+        
+        // If email confirmation is required, authData.user will be present but session might be null.
+        // We'll show a success message via the error handler logic I added earlier.
+        if (!authData.session) {
+          throw new Error('Success! Confirmation email sent.');
         }
 
       } else {
-        await signInWithEmailAndPassword(auth, email, password);
+        const { error: loginError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        if (loginError) throw loginError;
       }
       
       onSuccess();
     } catch (err: any) {
-      console.error('Auth Error:', err.code, err.message);
-      if (err.code === 'auth/operation-not-allowed') {
-        setError('Email/Password sign-in is disabled in Firebase. Please ensure you enabled it and clicked "Save" in the Firebase Console.');
-      } else if (err.code === 'auth/user-not-found') {
-        setError('No account found with this email. Please sign up first.');
-      } else if (err.code === 'auth/wrong-password') {
-        setError('Incorrect password. Please try again.');
-      } else {
-        setError(err.message);
+      console.error('Auth Error:', err.message);
+      let message = err.message || 'An error occurred during authentication';
+      
+      if (err.message?.toLowerCase().includes('email not confirmed')) {
+        message = 'Please check your email and confirm your address before signing in.';
+      } else if (err.message?.toLowerCase().includes('confirmation_sent')) {
+        message = 'Success! A confirmation email has been sent. Please verify it before logging in.';
       }
+      
+      setError(message);
     } finally {
       setIsLoading(false);
     }
@@ -113,20 +92,34 @@ export default function LoginPage({ isSignup: initialIsSignup = false, onSuccess
 
   const handleGoogleLogin = async () => {
     try {
-      const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
-      onSuccess();
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin,
+        }
+      });
+      if (error) throw error;
+      // Note: Redirect happens automatically for OAuth
     } catch (err: any) {
       setError(err.message);
     }
   };
 
   return (
-    <div className="min-h-screen bg-apple-gray/30 flex items-center justify-center p-6 relative">
+    <div className={`min-h-screen flex items-center justify-center p-6 relative transition-colors duration-500 ${isDark ? 'bg-slate-950 text-white' : 'bg-slate-50 text-slate-900'}`}>
+      {/* Background Decor */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute inset-0 bg-noise opacity-5" />
+        <div className={`absolute top-0 left-0 w-full h-full transition-opacity duration-1000 ${isDark ? 'opacity-20' : 'opacity-10'}`}>
+           <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-indigo-600 rounded-full blur-[120px]" />
+           <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-purple-600 rounded-full blur-[120px]" />
+        </div>
+      </div>
+
       {/* Back to Home */}
       <button 
         onClick={onBackToHome}
-        className="absolute top-8 left-8 flex items-center gap-2 text-gray-500 hover:text-accent font-bold transition-colors"
+        className={`absolute top-8 left-8 flex items-center gap-2 font-bold transition-colors z-10 ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-indigo-600'}`}
       >
         <ArrowLeft className="w-4 h-4" />
         Back to Home
@@ -135,17 +128,17 @@ export default function LoginPage({ isSignup: initialIsSignup = false, onSuccess
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md space-y-8"
+        className="w-full max-w-md space-y-8 relative z-10"
       >
-        <div className="text-center space-y-2">
-          <div className="w-12 h-12 bg-accent rounded-2xl flex items-center justify-center text-white font-bold text-2xl mx-auto shadow-lg">Z</div>
+        <div className="text-center space-y-4">
+          <Logo className="w-16 h-16 mx-auto" />
           <h1 className="text-3xl font-bold tracking-tight">{isSignup ? 'Create your workspace' : 'Welcome back'}</h1>
-          <p className="text-gray-500">
+          <p className={isDark ? 'text-slate-400' : 'text-slate-500'}>
             {isSignup ? 'Start your 14-day free trial today.' : 'Enter your credentials to access ZivoHR.'}
           </p>
         </div>
 
-        <div className="card-aura p-8 space-y-6">
+        <div className={`p-8 space-y-6 rounded-[2.5rem] border shadow-2xl transition-colors ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
           <form onSubmit={handleSubmit} className="space-y-4">
             <AnimatePresence mode="popLayout">
               {isSignup && (
@@ -240,27 +233,27 @@ export default function LoginPage({ isSignup: initialIsSignup = false, onSuccess
           </form>
 
           <div className="relative">
-            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-black/[0.05]"></div></div>
-            <div className="relative flex justify-center text-xs uppercase"><span className="bg-white px-2 text-gray-400 font-bold">Or continue with</span></div>
+            <div className="absolute inset-0 flex items-center"><div className={`w-full border-t ${isDark ? 'border-slate-800' : 'border-slate-100'}`}></div></div>
+            <div className="relative flex justify-center text-xs uppercase"><span className={`px-2 font-bold ${isDark ? 'bg-slate-900 text-slate-500' : 'bg-white text-slate-400'}`}>Or continue with</span></div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <button onClick={handleGoogleLogin} className="btn-secondary flex items-center justify-center gap-3 py-3 hover:bg-white hover:shadow-md transition-all">
+            <button onClick={handleGoogleLogin} className={`flex items-center justify-center gap-3 py-3 rounded-2xl border transition-all ${isDark ? 'bg-slate-800 border-slate-700 hover:bg-slate-700' : 'bg-slate-50 border-slate-200 hover:bg-white hover:shadow-md'}`}>
               <GoogleIcon />
               <span className="font-bold text-sm">Google</span>
             </button>
-            <button className="btn-secondary flex items-center justify-center gap-3 py-3 hover:bg-white hover:shadow-md transition-all">
+            <button className={`flex items-center justify-center gap-3 py-3 rounded-2xl border transition-all ${isDark ? 'bg-slate-800 border-slate-700 hover:bg-slate-700' : 'bg-slate-50 border-slate-200 hover:bg-white hover:shadow-md'}`}>
               <GithubIcon />
               <span className="font-bold text-sm">GitHub</span>
             </button>
           </div>
         </div>
 
-        <p className="text-center text-sm text-gray-500">
+        <p className={`text-center text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
           {isSignup ? 'Already have an account?' : "Don't have an account?"}{' '}
           <button 
             onClick={() => setIsSignup(!isSignup)}
-            className="text-accent font-bold hover:underline"
+            className="text-indigo-500 font-bold hover:underline"
           >
             {isSignup ? 'Sign In' : 'Sign Up'}
           </button>

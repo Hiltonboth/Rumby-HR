@@ -3,48 +3,39 @@ import { Employee, Company, Task, Candidate } from './types';
 export const MOCK_EMPLOYEES: Employee[] = [
   {
     id: '1',
-    name: 'Kofi Mensah',
-    role: 'Head of Marketing',
+    firstName: 'Kofi',
+    lastName: 'Mensah',
+    companyId: 'c1',
+    jobTitle: 'Head of Marketing',
     department: 'Marketing',
-    location: 'Accra, Ghana',
     startDate: '2021-03-15',
-    email: 'kofi.m@rumby.hr',
+    email: 'kofi.m@zivohr.com',
     avatar: 'https://images.unsplash.com/photo-1531384441138-2736e62e0919?w=400&h=400&fit=crop',
-    status: 'Active',
-    salary: 145000,
-    skills: ['Brand Strategy', 'Growth', 'Leadership'],
-    bio: 'Passionate marketing leader with 10+ years of experience in the African tech ecosystem.',
-    tenantId: 'c1',
+    status: 'active',
   },
   {
     id: '2',
-    name: 'Zanele Dlamini',
-    role: 'Senior Engineer',
+    firstName: 'Zanele',
+    lastName: 'Dlamini',
+    companyId: 'c1',
+    jobTitle: 'Senior Engineer',
     department: 'Engineering',
-    location: 'Johannesburg, SA',
     startDate: '2022-01-10',
-    email: 'zanele.d@rumby.hr',
+    email: 'zanele.d@zivohr.com',
     avatar: 'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=400&h=400&fit=crop',
-    status: 'Active',
-    salary: 160000,
-    skills: ['React', 'Node.js', 'AWS'],
-    bio: 'Full-stack developer focused on building scalable solutions for emerging markets.',
-    tenantId: 'c1',
+    status: 'active',
   },
   {
     id: '3',
-    name: 'Tunde Balogun',
-    role: 'Product Designer',
+    firstName: 'Tunde',
+    lastName: 'Balogun',
+    companyId: 'c1',
+    jobTitle: 'Product Designer',
     department: 'Design',
-    location: 'Lagos, Nigeria',
     startDate: '2023-05-22',
-    email: 'tunde.b@rumby.hr',
+    email: 'tunde.b@zivohr.com',
     avatar: 'https://images.unsplash.com/photo-1506277886164-e25aa3f4ef7f?w=400&h=400&fit=crop',
-    status: 'Active',
-    salary: 120000,
-    skills: ['UI/UX', 'Figma', 'Prototyping'],
-    bio: 'Visual designer with a love for minimalist interfaces and cultural storytelling.',
-    tenantId: 'c1',
+    status: 'active',
   },
 ];
 
@@ -52,22 +43,20 @@ export const MOCK_COMPANIES: Company[] = [
   {
     id: 'c1',
     name: "ZivoHR",
-    logo: 'Z',
+    logoUrl: '',
     accentColor: '#007AFF',
-    plan: 'Enterprise',
-    employeeCount: 124,
-    status: 'Active',
-    ownerUid: 'owner1',
+    plan: 'enterprise',
+    country: 'Zimbabwe',
+    currency: 'USD',
   },
   {
     id: 'c2',
     name: 'Stellar Tech',
-    logo: 'S',
+    logoUrl: '',
     accentColor: '#5856D6',
-    plan: 'Pro',
-    employeeCount: 45,
-    status: 'Active',
-    ownerUid: 'owner2',
+    plan: 'pro',
+    country: 'Zimbabwe',
+    currency: 'USD',
   },
 ];
 
@@ -101,39 +90,51 @@ export const MOCK_TASKS: Task[] = [
 export const MOCK_CANDIDATES: Candidate[] = [
   { 
     id: 'can1', 
+    companyId: '1',
     name: 'Alex Rivera', 
+    email: 'alex.rivera@example.com',
     role: 'Frontend Lead', 
-    status: 'Interviewing', 
+    status: 'Initial Interview', 
     score: 92,
     skills: ['React', 'TypeScript', 'Tailwind', 'Next.js'],
-    experience: '8 years of experience in frontend development, leading teams at scale.'
+    experience: '8 years of experience in frontend development, leading teams at scale.',
+    appliedAt: '2024-03-15'
   },
   { 
     id: 'can2', 
+    companyId: '1',
     name: 'Jordan Smith', 
+    email: 'jordan.smith@example.com',
     role: 'HR Manager', 
-    status: 'Offer Sent', 
+    status: 'Final Offer', 
     score: 88,
     skills: ['Employee Relations', 'Payroll', 'Recruitment', 'Labour Law'],
-    experience: '6 years in HR management, specializing in compliance and culture.'
+    experience: '6 years in HR management, specializing in compliance and culture.',
+    appliedAt: '2024-03-16'
   },
   { 
     id: 'can3', 
+    companyId: '1',
     name: 'Taylor Wong', 
+    email: 'taylor.wong@example.com',
     role: 'Sales Exec', 
-    status: 'Screening', 
+    status: 'Shortlisted', 
     score: 75,
     skills: ['B2B Sales', 'CRM', 'Negotiation'],
-    experience: '4 years in enterprise sales with a track record of exceeding quotas.'
+    experience: '4 years in enterprise sales with a track record of exceeding quotas.',
+    appliedAt: '2024-03-17'
   },
   { 
     id: 'can4', 
+    companyId: '1',
     name: 'Sam Jones', 
+    email: 'sam.jones@example.com',
     role: 'DevOps', 
     status: 'Applied', 
     score: 82,
     skills: ['Docker', 'Kubernetes', 'AWS', 'CI/CD'],
-    experience: '5 years in cloud infrastructure and automation.'
+    experience: '5 years in cloud infrastructure and automation.',
+    appliedAt: '2024-03-18'
   },
 ];
 
@@ -221,7 +222,8 @@ export const DEFAULT_STATUTORY_RATES: any = {
   necLevy: {
     type: 'Fixed',
     value: 5.43
-  }
+  },
+  zigRate: 13.5
 };
 
 export const MOCK_PAYROLL_RUNS: any[] = [

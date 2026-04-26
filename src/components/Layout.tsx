@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Bell, Command, LayoutDashboard, Users, Briefcase, TrendingUp, CreditCard, Heart, Settings, Zap, ChevronRight, Menu, X, Calendar, Clock, CheckCircle2, ArrowLeft, PartyPopper, ShieldCheck, PenTool, Upload, MessageCircle, BookOpen, Key } from 'lucide-react';
+import { Search, Bell, Command, LayoutDashboard, Users, Briefcase, TrendingUp, CreditCard, Heart, Settings, Zap, ChevronRight, Menu, X, Calendar, Clock, CheckCircle2, ArrowLeft, PartyPopper, ShieldCheck, PenTool, Upload, MessageCircle, BookOpen, Key, Shield, Monitor, Landmark } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
 import { Company } from '../types';
 import ConfirmationModal from './ConfirmationModal';
+
+import { useTheme } from './ThemeContext';
+import { Logo } from './Logo';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -80,7 +83,10 @@ export default function Layout({ children, activeTab, setActiveTab, currentCompa
     { id: 'team', label: 'Organization', icon: Users },
     { id: 'performance', label: 'Performance', icon: TrendingUp },
     { id: 'payroll', label: 'Payroll', icon: CreditCard },
-    { id: 'esignature', label: 'eSignature', icon: PenTool },
+    { id: 'treasury', label: 'Treasury', icon: Landmark },
+    { id: 'esignature', label: 'e-signatures', icon: PenTool },
+    { id: 'vault', label: 'Vault (Records)', icon: Shield },
+    { id: 'assets', label: 'Assets & IT', icon: Monitor },
     { id: 'community', label: 'Community & Jobs', icon: MessageCircle },
     { id: 'library', label: 'HR Library', icon: BookOpen },
     { id: 'engagement', label: 'Engagement', icon: Heart },
@@ -93,15 +99,18 @@ export default function Layout({ children, activeTab, setActiveTab, currentCompa
     displayMenuItems.push({ id: 'owner_kpis', label: 'Owner Dashboard', icon: ShieldCheck });
   }
 
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
   return (
-    <div className="min-h-screen bg-apple-gray/20 flex overflow-x-hidden">
+    <div className={`min-h-screen flex overflow-x-hidden transition-colors duration-500 ${isDark ? 'bg-slate-950' : 'bg-slate-50'}`}>
       {/* Sidebar */}
       <motion.aside 
         initial={false}
         animate={{ width: isSidebarCollapsed ? 80 : 256 }}
-        className="border-r border-black/[0.05] bg-white fixed h-full hidden lg:flex flex-col shadow-sm z-50 overflow-hidden"
+        className={`border-r fixed h-full hidden lg:flex flex-col shadow-sm z-50 overflow-hidden transition-colors ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}
       >
-        <div className="p-6 border-b border-black/[0.05] flex items-center justify-between">
+        <div className={`p-6 border-b flex items-center justify-between ${isDark ? 'border-slate-800' : 'border-slate-100'}`}>
           <AnimatePresence mode="wait">
             {!isSidebarCollapsed && (
               <motion.div 
@@ -110,15 +119,16 @@ export default function Layout({ children, activeTab, setActiveTab, currentCompa
                 exit={{ opacity: 0, x: -10 }}
                 className="flex items-center gap-3 overflow-hidden"
               >
-                <div 
-                  className="w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center text-white font-bold text-xl shadow-lg"
-                  style={{ backgroundColor: currentCompany.accentColor }}
-                >
-                  {currentCompany.logo || currentCompany.name.charAt(0)}
-                </div>
+                {currentCompany.logoUrl ? (
+                  <div className="w-10 h-10 rounded-xl flex-shrink-0 shadow-lg overflow-hidden border border-slate-200 cursor-pointer">
+                    <img src={currentCompany.logoUrl} alt="Logo" className="w-full h-full object-cover" />
+                  </div>
+                ) : (
+                  <Logo className="w-10 h-10" />
+                )}
                 <div className="min-w-0">
-                  <h2 className="font-bold text-space-gray leading-tight truncate">{currentCompany.name}</h2>
-                  <p className="text-[10px] font-bold text-accent uppercase tracking-widest">{currentCompany.plan} Plan</p>
+                  <h2 className={`font-bold text-sm leading-tight truncate ${isDark ? 'text-white' : 'text-slate-900'}`}>{currentCompany.name}</h2>
+                  <p className="text-[10px] font-bold text-indigo-500 uppercase tracking-widest">{currentCompany.plan} Plan</p>
                 </div>
               </motion.div>
             )}
@@ -127,10 +137,13 @@ export default function Layout({ children, activeTab, setActiveTab, currentCompa
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
-                className="w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center text-white font-bold text-xl shadow-lg mx-auto"
-                style={{ backgroundColor: currentCompany.accentColor }}
+                className="w-10 h-10 rounded-xl flex-shrink-0 shadow-lg mx-auto overflow-hidden border border-slate-200"
               >
-                {currentCompany.logo || currentCompany.name.charAt(0)}
+                {currentCompany.logoUrl ? (
+                   <img src={currentCompany.logoUrl} alt="Logo" className="w-full h-full object-cover" />
+                ) : (
+                   <Logo className="w-full h-full" />
+                )}
               </motion.div>
             )}
           </AnimatePresence>
@@ -234,12 +247,12 @@ export default function Layout({ children, activeTab, setActiveTab, currentCompa
         className="flex-1"
       >
         {/* Header */}
-        <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-black/[0.05] px-4 md:px-8 py-3 md:py-4 flex items-center justify-between">
+        <header className={`sticky top-0 z-50 backdrop-blur-md border-b px-4 md:px-8 py-3 md:py-4 flex items-center justify-between transition-colors ${isDark ? 'bg-slate-900/80 border-slate-800' : 'bg-white/80 border-slate-100'}`}>
           <div className="flex items-center gap-2 md:gap-4">
             {onBack ? (
               <button 
                 onClick={onBack}
-                className="p-2 hover:bg-apple-gray rounded-xl transition-all flex items-center gap-2 text-gray-500 hover:text-accent font-bold"
+                className={`p-2 rounded-xl transition-all flex items-center gap-2 font-bold ${isDark ? 'hover:bg-slate-800 text-slate-400 hover:text-white' : 'hover:bg-slate-100 text-slate-500 hover:text-indigo-600'}`}
               >
                 <ArrowLeft className="w-5 h-5" />
                 <span className="hidden sm:inline">Back</span>
@@ -247,20 +260,20 @@ export default function Layout({ children, activeTab, setActiveTab, currentCompa
             ) : (
               <button 
                 onClick={() => setIsMobileMenuOpen(true)}
-                className="lg:hidden p-2 text-gray-500 hover:text-accent transition-colors"
+                className={`lg:hidden p-2 transition-colors ${isDark ? 'text-slate-400' : 'text-slate-500'}`}
               >
                 <Menu className="w-6 h-6" />
               </button>
             )}
-            <div className="flex items-center gap-1 md:gap-2 text-xs md:text-sm font-bold text-gray-400">
+            <div className={`flex items-center gap-1 md:gap-2 text-xs md:text-sm font-bold ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
               <button 
                 onClick={() => setActiveTab('dashboard')}
-                className="hover:text-space-gray transition-colors hidden sm:inline"
+                className="hover:text-indigo-500 transition-colors hidden sm:inline"
               >
                 ZivoHR
               </button>
               <ChevronRight className="w-3 h-3 md:w-4 md:h-4 hidden sm:inline" />
-              <span className="text-space-gray capitalize truncate max-w-[100px] md:max-w-none">{activeTab.replace('_', ' ')}</span>
+              <span className={`capitalize truncate max-w-[100px] md:max-w-none ${isDark ? 'text-slate-200' : 'text-slate-900'}`}>{activeTab.replace('_', ' ')}</span>
             </div>
           </div>
 
@@ -292,40 +305,43 @@ export default function Layout({ children, activeTab, setActiveTab, currentCompa
                         className="fixed inset-0 z-40" 
                         onClick={() => setShowNotifications(false)} 
                       />
-                      <motion.div
-                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                        className="absolute right-0 mt-2 w-80 bg-white border border-black/[0.05] rounded-2xl shadow-xl z-50 overflow-hidden"
-                      >
-                        <div className="p-4 border-b border-black/[0.05] flex items-center justify-between bg-apple-gray/10">
-                          <h3 className="font-bold text-space-gray">Notifications</h3>
-                          <span className="text-[10px] font-bold text-accent bg-accent/10 px-2 py-0.5 rounded-full">3 NEW</span>
-                        </div>
-                        <div className="max-h-96 overflow-y-auto divide-y divide-black/[0.05]">
-                          {[
-                            { title: 'Payroll Approved', desc: 'April 2026 payroll has been approved by Finance.', time: '2h ago', icon: CheckCircle2, color: 'text-green-500' },
-                            { title: 'New Leave Request', desc: 'Sarah Johnson requested 3 days of annual leave.', time: '4h ago', icon: Calendar, color: 'text-blue-500' },
-                            { title: 'System Update', desc: 'New ZIMRA tax tables have been integrated.', time: '1d ago', icon: Zap, color: 'text-yellow-500' },
-                          ].map((n, i) => (
-                            <div key={i} className="p-4 hover:bg-apple-gray/20 transition-colors cursor-pointer">
-                              <div className="flex gap-3">
-                                <div className={cn("w-8 h-8 rounded-lg bg-apple-gray/50 flex items-center justify-center flex-shrink-0", n.color)}>
-                                  <n.icon className="w-4 h-4" />
-                                </div>
-                                <div>
-                                  <p className="text-sm font-bold text-space-gray">{n.title}</p>
-                                  <p className="text-xs text-gray-500 mt-0.5">{n.desc}</p>
-                                  <p className="text-[10px] text-gray-400 mt-1">{n.time}</p>
+                        <motion.div
+                          initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                          className={cn(
+                            "absolute right-0 mt-2 w-80 border rounded-2xl shadow-xl z-50 overflow-hidden",
+                            isDark ? "bg-slate-900 border-slate-800" : "bg-white border-black/[0.05]"
+                          )}
+                        >
+                          <div className={cn("p-4 border-b flex items-center justify-between transition-colors", isDark ? "border-white/5 bg-white/5" : "border-black/[0.05] bg-apple-gray/10")}>
+                            <h3 className={cn("font-bold", isDark ? "text-white" : "text-space-gray")}>Notifications</h3>
+                            <span className="text-[10px] font-bold text-accent bg-accent/10 px-2 py-0.5 rounded-full">3 NEW</span>
+                          </div>
+                          <div className={cn("max-h-96 overflow-y-auto divide-y", isDark ? "divide-white/5" : "divide-black/[0.05]")}>
+                            {[
+                              { title: 'Payroll Approved', desc: 'April 2026 payroll has been approved by Finance.', time: '2h ago', icon: CheckCircle2, color: 'text-green-500' },
+                              { title: 'New Leave Request', desc: 'Sarah Johnson requested 3 days of annual leave.', time: '4h ago', icon: Calendar, color: 'text-blue-500' },
+                              { title: 'System Update', desc: 'New ZIMRA tax tables have been integrated.', time: '1d ago', icon: Zap, color: 'text-yellow-500' },
+                            ].map((n, i) => (
+                              <div key={i} className={cn("p-4 transition-colors cursor-pointer", isDark ? "hover:bg-white/5" : "hover:bg-apple-gray/20")}>
+                                <div className="flex gap-3">
+                                  <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0", isDark ? "bg-white/5" : "bg-apple-gray/50", n.color)}>
+                                    <n.icon className="w-4 h-4" />
+                                  </div>
+                                  <div>
+                                    <p className={cn("text-sm font-bold", isDark ? "text-white" : "text-space-gray")}>{n.title}</p>
+                                    <p className={cn("text-xs mt-0.5", isDark ? "text-slate-400" : "text-gray-500")}>{n.desc}</p>
+                                    <p className="text-[10px] text-gray-400 mt-1">{n.time}</p>
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          ))}
-                        </div>
-                        <button className="w-full p-3 text-xs font-bold text-accent hover:bg-accent/5 transition-colors border-t border-black/[0.05]">
-                          View All Notifications
-                        </button>
-                      </motion.div>
+                            ))}
+                          </div>
+                          <button className={cn("w-full p-3 text-xs font-bold text-accent transition-colors border-t", isDark ? "hover:bg-white/5 border-white/5" : "hover:bg-accent/5 border-black/[0.05]")}>
+                            View All Notifications
+                          </button>
+                        </motion.div>
                     </>
                   )}
                 </AnimatePresence>
@@ -337,10 +353,10 @@ export default function Layout({ children, activeTab, setActiveTab, currentCompa
                 onClick={() => setShowProfileModal(true)}
                 className="flex items-center gap-2 md:gap-3 hover:opacity-80 transition-opacity"
               >
-                <div className="text-right hidden md:block">
-                  <p className="text-xs font-bold text-space-gray">Sarah Jenkins</p>
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">HR Manager</p>
-                </div>
+              <div className="text-right hidden md:block">
+                <p className={cn("text-xs font-bold", isDark ? "text-white" : "text-space-gray")}>Sarah Jenkins</p>
+                <p className={cn("text-[10px] font-bold uppercase tracking-widest", isDark ? "text-slate-500" : "text-gray-400")}>HR Manager</p>
+              </div>
                 <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl overflow-hidden border border-black/[0.05] shadow-sm">
                   <img 
                     src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop" 
@@ -389,13 +405,14 @@ export default function Layout({ children, activeTab, setActiveTab, currentCompa
             >
               <div className="p-6 border-b border-black/[0.05] flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div 
-                    className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg"
-                    style={{ backgroundColor: currentCompany.accentColor }}
-                  >
-                    {currentCompany.logo || currentCompany.name.charAt(0)}
-                  </div>
-                  <h2 className="font-bold text-space-gray">{currentCompany.name}</h2>
+                  {currentCompany.logoUrl ? (
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg overflow-hidden border border-slate-200">
+                      <img src={currentCompany.logoUrl} alt="Logo" className="w-full h-full object-cover" />
+                    </div>
+                  ) : (
+                    <Logo className="w-10 h-10" />
+                  )}
+                  <h2 className={`font-bold transition-colors ${isDark ? 'text-white' : 'text-slate-900'}`}>{currentCompany.name}</h2>
                 </div>
                 <button 
                   onClick={() => setIsMobileMenuOpen(false)}
@@ -457,26 +474,29 @@ export default function Layout({ children, activeTab, setActiveTab, currentCompa
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative w-full max-w-2xl bg-white rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+              className={cn(
+                "relative w-full max-w-2xl rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh] border transition-colors",
+                isDark ? "bg-slate-900 border-slate-800" : "bg-white border-white shadow-xl"
+              )}
             >
-              <div className="p-6 md:p-8 border-b border-black/[0.05] flex items-center justify-between bg-apple-gray/10">
+              <div className={cn("p-6 md:p-8 border-b flex items-center justify-between transition-colors", isDark ? "border-white/5 bg-white/5" : "border-black/[0.05] bg-apple-gray/10")}>
                 <div className="flex items-center gap-4">
                   {activeSettingsView !== 'main' && (
                     <button 
                       onClick={() => setActiveSettingsView('main')}
-                      className="p-2 hover:bg-white rounded-xl transition-colors text-gray-400 hover:text-accent"
+                      className={cn("p-2 rounded-xl transition-colors", isDark ? "hover:bg-white/10 text-slate-400 hover:text-accent" : "hover:bg-white text-gray-400 hover:text-accent")}
                     >
                       <ArrowLeft className="w-5 h-5" />
                     </button>
                   )}
                   <div>
-                    <h2 className="text-xl md:text-2xl font-bold text-space-gray">
+                    <h2 className={cn("text-xl md:text-2xl font-bold", isDark ? "text-white" : "text-space-gray")}>
                       {activeSettingsView === 'main' && "User Settings"}
                       {activeSettingsView === 'security' && "Security Settings"}
                       {activeSettingsView === 'roles' && "System Roles"}
                       {activeSettingsView === 'company' && "Company Configuration"}
                     </h2>
-                    <p className="text-sm text-gray-500">
+                    <p className={cn("text-sm transition-colors", isDark ? "text-slate-400" : "text-gray-500")}>
                       {activeSettingsView === 'main' && "Manage your personal profile and account security."}
                       {activeSettingsView === 'security' && "Configure 2FA, passwords, and active sessions."}
                       {activeSettingsView === 'roles' && "Manage user permissions and access levels."}
@@ -489,9 +509,9 @@ export default function Layout({ children, activeTab, setActiveTab, currentCompa
                     setShowProfileModal(false);
                     setActiveSettingsView('main');
                   }}
-                  className="p-2 hover:bg-white rounded-full transition-colors"
+                  className={cn("p-2 rounded-full transition-colors", isDark ? "hover:bg-white/10 text-slate-400 hover:text-white" : "hover:bg-white text-gray-400 hover:text-slate-600")}
                 >
-                  <X className="w-6 h-6 text-gray-400" />
+                  <X className="w-6 h-6" />
                 </button>
               </div>
 
@@ -500,10 +520,10 @@ export default function Layout({ children, activeTab, setActiveTab, currentCompa
                   <>
                     {/* Profile Section */}
                     <section className="space-y-4">
-                      <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Profile Information</h3>
+                      <h3 className={cn("text-xs font-bold uppercase tracking-widest", isDark ? "text-slate-600" : "text-gray-400")}>Profile Information</h3>
                       <div className="flex flex-col md:flex-row gap-6 items-start">
                         <div className="relative group">
-                          <div className="w-24 h-24 rounded-3xl overflow-hidden border-4 border-apple-gray shadow-inner">
+                          <div className={cn("w-24 h-24 rounded-3xl overflow-hidden border-4 shadow-inner transition-colors", isDark ? "border-slate-800" : "border-apple-gray")}>
                             <img 
                               src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=200&fit=crop" 
                               alt="Sarah Jenkins"
@@ -516,19 +536,25 @@ export default function Layout({ children, activeTab, setActiveTab, currentCompa
                         </div>
                         <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
                           <div className="space-y-1.5">
-                            <label className="text-[10px] font-bold text-gray-400 uppercase ml-1">Full Name</label>
+                            <label className={cn("text-[10px] font-bold uppercase ml-1", isDark ? "text-slate-600" : "text-gray-400")}>Full Name</label>
                             <input 
                               type="text" 
                               defaultValue="Sarah Jenkins"
-                              className="w-full bg-apple-gray border-none rounded-xl px-4 py-3 text-sm font-bold outline-none focus:ring-2 focus:ring-accent/20"
+                              className={cn(
+                                "w-full border-none rounded-xl px-4 py-3 text-sm font-bold outline-none focus:ring-2 focus:ring-accent/20 transition-colors",
+                                isDark ? "bg-slate-800 text-white" : "bg-apple-gray text-space-gray"
+                              )}
                             />
                           </div>
                           <div className="space-y-1.5">
-                            <label className="text-[10px] font-bold text-gray-400 uppercase ml-1">Job Title</label>
+                            <label className={cn("text-[10px] font-bold uppercase ml-1", isDark ? "text-slate-600" : "text-gray-400")}>Job Title</label>
                             <input 
                               type="text" 
                               defaultValue="HR Manager"
-                              className="w-full bg-apple-gray border-none rounded-xl px-4 py-3 text-sm font-bold outline-none focus:ring-2 focus:ring-accent/20"
+                              className={cn(
+                                "w-full border-none rounded-xl px-4 py-3 text-sm font-bold outline-none focus:ring-2 focus:ring-accent/20 transition-colors",
+                                isDark ? "bg-slate-800 text-white" : "bg-apple-gray text-space-gray"
+                              )}
                             />
                           </div>
                         </div>
@@ -537,30 +563,36 @@ export default function Layout({ children, activeTab, setActiveTab, currentCompa
 
                     {/* Account & Security */}
                     <section className="space-y-4">
-                      <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Account & Security</h3>
+                      <h3 className={cn("text-xs font-bold uppercase tracking-widest", isDark ? "text-slate-600" : "text-gray-400")}>Account & Security</h3>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <button 
                           onClick={() => setActiveSettingsView('security')}
-                          className="p-4 bg-apple-gray/30 rounded-2xl border border-black/[0.03] text-left hover:bg-apple-gray/50 hover:border-accent/20 hover:shadow-lg transition-all flex items-center gap-3 group"
+                          className={cn(
+                            "p-4 rounded-2xl border text-left transition-all flex items-center gap-3 group",
+                            isDark ? "bg-white/5 border-white/5 hover:bg-white/10 hover:border-accent/20 hover:shadow-xl" : "bg-apple-gray/30 border-black/[0.03] hover:bg-apple-gray/50 hover:border-accent/20 hover:shadow-lg"
+                          )}
                         >
-                          <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                          <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform", isDark ? "bg-blue-500/10 text-blue-400" : "bg-blue-50 text-blue-600")}>
                             <ShieldCheck className="w-5 h-5" />
                           </div>
                           <div>
-                            <p className="text-sm font-bold text-space-gray">Security Settings</p>
-                            <p className="text-[10px] text-gray-500">2FA, Password, Sessions</p>
+                            <p className={cn("text-sm font-bold", isDark ? "text-white" : "text-space-gray")}>Security Settings</p>
+                            <p className={cn("text-[10px]", isDark ? "text-slate-500" : "text-gray-500")}>2FA, Password, Sessions</p>
                           </div>
                         </button>
                         <button 
                           onClick={() => setActiveSettingsView('roles')}
-                          className="p-4 bg-apple-gray/30 rounded-2xl border border-black/[0.03] text-left hover:bg-apple-gray/50 hover:border-accent/20 hover:shadow-lg transition-all flex items-center gap-3 group"
+                          className={cn(
+                            "p-4 rounded-2xl border text-left transition-all flex items-center gap-3 group",
+                            isDark ? "bg-white/5 border-white/5 hover:bg-white/10 hover:border-accent/20 hover:shadow-xl" : "bg-apple-gray/30 border-black/[0.03] hover:bg-apple-gray/50 hover:border-accent/20 hover:shadow-lg"
+                          )}
                         >
-                          <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                          <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform", isDark ? "bg-purple-500/10 text-purple-400" : "bg-purple-50 text-purple-600")}>
                             <Settings className="w-5 h-5" />
                           </div>
                           <div>
-                            <p className="text-sm font-bold text-space-gray">System Roles</p>
-                            <p className="text-[10px] text-gray-500">Manage permissions</p>
+                            <p className={cn("text-sm font-bold", isDark ? "text-white" : "text-space-gray")}>System Roles</p>
+                            <p className={cn("text-[10px]", isDark ? "text-slate-500" : "text-gray-500")}>Manage permissions</p>
                           </div>
                         </button>
                       </div>
@@ -568,29 +600,32 @@ export default function Layout({ children, activeTab, setActiveTab, currentCompa
 
                     {/* Company Settings */}
                     <section className="space-y-4">
-                      <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Company Configuration</h3>
+                      <h3 className={cn("text-xs font-bold uppercase tracking-widest", isDark ? "text-slate-600" : "text-gray-400")}>Company Configuration</h3>
                       <button 
                         onClick={() => setActiveSettingsView('company')}
-                        className="w-full p-6 bg-apple-gray/30 rounded-3xl border border-black/[0.03] space-y-4 text-left hover:bg-apple-gray/50 hover:border-accent/20 hover:shadow-lg transition-all group"
+                        className={cn(
+                          "w-full p-6 rounded-3xl border space-y-4 text-left transition-all group",
+                          isDark ? "bg-white/5 border-white/5 hover:bg-white/10 hover:border-accent/20 hover:shadow-xl" : "bg-apple-gray/30 border-black/[0.03] hover:bg-apple-gray/50 hover:border-accent/20 hover:shadow-lg"
+                        )}
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
                             <div className="w-12 h-12 rounded-2xl bg-accent flex items-center justify-center text-white font-bold text-xl group-hover:scale-110 transition-transform">R</div>
                             <div>
-                              <p className="font-bold text-space-gray">ZivoHR</p>
-                              <p className="text-xs text-gray-500">Pro Plan • 124 Employees</p>
+                              <p className={cn("font-bold", isDark ? "text-white" : "text-space-gray")}>ZivoHR</p>
+                              <p className={cn("text-xs", isDark ? "text-slate-500" : "text-gray-500")}>Pro Plan • 124 Employees</p>
                             </div>
                           </div>
                           <span className="text-xs font-bold text-accent group-hover:underline">Edit Company</span>
                         </div>
-                        <div className="grid grid-cols-2 gap-4 pt-4 border-t border-black/[0.05]">
+                        <div className={cn("grid grid-cols-2 gap-4 pt-4 border-t", isDark ? "border-white/5" : "border-black/[0.05]")}>
                           <div className="space-y-1">
-                            <p className="text-[10px] font-bold text-gray-400 uppercase">Currency</p>
-                            <p className="text-sm font-bold text-space-gray">USD ($)</p>
+                            <p className={cn("text-[10px] font-bold uppercase", isDark ? "text-slate-600" : "text-gray-400")}>Currency</p>
+                            <p className={cn("text-sm font-bold", isDark ? "text-slate-300" : "text-space-gray")}>USD ($)</p>
                           </div>
                           <div className="space-y-1">
-                            <p className="text-[10px] font-bold text-gray-400 uppercase">Fiscal Year</p>
-                            <p className="text-sm font-bold text-space-gray">Jan - Dec</p>
+                            <p className={cn("text-[10px] font-bold uppercase", isDark ? "text-slate-600" : "text-gray-400")}>Fiscal Year</p>
+                            <p className={cn("text-sm font-bold", isDark ? "text-slate-300" : "text-space-gray")}>Jan - Dec</p>
                           </div>
                         </div>
                       </button>
@@ -677,8 +712,8 @@ export default function Layout({ children, activeTab, setActiveTab, currentCompa
                           >
                             {isUploadingLogo ? (
                               <div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin" />
-                            ) : currentCompany.logo ? (
-                              <img src={currentCompany.logo} alt="Logo" className="w-full h-full object-cover" />
+                            ) : currentCompany.logoUrl ? (
+                              <img src={currentCompany.logoUrl} alt="Logo" className="w-full h-full object-cover" />
                             ) : (
                               currentCompany.name.charAt(0)
                             )}
@@ -746,13 +781,13 @@ export default function Layout({ children, activeTab, setActiveTab, currentCompa
                 )}
               </div>
 
-              <div className="p-6 md:p-8 border-t border-black/[0.05] bg-apple-gray/10 flex items-center justify-end gap-4">
+              <div className={cn("p-6 md:p-8 border-t flex items-center justify-end gap-4 transition-colors", isDark ? "border-white/5 bg-white/5" : "border-black/[0.05] bg-apple-gray/10")}>
                 <button 
                   onClick={() => {
                     setShowProfileModal(false);
                     setActiveSettingsView('main');
                   }}
-                  className="px-6 py-3 text-sm font-bold text-gray-500 hover:text-space-gray transition-colors"
+                  className={cn("px-6 py-3 text-sm font-bold transition-colors", isDark ? "text-slate-400 hover:text-white" : "text-gray-500 hover:text-space-gray")}
                 >
                   Cancel
                 </button>

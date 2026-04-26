@@ -1,17 +1,48 @@
-import React, { useState } from 'react';
-import { Search, Plus, Filter, Mail, MapPin, MoreVertical, Phone, Building } from 'lucide-react';
-import { MOCK_EMPLOYEES } from '../constants';
-import { Employee } from '../types';
+import React, { useState, useEffect } from 'react';
+import { Search, Plus, Filter, Mail, MapPin, MoreVertical, Phone, Building, Loader2, Sparkles } from 'lucide-react';
+import { Employee, UserProfile } from '../types';
 import { cn } from '../lib/utils';
+import { employeeService } from '../services/employeeService';
+import EmployeeProfile from './EmployeeProfile';
 
 interface TeamDirectoryProps {
-  onSelectEmployee: (employee: Employee) => void;
+  onSelectEmployee: (employeeId: string) => void;
+  userProfile: UserProfile | null;
 }
 
-export default function TeamDirectory({ onSelectEmployee }: TeamDirectoryProps) {
+export default function TeamDirectory({ onSelectEmployee, userProfile }: TeamDirectoryProps) {
   const [searchQuery, setSearchQuery] = useState('');
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
 
-  const filteredEmployees = MOCK_EMPLOYEES.filter(employee => {
+  useEffect(() => {
+    async function fetchEmployees() {
+      if (!userProfile?.companyId) return;
+      try {
+        setIsLoading(true);
+        const data = await employeeService.getEmployees(userProfile.companyId);
+        setEmployees(data);
+      } catch (error) {
+        console.error("Error fetching employees:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchEmployees();
+  }, [userProfile]);
+
+  if (selectedEmployeeId) {
+    return (
+      <EmployeeProfile 
+        employeeId={selectedEmployeeId} 
+        onBack={() => setSelectedEmployeeId(null)}
+        userProfile={userProfile}
+      />
+    );
+  }
+
+  const filteredEmployees = employees.filter(employee => {
     const query = searchQuery.toLowerCase();
     return (
       employee.name.toLowerCase().includes(query) ||
@@ -19,6 +50,17 @@ export default function TeamDirectory({ onSelectEmployee }: TeamDirectoryProps) 
       employee.department.toLowerCase().includes(query)
     );
   });
+
+  if (isLoading) {
+    return (
+      <div className="h-[60vh] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-10 h-10 text-accent animate-spin" />
+          <p className="text-gray-500 font-medium">Loading organization directory...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -88,7 +130,7 @@ export default function TeamDirectory({ onSelectEmployee }: TeamDirectoryProps) 
                   {filteredEmployees.map((employee) => (
                     <tr 
                       key={employee.id} 
-                      onClick={() => onSelectEmployee(employee)}
+                      onClick={() => setSelectedEmployeeId(employee.id)}
                       className="group hover:bg-apple-gray/20 transition-colors cursor-pointer"
                     >
                       <td className="px-6 py-4">
@@ -128,12 +170,26 @@ export default function TeamDirectory({ onSelectEmployee }: TeamDirectoryProps) 
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className={cn(
-                          "px-2 py-1 text-[10px] font-bold uppercase tracking-widest rounded-md",
-                          employee.status === 'Active' ? "bg-green-50 text-green-600" : "bg-orange-50 text-orange-600"
-                        )}>
-                          {employee.status}
-                        </span>
+                        <div className="flex flex-col gap-1">
+                          <span className={cn(
+                            "px-2 py-1 text-[10px] font-bold uppercase tracking-widest rounded-md w-fit",
+                            employee.status === 'Active' ? "bg-green-50 text-green-600" : 
+                            employee.status === 'Onboarding' ? "bg-purple-50 text-purple-600" : "bg-orange-50 text-orange-600"
+                          )}>
+                            {employee.status}
+                          </span>
+                          {employee.status === 'Onboarding' && (
+                            <div className="flex flex-col gap-1 mt-1">
+                              <div className="flex items-center justify-between text-[8px] font-bold text-purple-400">
+                                <span>PROGRESS</span>
+                                <span>35%</span>
+                              </div>
+                              <div className="h-1 w-16 bg-purple-100 rounded-full overflow-hidden">
+                                <div className="h-full bg-purple-500 rounded-full" style={{ width: '35%' }} />
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       </td>
                       <td className="px-6 py-4 text-right">
                         <button className="p-2 text-gray-300 hover:text-space-gray transition-colors">
@@ -151,8 +207,8 @@ export default function TeamDirectory({ onSelectEmployee }: TeamDirectoryProps) 
               {filteredEmployees.map((employee) => (
                 <div 
                   key={employee.id}
-                  onClick={() => onSelectEmployee(employee)}
-                  className="p-5 space-y-4 active:bg-apple-gray/20 transition-colors"
+                  onClick={() => setSelectedEmployeeId(employee.id)}
+                  className="p-5 space-y-4 active:bg-apple-gray/20 transition-colors cursor-pointer"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">

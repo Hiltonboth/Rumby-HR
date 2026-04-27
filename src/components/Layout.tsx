@@ -7,6 +7,7 @@ import ConfirmationModal from './ConfirmationModal';
 
 import { useTheme } from './ThemeContext';
 import { Logo } from './Logo';
+import { useLanguage, Language } from '../contexts/LanguageContext';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -19,6 +20,10 @@ interface LayoutProps {
 }
 
 export default function Layout({ children, activeTab, setActiveTab, currentCompany, userProfile, onBack, onGoHome }: LayoutProps) {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+  const { language, setLanguage, t } = useLanguage();
+  
   const [isScrolled, setIsScrolled] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -73,16 +78,16 @@ export default function Layout({ children, activeTab, setActiveTab, currentCompa
   }, []);
 
   const menuItems = [
-    { id: 'dashboard', label: 'Home', icon: LayoutDashboard },
+    { id: 'dashboard', label: t('dashboard'), icon: LayoutDashboard },
     { id: 'onboarding', label: 'Onboarding', icon: PartyPopper },
-    { id: 'self_service', label: 'Self Service', icon: Users },
+    { id: 'self_service', label: t('employees'), icon: Users },
     { id: 'leave', label: 'Leave Tracker', icon: Calendar },
     { id: 'time', label: 'Time Tracker', icon: Clock },
     { id: 'attendance', label: 'Attendance', icon: CheckCircle2 },
-    { id: 'hiring', label: 'Recruitment', icon: Briefcase },
+    { id: 'hiring', label: t('hiring'), icon: Briefcase },
     { id: 'team', label: 'Organization', icon: Users },
-    { id: 'performance', label: 'Performance', icon: TrendingUp },
-    { id: 'payroll', label: 'Payroll', icon: CreditCard },
+    { id: 'performance', label: t('performance'), icon: TrendingUp },
+    { id: 'payroll', label: t('payroll'), icon: CreditCard },
     { id: 'treasury', label: 'Treasury', icon: Landmark },
     { id: 'esignature', label: 'e-signatures', icon: PenTool },
     { id: 'vault', label: 'Vault (Records)', icon: Shield },
@@ -91,16 +96,13 @@ export default function Layout({ children, activeTab, setActiveTab, currentCompa
     { id: 'library', label: 'HR Library', icon: BookOpen },
     { id: 'engagement', label: 'Engagement', icon: Heart },
     { id: 'workflows', label: 'Workflows', icon: Zap },
-    { id: 'settings', label: 'Settings', icon: Settings },
+    { id: 'settings', label: t('settings'), icon: Settings },
   ];
 
   const displayMenuItems = [...menuItems];
   if (userProfile?.role === 'platform_owner') {
     displayMenuItems.push({ id: 'owner_kpis', label: 'Owner Dashboard', icon: ShieldCheck });
   }
-
-  const { theme } = useTheme();
-  const isDark = theme === 'dark';
 
   return (
     <div className={`min-h-screen flex overflow-x-hidden transition-colors duration-500 ${isDark ? 'bg-slate-950' : 'bg-slate-50'}`}>
@@ -200,9 +202,27 @@ export default function Layout({ children, activeTab, setActiveTab, currentCompa
             </button>
           ))}
           
-          <div className="pt-4 mt-4 border-t border-black/[0.05]">
+          <div className="pt-4 mt-4 border-t border-black/[0.05] space-y-4">
+            <div className="px-4">
+               <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 px-1">Language</p>
+               <select 
+                 value={language}
+                 onChange={(e) => setLanguage(e.target.value as Language)}
+                 className={cn(
+                   "w-full bg-apple-gray/50 rounded-xl px-3 py-2 text-xs font-bold outline-none border border-black/[0.05] focus:ring-1 focus:ring-accent/20 transition-all cursor-pointer",
+                   isDark ? "bg-slate-800 text-white border-slate-700" : "bg-apple-gray text-slate-700 border-slate-100"
+                 )}
+               >
+                 <option value="en">English (US)</option>
+                 <option value="sn">Shona (ZW)</option>
+                 <option value="nd">Ndebele (ZW)</option>
+                 <option value="zh">Chinese (CN)</option>
+                 <option value="af">Afrikaans (SA)</option>
+               </select>
+            </div>
+
             <button
-              onClick={onGoHome}
+               onClick={onGoHome}
               className={cn(
                 "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-gray-500 hover:text-accent hover:bg-accent/5 transition-all group relative",
                 isSidebarCollapsed && "justify-center px-0"
@@ -354,8 +374,8 @@ export default function Layout({ children, activeTab, setActiveTab, currentCompa
                 className="flex items-center gap-2 md:gap-3 hover:opacity-80 transition-opacity"
               >
               <div className="text-right hidden md:block">
-                <p className={cn("text-xs font-bold", isDark ? "text-white" : "text-space-gray")}>Sarah Jenkins</p>
-                <p className={cn("text-[10px] font-bold uppercase tracking-widest", isDark ? "text-slate-500" : "text-gray-400")}>HR Manager</p>
+                <p className={cn("text-xs font-bold", isDark ? "text-white" : "text-space-gray")}>{userProfile?.fullName || 'Sarah Jenkins'}</p>
+                <p className={cn("text-[10px] font-bold uppercase tracking-widest", isDark ? "text-slate-500" : "text-gray-400")}>{userProfile?.role === 'platform_owner' ? 'Platform Owner' : 'HR Manager'}</p>
               </div>
                 <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl overflow-hidden border border-black/[0.05] shadow-sm">
                   <img 

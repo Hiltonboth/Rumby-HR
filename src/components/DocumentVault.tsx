@@ -98,7 +98,8 @@ export default function DocumentVault({ userProfile, targetEmployeeId }: Documen
       
       const filePromises = documents.map(async (doc) => {
         try {
-          const response = await fetch(doc.file_url);
+          if (!doc.file_url) return;
+          const response = await fetch(doc.file_url, { mode: 'cors' });
           if (!response.ok) throw new Error(`HTTP ${response.status}`);
           const blob = await response.blob();
           const extension = doc.file_url.split('.').pop()?.split('?')[0] || 'pdf';

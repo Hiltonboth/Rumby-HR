@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { UserProfile } from '../types';
 
 interface AuthContextType {
@@ -7,6 +7,7 @@ interface AuthContextType {
   userProfile: UserProfile | null;
   loading: boolean;
   signOut: () => Promise<void>;
+  isConfigured: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -15,11 +16,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<any>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const configured = isSupabaseConfigured();
 
   useEffect(() => {
+    if (!configured) {
+      setLoading(false);
+      return;
+    }
+
     // Initial session check
     supabase.auth.getSession().then(({ data: { session } }) => {
       handleAuthChange(session?.user ?? null);
+    }).catch(err => {
+      console.error("Session check failed:", err);
+      setLoading(false);
     });
 
     // Listen for changes
@@ -28,7 +38,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [configured]);
 
   const handleAuthChange = async (supabaseUser: any) => {
     if (supabaseUser) {
@@ -92,7 +102,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, userProfile, loading, signOut }}>
+    <AuthContext.Provider value={{ user, userProfile, loading, signOut, isConfigured: configured }}>
       {children}
     </AuthContext.Provider>
   );

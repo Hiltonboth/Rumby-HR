@@ -30,6 +30,23 @@ interface DocumentationProps {
 
 const DOC_SECTIONS = [
   {
+    title: 'Technical Setup',
+    icon: Settings,
+    items: [
+      {
+        id: 'supabase-setup',
+        title: 'Configuring Supabase (Required)',
+        content: 'ZivoHR uses Supabase for database and authentication. To make the application functional, you MUST provide your own Supabase credentials in the AI Studio settings.',
+        keyFeatures: [
+          { title: 'Step 1: Create Project', desc: 'Go to supabase.com and create a new project.' },
+          { title: 'Step 2: Get Credentials', desc: 'Go to Project Settings -> API and copy the Project URL and Anon Key.' },
+          { title: 'Step 3: Update Settings', desc: 'In AI Studio, go to Settings (gear icon) and add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY variables.' },
+          { title: 'Step 4: SQL Migration', desc: 'Copy and run the contents of supabase-schema.sql in the SQL Editor on Supabase.' }
+        ]
+      }
+    ]
+  },
+  {
     title: 'Getting Started',
     icon: Zap,
     items: [

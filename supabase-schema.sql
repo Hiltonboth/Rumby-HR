@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS companies (
 CREATE TABLE IF NOT EXISTS user_profiles (
   id          UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   company_id  UUID REFERENCES companies(id) ON DELETE SET NULL,
-  full_name   TEXT NOT NULL,
+  full_name   TEXT,
   email       TEXT NOT NULL,
   avatar_url  TEXT,
   role        TEXT NOT NULL DEFAULT 'employee', -- 'owner' | 'admin' | 'hr' | 'manager' | 'employee'
@@ -45,6 +45,27 @@ CREATE TABLE IF NOT EXISTS user_profiles (
   created_at  TIMESTAMPTZ DEFAULT NOW(),
   updated_at  TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- FUNCTION: Handle new user registration (Email or Social)
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.user_profiles (id, email, full_name, avatar_url)
+  VALUES (
+    new.id,
+    new.email,
+    COALESCE(new.raw_user_meta_data->>'full_name', new.raw_user_meta_data->>'name', ''),
+    new.raw_user_meta_data->>'avatar_url'
+  );
+  RETURN new;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- TRIGGER: Run function after every signup
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
 
 -- =============================================================
 -- 3. DEPARTMENTS
@@ -454,6 +475,11 @@ CREATE OR REPLACE FUNCTION my_company_id() RETURNS UUID AS $$
   SELECT company_id FROM user_profiles WHERE id = auth.uid();
 $$ LANGUAGE sql SECURITY DEFINER STABLE;
 
+-- Helper Function: Is Platform Admin
+CREATE OR REPLACE FUNCTION is_platform_admin() RETURNS BOOLEAN AS $$
+  SELECT role IN ('owner', 'admin', 'hr') FROM user_profiles WHERE id = auth.uid();
+$$ LANGUAGE sql SECURITY DEFINER STABLE;
+
 -- Enable RLS on ALL tables
 ALTER TABLE companies ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
@@ -485,12 +511,49 @@ ALTER TABLE kudos ENABLE ROW LEVEL SECURITY;
 ALTER TABLE time_entries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
 
--- UNIVERSAL POLICY: "Company Isolation"
--- This one rule prevents cross-tenant data leaks for most tables.
--- Note: Replace 'ANY_TABLE' below for each created table in your migration script.
+-- UNIVERSAL POLICIES
 
-CREATE POLICY "company_scoped_policy" ON employees FOR ALL USING (company_id = my_company_id());
--- ... Apply same logic to others ...
+-- User Profiles Policies
+DROP POLICY IF EXISTS "user_profiles_self_read" ON user_profiles;
+CREATE POLICY "user_profiles_self_read" ON user_profiles FOR SELECT USING (auth.uid() = id);
+
+DROP POLICY IF EXISTS "user_profiles_company_read" ON user_profiles;
+CREATE POLICY "user_profiles_company_read" ON user_profiles FOR SELECT USING (company_id = my_company_id());
+
+DROP POLICY IF EXISTS "user_profiles_self_update" ON user_profiles;
+CREATE POLICY "user_profiles_self_update" ON user_profiles FOR UPDATE USING (auth.uid() = id);
+
+-- Company Isolation for all major tables
+CREATE OR REPLACE FUNCTION apply_company_isolation(table_name text) RETURNS void AS $$
+BEGIN
+  EXECUTE format('DROP POLICY IF EXISTS "company_isolation_policy" ON %I', table_name);
+  EXECUTE format('CREATE POLICY "company_isolation_policy" ON %I FOR ALL USING (company_id = my_company_id() OR is_platform_admin())', table_name);
+END;
+$$ LANGUAGE plpgsql;
+
+-- Apply to tables
+SELECT apply_company_isolation('employees');
+SELECT apply_company_isolation('departments');
+SELECT apply_company_isolation('leave_types');
+SELECT apply_company_isolation('leave_requests');
+SELECT apply_company_isolation('attendance_logs');
+SELECT apply_company_isolation('payroll_runs');
+SELECT apply_company_isolation('payslips');
+SELECT apply_company_isolation('employee_documents');
+SELECT apply_company_isolation('signature_envelopes');
+SELECT apply_company_isolation('job_postings');
+SELECT apply_company_isolation('applicants');
+SELECT apply_company_isolation('onboarding_checklists');
+SELECT apply_company_isolation('assets');
+SELECT apply_company_isolation('performance_review_cycles');
+SELECT apply_company_isolation('performance_reviews');
+SELECT apply_company_isolation('performance_goals');
+SELECT apply_company_isolation('training_modules');
+SELECT apply_company_isolation('expense_claims');
+SELECT apply_company_isolation('community_posts');
+SELECT apply_company_isolation('kudos');
+SELECT apply_company_isolation('time_entries');
+SELECT apply_company_isolation('notifications');
 
 -- Seed 2024 ZIMRA PAYE bands (Universal Utility - read by any company)
 CREATE TABLE IF NOT EXISTS zimra_tax_bands (

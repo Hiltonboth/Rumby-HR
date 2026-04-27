@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { TrendingUp, CreditCard, LogOut, ShieldCheck, ArrowLeft, Upload, Sparkles, Building2, FileText, Calendar, Users } from 'lucide-react';
+import { TrendingUp, CreditCard, LogOut, ShieldCheck, ArrowLeft, Upload, Sparkles, Building2, FileText, Calendar, Users, AlertCircle, Plus } from 'lucide-react';
 import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
 import TeamDirectory from './components/TeamDirectory';
@@ -32,13 +32,15 @@ import { ThemeProvider } from './components/ThemeContext';
 import { useAuth } from './contexts/AuthContext';
 
 export default function App() {
-  const { user, userProfile, loading: isAuthLoading } = useAuth();
+  const { user, userProfile, loading: isAuthLoading, isConfigured } = useAuth();
   const [currentCompany, setCurrentCompany] = useState<Company | null>(null);
   const [view, setView] = useState<'landing' | 'login' | 'signup' | 'app' | 'documentation' | 'careers'>('landing');
   const [activeTab, setActiveTab] = useState('dashboard');
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [viewHistory, setViewHistory] = useState<string[]>(['dashboard']);
   const [portalCompanyId, setPortalCompanyId] = useState<string | null>(null);
+
+  const showConfigWarning = !isConfigured && view !== 'landing' && view !== 'documentation';
 
   useEffect(() => {
     // Check for Careers Portal URL
@@ -466,6 +468,18 @@ export default function App() {
 
   return (
     <ThemeProvider>
+      {showConfigWarning && (
+        <div className="fixed top-0 left-0 right-0 z-[200] bg-orange-600 text-white p-2 text-center text-xs font-bold flex items-center justify-center gap-2">
+          <AlertCircle className="w-4 h-4" />
+          Supabase credentials missing. Please add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to your settings.
+          <button 
+            onClick={() => setView('documentation')}
+            className="underline ml-2"
+          >
+            How to set up?
+          </button>
+        </div>
+      )}
       {view === 'careers' && portalCompanyId ? (
         <JobPortal companyId={portalCompanyId} />
       ) : view === 'landing' ? (

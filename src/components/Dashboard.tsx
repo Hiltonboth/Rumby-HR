@@ -1,10 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   DollarSign, 
-  Download, 
-  Calendar, 
-  ArrowUpRight, 
-  ArrowDownRight, 
   Clock,
   CheckCircle2,
   AlertCircle,
@@ -13,14 +9,9 @@ import {
   Users,
   TrendingUp,
   Plus,
-  Send,
-  CreditCard,
-  Briefcase,
   Zap,
   Loader2,
-  Eye,
   Sparkles,
-  PieChart as PieChartIcon
 } from 'lucide-react';
 import { 
   AreaChart, 
@@ -37,25 +28,48 @@ import {
 import { cn } from '../lib/utils';
 import { UserProfile } from '../types';
 import { analyticsService } from '../services/analyticsService';
-import { motion } from 'motion/react';
+import { motion, useInView } from 'motion/react';
 import GettingStarted from './GettingStarted';
 import { onboardingService } from '../services/onboardingService';
 import { useTheme } from './ThemeContext';
+import { useLanguage } from '../contexts/LanguageContext';
+
+// ─── Animation variants (Documenso-style) ────────────────────────────────────
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 18 },
+  show:   { opacity: 1, y: 0, transition: { duration: 0.45, ease: [0.25, 0.46, 0.45, 0.94] } },
+};
+
+const stagger = (delay = 0) => ({
+  hidden: { opacity: 0, y: 20 },
+  show:   { opacity: 1, y: 0, transition: { duration: 0.42, delay, ease: [0.25, 0.46, 0.45, 0.94] } },
+});
+
+const container = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.08, delayChildren: 0.05 } },
+};
+
+// ─── Props ────────────────────────────────────────────────────────────────────
 
 interface DashboardProps {
   onNavigate: (tab: string) => void;
   userProfile: UserProfile | null;
 }
 
+// ─── Main component ───────────────────────────────────────────────────────────
+
 export default function Dashboard({ onNavigate, userProfile }: DashboardProps) {
   const { isDark } = useTheme();
-  const [timeframe, setTimeframe] = useState<number>(6);
-  const [stats, setStats] = useState<any>(null);
-  const [salaryTrends, setSalaryTrends] = useState<any[]>([]);
-  const [headcountTrends, setHeadcountTrends] = useState<any[]>([]);
-  const [expiringContracts, setExpiringContracts] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [onboardingTasks, setOnboardingTasks] = useState<any[]>([]);
+  const { t } = useLanguage();
+  const [timeframe, setTimeframe]                   = useState<number>(6);
+  const [stats, setStats]                           = useState<any>(null);
+  const [salaryTrends, setSalaryTrends]             = useState<any[]>([]);
+  const [headcountTrends, setHeadcountTrends]       = useState<any[]>([]);
+  const [expiringContracts, setExpiringContracts]   = useState<any[]>([]);
+  const [loading, setLoading]                       = useState(true);
+  const [onboardingTasks, setOnboardingTasks]       = useState<any[]>([]);
 
   useEffect(() => {
     async function loadDashboardData() {
@@ -66,20 +80,19 @@ export default function Dashboard({ onNavigate, userProfile }: DashboardProps) {
           analyticsService.getDashboardStats(userProfile.companyId),
           analyticsService.getSalaryTrends(userProfile.companyId, timeframe),
           analyticsService.getHeadcountTrends(userProfile.companyId, timeframe),
-          analyticsService.getExpiringContracts(userProfile.companyId)
+          analyticsService.getExpiringContracts(userProfile.companyId),
         ]);
         setStats(dashStats);
         setSalaryTrends(trendData);
         setHeadcountTrends(headData);
         setExpiringContracts(expiryData);
 
-        // Load onboarding tasks for the employee if not owner/hr
         if (userProfile.role === 'employee') {
           const checklist = await onboardingService.getChecklist(userProfile.uid);
           setOnboardingTasks(checklist?.onboarding_tasks || []);
         }
       } catch (error) {
-        console.error("Error loading dashboard:", error);
+        console.error('Error loading dashboard:', error);
       } finally {
         setLoading(false);
       }
@@ -90,446 +103,667 @@ export default function Dashboard({ onNavigate, userProfile }: DashboardProps) {
   const handleCompleteTask = async (taskId: string, currentStatus: boolean) => {
     try {
       await onboardingService.toggleTask(taskId, !currentStatus);
-      setOnboardingTasks(prev => prev.map(t => t.id === taskId ? { ...t, is_completed: !currentStatus } : t));
+      setOnboardingTasks(prev =>
+        prev.map(t => (t.id === taskId ? { ...t, is_completed: !currentStatus } : t))
+      );
     } catch (err) {
       console.error(err);
     }
   };
 
+  // ── colour tokens – one source of truth ──────────────────────────────────
+  const T = {
+    pageBg:      isDark ? '#080910'  : '#f0f1fa',
+    cardBg:      isDark ? '#12131e'  : '#ffffff',
+    cardBorder:  isDark ? '#1c1d30'  : 'rgba(148,163,184,0.35)',
+    innerBg:     isDark ? '#0d0e18'  : '#f8fafc',
+    innerBorder: isDark ? '#1c1d30'  : 'rgba(148,163,184,0.25)',
+    heading:     isDark ? '#f1f5f9'  : '#0f172a',
+    muted:       isDark ? '#64748b'  : '#64748b',
+    dim:         isDark ? '#374151'  : '#94a3b8',
+    label:       isDark ? '#475569'  : '#94a3b8',
+    gridLine:    isDark ? '#1c1d30'  : '#f1f5f9',
+    tooltipBg:   isDark ? '#12131e'  : '#ffffff',
+    tooltipBorder: isDark ? '#1c1d30' : '#e2e8f0',
+    inputBg:     isDark ? '#12131e'  : '#ffffff',
+    inputBorder: isDark ? '#1c1d30'  : 'rgba(148,163,184,0.5)',
+  };
+
   if (loading && !stats) {
     return (
-      <div className="h-[60vh] flex items-center justify-center">
-        <Loader2 className="w-10 h-10 text-accent animate-spin" />
+      <div style={{ background: T.pageBg }} className="h-[60vh] flex items-center justify-center">
+        <div style={{ background: T.cardBg, borderColor: T.cardBorder }}
+          className="w-16 h-16 rounded-2xl border flex items-center justify-center">
+          <Loader2 className="w-7 h-7 text-violet-500 animate-spin" />
+        </div>
       </div>
     );
   }
 
-  const isOwner = userProfile?.role === 'owner' || userProfile?.role === 'hr';
+  const isOwner      = userProfile?.role === 'owner' || userProfile?.role === 'hr';
   const isNewCompany = stats?.headcount <= 1 && stats?.totalDocs === 0;
 
+  const kpiCards = [
+    { label: t('payroll'), value: `$${stats?.monies?.toLocaleString() ?? '0'}`, subtext: 'Processed in last run',         icon: DollarSign,  accent: 'violet', trend: '+12%',   nav: 'payroll'     },
+    { label: t('employees'),     value: stats?.headcount ?? '0',                      subtext: 'Across all departments',         icon: Users,       accent: 'blue',   trend: 'Active', nav: 'team'        },
+    { label: 'New Hires',     value: stats?.hires ?? '0',                          subtext: 'Onboarding pipeline',            icon: TrendingUp,  accent: 'emerald',trend: '+3',     nav: 'team'        },
+    { label: 'Pending Sigs',  value: stats?.pendingDocs ?? '0',                    subtext: `of ${stats?.totalDocs ?? 0} docs`, icon: FileText, accent: 'amber', trend: 'Urgent', nav: 'esignature' },
+    ...(userProfile?.role === 'hr' && stats?.pendingChanges > 0
+      ? [{ label: 'Profile Requests', value: stats.pendingChanges, subtext: 'Awaiting approval', icon: AlertCircle, accent: 'amber', trend: 'Pending', nav: 'self_service' }] : []),
+    ...(userProfile?.role === 'hr' && stats?.activeOnboardings > 0
+      ? [{ label: 'Onboarding', value: stats.activeOnboardings, subtext: 'New hire progress', icon: Zap, accent: 'purple', trend: 'Active', nav: 'onboarding' }] : []),
+  ];
+
+  const SKYSCRAPER_FLOORS = [
+    { id: 1, name: 'Core Identity', status: 'completed' },
+    { id: 2, name: 'Company Tenancy', status: 'completed' },
+    { id: 3, name: 'Employee Management', status: 'completed' },
+    { id: 4, name: 'Leave & Attendance', status: 'completed' },
+    { id: 5, name: 'Payroll Engine', status: 'completed' },
+    { id: 6, name: 'Document Vault', status: 'completed' },
+    { id: 7, name: 'Performance Hub', status: 'completed' },
+    { id: 8, name: 'The Treasury', status: 'completed' },
+    { id: 9, name: 'Asset & IT Shield', status: 'completed' },
+    { id: 10, name: 'Recruitment & Onboarding', status: 'completed' },
+    { id: 11, name: 'The Dark Dimension', status: 'completed' },
+    { id: 12, name: 'Mobile Optimization', status: 'completed' },
+    { id: 13, name: 'Integrated Documentation', status: 'completed' },
+    { id: 14, name: 'Internationalization', status: 'in_progress' },
+    { id: 15, name: 'Final Polish', status: 'scheduled' }
+  ];
+
+  const completedFloors = SKYSCRAPER_FLOORS.filter(f => f.status === 'completed').length;
+  const progressPercent = Math.round((completedFloors / SKYSCRAPER_FLOORS.length) * 100);
+
   return (
-    <div className="space-y-8 max-w-7xl mx-auto pb-12">
-      {/* Onboarding Helper for Owners */}
-      {isOwner && isNewCompany && (
-        <GettingStarted userProfile={userProfile} onNavigate={onNavigate} />
-      )}
+    <div style={{ background: T.pageBg }} className="min-h-screen transition-colors duration-300">
 
-      {/* Welcome Checklist for New Employees */}
-      {onboardingTasks.length > 0 && onboardingTasks.some(t => !t.is_completed) && (
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-accent text-white rounded-[2.5rem] p-8 md:p-12 shadow-2xl shadow-accent/20 relative overflow-hidden mb-8"
-        >
-          <div className="absolute top-0 right-0 p-12 opacity-10">
-            <Zap className="w-64 h-64 rotate-12" />
-          </div>
-          
-          <div className="relative z-10 space-y-8">
-            <div className="space-y-4">
-              <div className="inline-flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full border border-white/10">
-                <Sparkles className="w-4 h-4 text-white" />
-                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white">Welcome to the Team!</span>
+      {/* Ambient glows */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
+        <div style={{ opacity: isDark ? 0.06 : 0.1 }}
+          className="absolute -top-56 -right-56 w-[700px] h-[700px] rounded-full blur-[160px] bg-violet-600" />
+        <div style={{ opacity: isDark ? 0.04 : 0.07 }}
+          className="absolute top-1/2 -left-72 w-[600px] h-[600px] rounded-full blur-[140px] bg-indigo-500" />
+      </div>
+
+      <motion.div
+        initial="hidden"
+        animate="show"
+        variants={container}
+        className="relative z-10 max-w-7xl mx-auto pb-16 px-4 sm:px-6 lg:px-8 pt-6 space-y-5"
+      >
+        {/* Onboarding Helper */}
+        {isOwner && isNewCompany && (
+          <motion.div variants={fadeUp}>
+            <GettingStarted userProfile={userProfile} onNavigate={onNavigate} />
+          </motion.div>
+        )}
+
+        {/* Employee Checklist */}
+        {onboardingTasks.length > 0 && onboardingTasks.some(t => !t.is_completed) && (
+          <motion.div
+            variants={fadeUp}
+            className="relative rounded-2xl overflow-hidden"
+            style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 50%, #6d28d9 100%)' }}
+          >
+            <div className="absolute inset-0 opacity-[0.07]"
+              style={{ backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
+            <div className="absolute top-0 right-0 p-10 opacity-[0.04]">
+              <Zap className="w-56 h-56 rotate-12" />
+            </div>
+            <div className="relative z-10 p-8 md:p-12 space-y-8">
+              <div className="space-y-3">
+                <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-1.5 rounded-full border border-white/20">
+                  <Sparkles className="w-3.5 h-3.5 text-yellow-300" />
+                  <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white">Welcome aboard!</span>
+                </div>
+                <h2 className="text-4xl md:text-5xl font-black tracking-tight text-white leading-tight">
+                  Your Launch <span className="text-white/40">Checklist</span>
+                </h2>
+                <p className="text-white/60 text-sm max-w-xl">Complete these tasks to get fully settled into your new role.</p>
               </div>
-              <h2 className="text-4xl md:text-6xl font-black italic tracking-tighter leading-[0.9] uppercase">
-                Your <span className="opacity-50">Launch</span> Checklist.
-              </h2>
-              <p className="text-white/60 font-medium max-w-xl">
-                We're excited to have you on board. Please complete these initial tasks to get fully settled into your new role.
-              </p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {onboardingTasks.map((task, i) => (
+                  <motion.button
+                    key={task.id}
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 + i * 0.07 }}
+                    onClick={() => handleCompleteTask(task.id, task.is_completed)}
+                    className={cn(
+                      'p-5 rounded-xl border backdrop-blur-sm transition-all flex items-center gap-4 text-left',
+                      task.is_completed
+                        ? 'bg-white/5 border-white/10 opacity-50'
+                        : 'bg-white/10 border-white/20 hover:bg-white/[0.18] hover:scale-[1.02]'
+                    )}
+                  >
+                    <div className={cn('w-9 h-9 rounded-xl flex-shrink-0 flex items-center justify-center', task.is_completed ? 'bg-green-500/20' : 'bg-white/10')}>
+                      {task.is_completed ? <CheckCircle2 className="w-4 h-4 text-green-400" /> : <Clock className="w-4 h-4 text-white/70" />}
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-white">{task.title}</p>
+                      <p className="text-[10px] font-semibold text-white/40 uppercase tracking-widest mt-0.5">{task.category || 'Standard'}</p>
+                    </div>
+                  </motion.button>
+                ))}
+              </div>
             </div>
+          </motion.div>
+        )}
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {onboardingTasks.map((task) => (
-                <button
-                  key={task.id}
-                  onClick={() => handleCompleteTask(task.id, task.is_completed)}
-                  className={cn(
-                    "p-6 rounded-3xl border transition-all flex items-center justify-between group",
-                    task.is_completed 
-                      ? "bg-white/5 border-white/5 opacity-50" 
-                      : "bg-white text-space-gray border-white shadow-xl hover:scale-[1.02]"
-                  )}
-                >
-                  <div className="flex items-center gap-4">
-                    <div className={cn(
-                      "w-10 h-10 rounded-xl flex items-center justify-center transition-colors",
-                      task.is_completed ? "bg-green-500 text-white" : "bg-apple-gray text-gray-400 group-hover:bg-accent group-hover:text-white"
-                    )}>
-                      {task.is_completed ? <CheckCircle2 className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
-                    </div>
-                    <div className="text-left">
-                      <p className="text-sm font-black italic uppercase tracking-tight">{task.title}</p>
-                      <p className="text-[10px] font-bold opacity-40 uppercase tracking-widest">{task.category || 'Standard'}</p>
-                    </div>
-                  </div>
-                </button>
-              ))}
+        {/* ── Page Header ── */}
+        <motion.div variants={fadeUp} className="flex flex-col md:flex-row md:items-center justify-between gap-4 py-1">
+          <div>
+            <div className="flex items-center gap-2.5 mb-1.5">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-violet-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-violet-500" />
+              </span>
+              <span style={{ color: isDark ? '#a78bfa' : '#7c3aed' }} className="text-[10px] font-black uppercase tracking-[0.2em]">
+                Live Dashboard
+              </span>
             </div>
+            <h1 style={{ color: T.heading }} className="text-2xl font-black tracking-tight">Command Center</h1>
+            <p style={{ color: T.muted }} className="text-sm mt-0.5">
+              Real-time overview of{' '}
+              <span style={{ color: isDark ? '#e2e8f0' : '#1e293b' }} className="font-semibold">
+                {userProfile?.fullName}'s
+              </span>{' '}
+              organization
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2.5">
+            <select
+              value={timeframe}
+              onChange={e => setTimeframe(Number(e.target.value))}
+              style={{ background: T.inputBg, borderColor: T.inputBorder, color: T.heading }}
+              className="rounded-xl px-4 py-2.5 text-sm font-semibold outline-none border transition-all cursor-pointer focus:border-violet-500 hover:border-violet-500/50"
+            >
+              <option value={1}>Last Month</option>
+              <option value={3}>Last 3 Months</option>
+              <option value={6}>Last 6 Months</option>
+              <option value={12}>Last 12 Months</option>
+            </select>
+
+            <button
+              onClick={() => onNavigate('hiring')}
+              style={{ background: T.inputBg, borderColor: T.inputBorder, color: T.heading }}
+              className="flex items-center gap-2 px-4 py-2.5 text-sm font-bold rounded-xl border transition-all hover:border-violet-500/40"
+            >
+              <Plus className="w-4 h-4" /> New Hire
+            </button>
+
+            <button
+              onClick={() => onNavigate('payroll')}
+              className="flex items-center gap-2 px-5 py-2.5 text-sm font-bold rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white hover:from-violet-500 hover:to-indigo-500 transition-all shadow-lg shadow-violet-500/20 hover:shadow-violet-500/30 hover:-translate-y-0.5 active:translate-y-0"
+            >
+              <DollarSign className="w-4 h-4" /> Run Payroll
+            </button>
           </div>
         </motion.div>
-      )}
 
-      {/* Welcome & Actions */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div>
-          <h1 className={cn("text-3xl font-bold tracking-tight", isDark ? "text-white" : "text-space-gray")}>Command Center</h1>
-          <p className={cn("text-gray-500 mt-2", isDark ? "text-slate-400" : "text-gray-500")}>Real-time health of {userProfile?.fullName}'s organization.</p>
-        </div>
-        <div className="flex flex-wrap gap-3">
-          <select 
-            value={timeframe}
-            onChange={(e) => setTimeframe(Number(e.target.value))}
-            className={cn(
-              "rounded-xl px-4 py-2 text-sm font-bold shadow-sm outline-none focus:ring-2 focus:ring-accent border transition-colors",
-              isDark ? "bg-slate-900 border-slate-800 text-white" : "bg-white border-black/[0.1] text-space-gray"
-            )}
+        {/* Skyscraper Progress */}
+        <motion.div variants={fadeUp} className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+          <div 
+            className="lg:col-span-2 rounded-[2rem] p-8 border shadow-sm relative overflow-hidden"
+            style={{ background: T.cardBg, borderColor: T.cardBorder }}
           >
-            <option value={1}>Last Month</option>
-            <option value={3}>Last 3 Months</option>
-            <option value={6}>Last 6 Months</option>
-            <option value={12}>Last 12 Months</option>
-          </select>
-          <div className="flex gap-2">
-             <button onClick={() => onNavigate('hiring')} className="btn-secondary py-2 px-4 text-xs font-bold flex items-center gap-2">
-               <Plus className="w-4 h-4" /> New Hire
-             </button>
-             <button onClick={() => onNavigate('payroll')} className="btn-primary py-2 px-4 text-xs font-bold shadow-lg shadow-accent/20 flex items-center gap-2">
-               <DollarSign className="w-4 h-4" /> Run Payroll
-             </button>
-          </div>
-        </div>
-      </div>
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h3 style={{ color: T.heading }} className="text-xl font-black tracking-tight tracking-tight">The ZivoHR Skyscraper</h3>
+                  <p style={{ color: T.muted }} className="text-sm">Building the future of African HR, floor by floor.</p>
+                </div>
+                <div className="text-right">
+                  <div className="text-3xl font-black text-indigo-500">{progressPercent}%</div>
+                  <div style={{ color: T.muted }} className="text-[10px] font-bold uppercase tracking-widest">Complete</div>
+                </div>
+              </div>
+              
+              <div className="relative h-4 bg-black/5 rounded-full overflow-hidden mb-8">
+                <motion.div 
+                  initial={{ width: 0 }}
+                  animate={{ width: `${progressPercent}%` }}
+                  transition={{ duration: 1.5, ease: "easeOut" }}
+                  className="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-400"
+                />
+              </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <KPICard 
-          label="Total Payroll (Last Month)" 
-          value={`$${stats?.monies.toLocaleString()}`}
-          subtext="Processed in last run"
-          icon={DollarSign}
-          color="accent"
-          onClick={() => onNavigate('payroll')}
-        />
-         <KPICard 
-          label="Employee Headcount" 
-          value={stats?.headcount || '0'}
-          subtext="Active employees"
-          icon={Users}
-          color="blue"
-          onClick={() => onNavigate('team')}
-        />
-        <KPICard 
-          label="New Hires (30d)" 
-          value={stats?.hires || '0'}
-          subtext="Onboarding pipeline"
-          icon={TrendingUp}
-          color="green"
-          onClick={() => onNavigate('team')}
-        />
-        <KPICard 
-          label="Pending Signatures" 
-          value={stats?.pendingDocs || '0'}
-          subtext={`out of ${stats?.totalDocs} total docs`}
-          icon={PenToolIcon}
-          color="orange"
-          onClick={() => onNavigate('esignature')}
-        />
-        {userProfile?.role === 'hr' && stats?.pendingChanges > 0 && (
-          <KPICard 
-            label="Profile Requests" 
-            value={stats?.pendingChanges}
-            subtext="Awaiting HR approval"
-            icon={AlertCircle}
-            color="orange"
-            onClick={() => onNavigate('self_service')}
-          />
-        )}
-        {userProfile?.role === 'hr' && stats?.activeOnboardings > 0 && (
-          <KPICard 
-            label="Onboarding Active" 
-            value={stats?.activeOnboardings}
-            subtext="Track new hire progress"
-            icon={Zap}
-            color="purple"
-            onClick={() => onNavigate('onboarding')}
-          />
-        )}
-      </div>
-
-      {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Salary Trends */}
-        <div className={cn("border rounded-[2rem] p-8 shadow-sm transition-colors", isDark ? "bg-slate-900/40 border-slate-800" : "bg-white border-black/[0.05]")}>
-          <div className="flex items-center justify-between mb-8">
-            <h3 className={cn("font-bold text-lg tracking-tight", isDark ? "text-white" : "text-space-gray")}>Salary Expenditure</h3>
-            <div className={cn("p-2 rounded-xl", isDark ? "bg-slate-800 text-slate-500" : "bg-apple-gray text-gray-400")}>
-               <DollarSign className="w-4 h-4" />
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {SKYSCRAPER_FLOORS.map((floor) => (
+                  <div 
+                    key={floor.id}
+                    className={cn(
+                      "p-3 rounded-xl border text-[10px] font-bold flex items-center gap-2 transition-all",
+                      floor.status === 'completed' 
+                        ? (isDark ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" : "bg-emerald-50 border-emerald-100 text-emerald-700")
+                        : floor.status === 'in_progress'
+                        ? (isDark ? "bg-indigo-500/10 border-indigo-500/20 text-indigo-400 animate-pulse" : "bg-indigo-50 border-indigo-100 text-indigo-700 animate-pulse")
+                        : (isDark ? "bg-slate-800/50 border-slate-700 text-slate-500" : "bg-slate-50 border-slate-100 text-slate-400")
+                    )}
+                  >
+                    <div className={cn(
+                      "w-4 h-4 rounded-full flex items-center justify-center text-[8px]",
+                      floor.status === 'completed' ? "bg-emerald-500 text-white" : "bg-current opacity-20"
+                    )}>
+                      {floor.status === 'completed' ? "✓" : floor.id}
+                    </div>
+                    <span className="truncate">{floor.name}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
-          <div className="h-[300px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={salaryTrends}>
-                <defs>
-                  <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#007AFF" stopOpacity={0.1}/>
-                    <stop offset="95%" stopColor="#007AFF" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#00000005" />
-                <XAxis 
-                  dataKey="name" 
-                  axisLine={false} 
-                  tickLine={false} 
-                  tick={{ fontSize: 10, fontWeight: 700, fill: '#9ca3af' }}
-                  dy={10}
-                />
-                <YAxis 
-                  axisLine={false} 
-                  tickLine={false} 
-                  tick={{ fontSize: 10, fontWeight: 700, fill: '#9ca3af' }}
-                />
-                <Tooltip 
-                  contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                />
-                <Area type="monotone" dataKey="value" stroke="#007AFF" strokeWidth={3} fillOpacity={1} fill="url(#colorValue)" />
-              </AreaChart>
-            </ResponsiveContainer>
+
+          <div 
+            className="rounded-[2rem] p-8 border shadow-sm flex flex-col justify-center text-center space-y-4"
+            style={{ background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)', borderColor: 'transparent' }}
+          >
+            <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-2 backdrop-blur-sm">
+              <Sparkles className="w-8 h-8 text-white" />
+            </div>
+            <h3 className="text-2xl font-black text-white px-4">Almost at the Top!</h3>
+            <p className="text-white/70 text-sm px-4">Floor 14 (Internationalization) is live. Switching languages is now just a tap away.</p>
+            <button 
+              onClick={() => onNavigate('settings')}
+              className="mt-4 mx-8 py-3 bg-white text-indigo-600 rounded-xl font-bold text-sm shadow-xl shadow-indigo-900/20 hover:scale-[1.02] transition-transform"
+            >
+              Adjust Settings
+            </button>
           </div>
+        </motion.div>
+
+        {/* ── KPI Cards ── */}
+        <motion.div variants={container} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {kpiCards.map((item, i) => (
+            <KPICard key={item.label} {...item} index={i} onClick={() => onNavigate(item.nav)} isDark={isDark} T={T} />
+          ))}
+        </motion.div>
+
+        {/* ── Charts Row ── */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <AnimatedSection delay={0}>
+            <ChartCard title="Salary Expenditure" subtitle="Monthly payroll spend" icon={DollarSign} isDark={isDark} T={T}>
+              <div className="h-[250px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={salaryTrends}>
+                    <defs>
+                      <linearGradient id="salaryGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%"  stopColor="#7c3aed" stopOpacity={isDark ? 0.22 : 0.12} />
+                        <stop offset="95%" stopColor="#7c3aed" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={T.gridLine} />
+                    <XAxis dataKey="name" axisLine={false} tickLine={false}
+                      tick={{ fontSize: 11, fontWeight: 600, fill: T.dim }} dy={10} />
+                    <YAxis axisLine={false} tickLine={false}
+                      tick={{ fontSize: 11, fontWeight: 600, fill: T.dim }} dx={-8} />
+                    <Tooltip contentStyle={{
+                      borderRadius: '12px', border: `1px solid ${T.tooltipBorder}`,
+                      boxShadow: '0 20px 40px rgba(0,0,0,0.18)',
+                      background: T.tooltipBg, color: T.heading,
+                      padding: '10px 16px', fontSize: '12px', fontWeight: 700,
+                    }} />
+                    <Area type="monotone" dataKey="value" stroke="#7c3aed" strokeWidth={2.5}
+                      fillOpacity={1} fill="url(#salaryGrad)" dot={false}
+                      activeDot={{ r: 5, fill: '#7c3aed', strokeWidth: 0 }} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </ChartCard>
+          </AnimatedSection>
+
+          <AnimatedSection delay={0.08}>
+            <ChartCard title="Headcount Growth" subtitle="Team size over time" icon={Users} isDark={isDark} T={T}>
+              <div className="h-[250px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={headcountTrends} barSize={26}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={T.gridLine} />
+                    <XAxis dataKey="name" axisLine={false} tickLine={false}
+                      tick={{ fontSize: 11, fontWeight: 600, fill: T.dim }} dy={10} />
+                    <YAxis axisLine={false} tickLine={false}
+                      tick={{ fontSize: 11, fontWeight: 600, fill: T.dim }} dx={-8} />
+                    <Tooltip cursor={{ fill: '#7c3aed10', radius: 6 }}
+                      contentStyle={{
+                        borderRadius: '12px', border: `1px solid ${T.tooltipBorder}`,
+                        boxShadow: '0 20px 40px rgba(0,0,0,0.18)',
+                        background: T.tooltipBg, color: T.heading,
+                        padding: '10px 16px', fontSize: '12px', fontWeight: 700,
+                      }} />
+                    <Bar dataKey="value" radius={[6, 6, 2, 2]}>
+                      {headcountTrends.map((_e, idx) => (
+                        <Cell key={`cell-${idx}`}
+                          fill={idx === headcountTrends.length - 1 ? '#7c3aed' : (isDark ? '#1c1d30' : '#e2e8f0')} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </ChartCard>
+          </AnimatedSection>
         </div>
 
-        {/* Headcount Growth */}
-        <div className={cn("border rounded-[2rem] p-8 shadow-sm transition-colors", isDark ? "bg-slate-900/40 border-slate-800" : "bg-white border-black/[0.05]")}>
-          <div className="flex items-center justify-between mb-8">
-            <h3 className={cn("font-bold text-lg tracking-tight", isDark ? "text-white" : "text-space-gray")}>Headcount Growth</h3>
-            <div className={cn("p-2 rounded-xl", isDark ? "bg-slate-800 text-slate-500" : "bg-apple-gray text-gray-400")}>
-               <TrendingUp className="w-4 h-4" />
+        {/* ── Compliance Radar ── */}
+        <AnimatedSection delay={0}>
+          <div style={{ background: T.cardBg, borderColor: T.cardBorder }} className="rounded-2xl border p-6 transition-colors">
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <h3 style={{ color: T.heading }} className="font-black text-lg tracking-tight">Compliance Radar</h3>
+                <p style={{ color: T.muted }} className="text-xs mt-0.5">Automatic contract expiry & document alerts</p>
+              </div>
+              <div style={{ background: isDark ? 'rgba(239,68,68,0.1)' : '#fef2f2' }}
+                className="w-10 h-10 rounded-xl flex items-center justify-center">
+                <AlertCircle className="w-5 h-5 text-red-500" />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {expiringContracts.length === 0 ? (
+                <div style={{ borderColor: T.innerBorder }}
+                  className="lg:col-span-3 py-14 text-center rounded-xl border-2 border-dashed">
+                  <ShieldCheckIcon style={{ color: T.innerBorder }} className="w-10 h-10 mx-auto mb-3" />
+                  <p style={{ color: T.muted }} className="font-bold text-sm">All Clear — No expiring contracts</p>
+                  <p style={{ color: T.dim }} className="text-xs mt-1">System is fully compliant</p>
+                </div>
+              ) : (
+                expiringContracts.map((contract, i) => {
+                  const daysLeft = Math.ceil((new Date(contract.expiryDate).getTime() - Date.now()) / 86400000);
+                  const isCritical = daysLeft <= 30;
+                  return (
+                    <motion.div
+                      key={contract.id}
+                      initial={{ opacity: 0, y: 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.07 }}
+                      whileHover={{ y: -2 }}
+                      onClick={() => onNavigate('team')}
+                      style={{
+                        background: isCritical ? (isDark ? 'rgba(239,68,68,0.05)' : '#fef2f2') : T.innerBg,
+                        borderColor: isCritical ? (isDark ? 'rgba(239,68,68,0.2)' : '#fecaca') : T.innerBorder,
+                      }}
+                      className="group p-5 rounded-xl border transition-all hover:shadow-xl cursor-pointer"
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <img
+                            src={contract.avatar || `https://ui-avatars.com/api/?name=${contract.name}&background=random`}
+                            alt={contract.name}
+                            className="w-10 h-10 rounded-xl object-cover flex-shrink-0"
+                            referrerPolicy="no-referrer"
+                          />
+                          <div className="min-w-0">
+                            <p style={{ color: T.heading }} className="text-sm font-bold truncate">{contract.name}</p>
+                            <p style={{ color: T.muted }} className="text-xs truncate">{contract.role}</p>
+                          </div>
+                        </div>
+                        <span className={cn(
+                          'flex-shrink-0 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider text-white',
+                          isCritical ? 'bg-red-500' : 'bg-amber-500'
+                        )}>
+                          {daysLeft}d
+                        </span>
+                      </div>
+                      <div className="mt-4 flex items-center justify-between">
+                        <div>
+                          <p style={{ color: T.dim }} className="text-[10px] font-bold uppercase tracking-widest mb-0.5">Expires</p>
+                          <p style={{ color: isDark ? '#cbd5e1' : '#475569' }} className="text-xs font-semibold">
+                            {new Date(contract.expiryDate).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <div style={{ background: T.innerBg, borderColor: T.innerBorder }}
+                          className="w-8 h-8 rounded-lg border flex items-center justify-center group-hover:border-violet-500/40 transition-colors">
+                          <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-violet-500 transition-colors" />
+                        </div>
+                      </div>
+                    </motion.div>
+                  );
+                })
+              )}
             </div>
           </div>
-          <div className="h-[300px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={headcountTrends}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#00000005" />
-                <XAxis 
-                  dataKey="name" 
-                  axisLine={false} 
-                  tickLine={false} 
-                  tick={{ fontSize: 10, fontWeight: 700, fill: '#9ca3af' }}
-                  dy={10}
-                />
-                <YAxis 
-                  axisLine={false} 
-                  tickLine={false} 
-                  tick={{ fontSize: 10, fontWeight: 700, fill: '#9ca3af' }}
-                />
-                <Tooltip 
-                   cursor={{ fill: '#007AFF10' }}
-                   contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                />
-                <Bar dataKey="value" radius={[6, 6, 0, 0]}>
-                  {headcountTrends.map((_entry, index) => (
-                    <Cell key={`cell-${index}`} fill={index === headcountTrends.length - 1 ? '#007AFF' : '#E5E7EB'} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      </div>
+        </AnimatedSection>
 
-      {/* Compliance Radar */}
-      <div className={cn("border rounded-[2rem] p-8 shadow-sm transition-colors", isDark ? "bg-slate-900/40 border-slate-800" : "bg-white border-black/[0.05]")}>
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h3 className={cn("font-bold text-xl tracking-tight", isDark ? "text-white" : "text-space-gray")}>Compliance Radar</h3>
-            <p className={cn("text-xs font-medium tracking-tight", isDark ? "text-slate-400" : "text-gray-500")}>Automatic contract expiry & document alerts.</p>
-          </div>
-          <div className={cn("p-3 rounded-2xl", isDark ? "bg-red-500/10 text-red-500" : "bg-red-50")}>
-            <AlertCircle className="w-6 h-6" />
-          </div>
-        </div>
+        {/* ── Bottom Row ── */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {/* Recruitment Funnel */}
+          <AnimatedSection delay={0}>
+            <div style={{ background: T.cardBg, borderColor: T.cardBorder }} className="rounded-2xl border p-6 h-full flex flex-col">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h3 style={{ color: T.heading }} className="font-black text-base tracking-tight">Recruitment Funnel</h3>
+                  <p style={{ color: T.muted }} className="text-xs mt-0.5">Pipeline overview</p>
+                </div>
+                <div style={{ background: isDark ? 'rgba(124,58,237,0.1)' : '#f5f3ff' }}
+                  className="w-9 h-9 rounded-xl flex items-center justify-center">
+                  <TrendingUp className="w-4 h-4 text-violet-500" />
+                </div>
+              </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {expiringContracts.length === 0 ? (
-            <div className={cn("lg:col-span-3 py-12 text-center rounded-[2rem] border-2 border-dashed transition-colors", isDark ? "bg-slate-800/10 border-white/5" : "bg-apple-gray/20 border-black/[0.03]")}>
-              <ShieldCheckIcon className={cn("w-12 h-12 mx-auto mb-4", isDark ? "text-slate-700" : "text-gray-300")} />
-              <p className={cn("font-bold tracking-tight", isDark ? "text-slate-500" : "text-gray-500")}>System Secure • All contracts are currently active.</p>
+              <div className="space-y-5 flex-1">
+                {[
+                  { label: 'Total Applicants',   count: stats?.applicants || 0, pct: '100%', color: '#7c3aed' },
+                  { label: 'Offers Sent',        count: 0,                      pct: '0%',   color: '#6366f1' },
+                  { label: 'Successfully Hired', count: stats?.hires || 0,
+                    pct: `${stats?.applicants ? Math.round((stats.hires / stats.applicants) * 100) : 0}%`,
+                    color: '#10b981' },
+                ].map(fi => (
+                  <FunnelItem key={fi.label} label={fi.label} count={fi.count} percentage={fi.pct} color={fi.color} T={T} />
+                ))}
+              </div>
+
+              <button
+                onClick={() => onNavigate('hiring')}
+                style={{ background: T.innerBg, borderColor: T.innerBorder, color: T.muted }}
+                className="w-full mt-6 py-2.5 text-xs font-bold rounded-xl border transition-all flex items-center justify-center gap-2 hover:border-violet-500/40"
+              >
+                Manage Pipeline <ChevronRight className="w-4 h-4" />
+              </button>
             </div>
-          ) : (
-            expiringContracts.map((contract) => {
-              const daysLeft = Math.ceil((new Date(contract.expiryDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-              const isCritical = daysLeft <= 30;
+          </AnimatedSection>
 
-              return (
-                <div 
-                  key={contract.id}
-                  onClick={() => onNavigate('team')}
-                  className={cn(
-                    "p-6 rounded-3xl border transition-all hover:shadow-xl hover:scale-[1.02] cursor-pointer group",
-                    isCritical 
-                      ? (isDark ? "bg-red-500/5 border-red-500/20" : "bg-red-50/30 border-red-100") 
-                      : (isDark ? "bg-slate-900 border-slate-800" : "bg-white border-black/[0.05]")
-                  )}
-                >
-                  <div className="flex items-start justify-between gap-4">
+          {/* E-Signature Queue */}
+          <AnimatedSection delay={0.08} className="lg:col-span-2">
+            <div style={{ background: T.cardBg, borderColor: T.cardBorder }} className="rounded-2xl border p-6 h-full">
+              <div className="flex items-center justify-between mb-5">
+                <div>
+                  <h3 style={{ color: T.heading }} className="font-black text-base tracking-tight">E-Signature Queue</h3>
+                  <p style={{ color: T.muted }} className="text-xs mt-0.5">Pending document signatures</p>
+                </div>
+                <div style={{
+                  background: isDark ? 'rgba(245,158,11,0.1)' : '#fffbeb',
+                  borderColor: isDark ? 'rgba(245,158,11,0.2)' : '#fde68a',
+                  color: isDark ? '#fbbf24' : '#d97706'
+                }} className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border">
+                  {stats?.pendingDocs ?? 0} Pending
+                </div>
+              </div>
+
+              {stats?.totalDocs === 0 ? (
+                <div style={{ borderColor: T.innerBorder }} className="py-14 text-center rounded-xl border-2 border-dashed">
+                  <FileText style={{ color: T.innerBorder }} className="w-10 h-10 mx-auto mb-3" />
+                  <p style={{ color: T.muted }} className="text-sm font-semibold">No active signature flows</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <div style={{ background: T.innerBg, borderColor: T.innerBorder }}
+                    className="p-4 rounded-xl border flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <img 
-                       src={contract.avatar || `https://ui-avatars.com/api/?name=${contract.name}&background=random`} 
-                       alt={contract.name} 
-                       className="w-10 h-10 rounded-xl object-cover"
-                       referrerPolicy="no-referrer"
-                      />
+                      <div style={{ background: isDark ? 'rgba(16,185,129,0.1)' : '#ecfdf5' }}
+                        className="w-10 h-10 rounded-xl flex items-center justify-center">
+                        <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+                      </div>
                       <div>
-                        <p className={cn("text-sm font-bold", isDark ? "text-white" : "text-space-gray")}>{contract.name}</p>
-                        <p className={cn("text-[10px] font-medium tracking-tight", isDark ? "text-slate-500" : "text-gray-500")}>{contract.role}</p>
+                        <p style={{ color: T.heading }} className="text-sm font-bold">{stats?.signedDocs} Signed Documents</p>
+                        <p style={{ color: T.muted }} className="text-xs">Electronically sealed & archived</p>
                       </div>
                     </div>
-                    <span className={cn(
-                      "px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest",
-                      isCritical ? "bg-red-500 text-white" : "bg-orange-500 text-white"
-                    )}>
-                      {daysLeft} Days
-                    </span>
-                  </div>
-                  
-                  <div className="mt-6 flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <p className={cn("text-[9px] font-black uppercase tracking-widest", isDark ? "text-slate-600" : "text-gray-400")}>Expires On</p>
-                      <p className={cn("text-xs font-bold", isDark ? "text-slate-300" : "text-space-gray")}>{new Date(contract.expiryDate).toLocaleDateString()}</p>
-                    </div>
-                    <button 
-                      onClick={() => onNavigate('team')} 
-                      className={cn("p-2 rounded-xl transition-all border", isDark ? "bg-slate-800 border-white/5 hover:bg-slate-700" : "bg-white border-black/[0.05] hover:bg-apple-gray")}
-                    >
-                      <ChevronRight className="w-4 h-4 text-gray-400" />
+                    <button onClick={() => onNavigate('esignature')} className="text-xs font-bold text-violet-500 hover:text-violet-400 transition-colors">
+                      View All →
                     </button>
                   </div>
+
+                  <div className="grid grid-cols-3 gap-3">
+                    {[
+                      { label: 'Total Docs', value: stats?.totalDocs  ?? 0 },
+                      { label: 'Signed',     value: stats?.signedDocs ?? 0 },
+                      { label: 'Pending',    value: stats?.pendingDocs ?? 0 },
+                    ].map(item => (
+                      <div key={item.label} style={{ background: T.innerBg, borderColor: T.innerBorder }}
+                        className="p-3 rounded-xl border text-center">
+                        <p style={{ color: T.heading }} className="text-xl font-black">{item.value}</p>
+                        <p style={{ color: T.dim }} className="text-[10px] font-bold uppercase tracking-wider mt-0.5">{item.label}</p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              );
-            })
-          )}
+              )}
+            </div>
+          </AnimatedSection>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+// ─── Animated section wrapper (scroll-triggered, Documenso-style) ─────────────
+
+function AnimatedSection({ children, delay = 0, className = '' }: { children: React.ReactNode; delay?: number; className?: string }) {
+  const ref    = useRef(null);
+  const inView = useInView(ref, { once: true, margin: '-40px' });
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 22 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.45, delay, ease: [0.25, 0.46, 0.45, 0.94] }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+// ─── KPI Card ─────────────────────────────────────────────────────────────────
+
+const accentMap: Record<string, { iconDark: string; iconLight: string; badgeDark: string; badgeLight: string; glow: string }> = {
+  violet:  { iconDark: 'rgba(124,58,237,0.12)',  iconLight: '#f5f3ff', badgeDark: 'rgba(167,139,250,0.12)', badgeLight: '#ede9fe', glow: '#7c3aed' },
+  blue:    { iconDark: 'rgba(59,130,246,0.12)',   iconLight: '#eff6ff', badgeDark: 'rgba(147,197,253,0.12)', badgeLight: '#dbeafe', glow: '#3b82f6' },
+  emerald: { iconDark: 'rgba(16,185,129,0.12)',   iconLight: '#ecfdf5', badgeDark: 'rgba(110,231,183,0.12)', badgeLight: '#d1fae5', glow: '#10b981' },
+  amber:   { iconDark: 'rgba(245,158,11,0.12)',   iconLight: '#fffbeb', badgeDark: 'rgba(252,211,77,0.12)',  badgeLight: '#fef3c7', glow: '#f59e0b' },
+  purple:  { iconDark: 'rgba(168,85,247,0.12)',   iconLight: '#faf5ff', badgeDark: 'rgba(216,180,254,0.12)', badgeLight: '#ede9fe', glow: '#a855f7' },
+};
+const accentText: Record<string, { dark: string; light: string }> = {
+  violet:  { dark: '#a78bfa', light: '#7c3aed' },
+  blue:    { dark: '#93c5fd', light: '#2563eb' },
+  emerald: { dark: '#6ee7b7', light: '#059669' },
+  amber:   { dark: '#fcd34d', light: '#d97706' },
+  purple:  { dark: '#d8b4fe', light: '#9333ea' },
+};
+
+function KPICard({ label, value, subtext, icon: Icon, accent, trend, onClick, isDark, index, T }: any) {
+  const a = accentMap[accent] ?? accentMap.violet;
+  const tx = accentText[accent] ?? accentText.violet;
+
+  return (
+    <motion.button
+      variants={stagger(index * 0.06)}
+      onClick={onClick}
+      whileHover={{ y: -3, transition: { type: 'spring', stiffness: 350, damping: 22 } }}
+      whileTap={{ scale: 0.98 }}
+      style={{ background: T.cardBg, borderColor: T.cardBorder }}
+      className="group relative w-full text-left p-5 rounded-2xl border overflow-hidden transition-colors duration-200 hover:border-violet-500/30"
+    >
+      {/* Documenso-style gradient wash on hover */}
+      <div className="absolute inset-0 rounded-2xl pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+        style={{ background: `radial-gradient(ellipse at top right, ${a.glow}08 0%, transparent 60%)` }} />
+
+      <div className="flex items-start justify-between mb-5 relative">
+        <motion.div
+          whileHover={{ scale: 1.08, rotate: 3 }}
+          transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+          style={{ background: isDark ? a.iconDark : a.iconLight }}
+          className="w-11 h-11 rounded-xl flex items-center justify-center"
+        >
+          <Icon className="w-5 h-5" style={{ color: tx[isDark ? 'dark' : 'light'] }} />
+        </motion.div>
+        <span style={{
+          background: isDark ? a.badgeDark : a.badgeLight,
+          color: tx[isDark ? 'dark' : 'light'],
+          border: `1px solid ${isDark ? a.badgeDark : a.badgeLight}`,
+        }} className="text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full">
+          {trend}
+        </span>
+      </div>
+
+      <div className="space-y-0.5 relative">
+        <p style={{ color: T.label }} className="text-[10px] font-bold uppercase tracking-widest">{label}</p>
+        <h4 style={{ color: T.heading }} className="text-3xl font-black tracking-tight leading-none">{value}</h4>
+        <p style={{ color: T.dim }} className="text-xs pt-1">{subtext}</p>
+      </div>
+    </motion.button>
+  );
+}
+
+// ─── Chart Card ───────────────────────────────────────────────────────────────
+
+function ChartCard({ title, subtitle, icon: Icon, isDark, T, children }: any) {
+  return (
+    <div style={{ background: T.cardBg, borderColor: T.cardBorder }} className="rounded-2xl border p-6 transition-colors">
+      <div className="flex items-center justify-between mb-5">
+        <div>
+          <h3 style={{ color: T.heading }} className="font-black text-base tracking-tight">{title}</h3>
+          <p style={{ color: T.muted }} className="text-xs mt-0.5">{subtitle}</p>
+        </div>
+        <div style={{ background: T.innerBg, borderColor: T.innerBorder }}
+          className="w-9 h-9 rounded-xl border flex items-center justify-center">
+          <Icon style={{ color: T.dim }} className="w-4 h-4" />
         </div>
       </div>
-
-      {/* Recruitment & Signatures Mixed Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-         {/* Recruitment Funnel */}
-         <div className={cn("border rounded-[2rem] p-8 shadow-sm lg:col-span-1 transition-colors", isDark ? "bg-slate-900/40 border-slate-800" : "bg-white border-black/[0.05]")}>
-            <h3 className={cn("font-bold mb-6", isDark ? "text-white" : "text-space-gray")}>Recruitment Funnel</h3>
-            <div className="space-y-6">
-              <FunnelItem label="Total Applicants" count={stats?.applicants || 0} percentage="100%" color="bg-accent" isDark={isDark} />
-              <FunnelItem label="Offers Sent" count={0} percentage="0%" color="bg-purple-500" isDark={isDark} />
-              <FunnelItem label="Successfully Hired" count={stats?.hires || 0} percentage={`${stats?.applicants ? Math.round((stats.hires / stats.applicants) * 100) : 0}%`} color="bg-green-500" isDark={isDark} />
-            </div>
-            <button 
-              onClick={() => onNavigate('hiring')}
-              className={cn(
-                "w-full mt-8 py-3 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-2",
-                isDark ? "bg-slate-800 text-slate-300 hover:bg-slate-700" : "bg-apple-gray text-space-gray hover:bg-black/5"
-              )}
-            >
-              Manage Pipeline <ChevronRight className="w-4 h-4" />
-            </button>
-         </div>
-
-         {/* Pending Signature Queue */}
-         <div className={cn("border rounded-[2rem] p-8 shadow-sm lg:col-span-2 transition-colors", isDark ? "bg-slate-900/40 border-slate-800" : "bg-white border-black/[0.05]")}>
-            <div className="flex items-center justify-between mb-6">
-               <h3 className={cn("font-bold", isDark ? "text-white" : "text-space-gray")}>E-Signature Queue</h3>
-               <span className={cn("text-[10px] font-black tracking-widest uppercase px-3 py-1 rounded-full", isDark ? "bg-orange-500/10 text-orange-500 border border-orange-500/20" : "bg-orange-50 text-orange-600")}>{stats?.pendingDocs} ACTION REQUIRED</span>
-            </div>
-            
-            <div className="space-y-4">
-               {stats?.totalDocs === 0 ? (
-                 <div className="py-12 text-center text-gray-400">
-                    <FileText className="w-12 h-12 mx-auto mb-2 opacity-20" />
-                    <p className="text-sm">No active signature flows.</p>
-                 </div>
-               ) : (
-                 <div className="flex flex-col gap-3">
-                   <div className={cn("p-4 rounded-2xl border transition-colors flex items-center justify-between", isDark ? "bg-slate-800/30 border-white/5" : "bg-apple-gray/30 border-black/[0.03]")}>
-                     <div className="flex items-center gap-3">
-                        <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shadow-sm", isDark ? "bg-slate-800 text-accent" : "bg-white text-accent")}>
-                          <CheckCircle2 className="w-5 h-5 text-green-500" />
-                        </div>
-                        <div>
-                          <p className={cn("text-sm font-bold", isDark ? "text-white" : "text-space-gray")}>{stats?.signedDocs} Signed Documents</p>
-                          <p className={cn("text-[10px]", isDark ? "text-slate-500" : "text-gray-500")}>Electronically sealed</p>
-                        </div>
-                     </div>
-                     <button onClick={() => onNavigate('esignature')} className="text-xs font-bold text-accent hover:underline">View All</button>
-                   </div>
-                 </div>
-               )}
-            </div>
-         </div>
-      </div>
+      {children}
     </div>
   );
 }
 
-function KPICard({ label, value, subtext, icon: Icon, color, onClick }: any) {
-  const { isDark } = useTheme();
-  const colorMap = {
-    accent: isDark ? "text-accent bg-accent/10" : "text-accent bg-accent/5",
-    blue: isDark ? "text-blue-400 bg-blue-500/10" : "text-blue-600 bg-blue-50",
-    green: isDark ? "text-green-400 bg-green-500/10" : "text-green-600 bg-green-50",
-    orange: isDark ? "text-orange-400 bg-orange-500/10" : "text-orange-600 bg-orange-50",
-    purple: isDark ? "text-purple-400 bg-purple-500/10" : "text-purple-600 bg-purple-50",
-  };
+// ─── Funnel Item ──────────────────────────────────────────────────────────────
 
-  return (
-    <button 
-      onClick={onClick}
-      className={cn(
-        "border p-8 rounded-[2rem] text-left hover:shadow-xl hover:shadow-black/5 hover:-translate-y-1 transition-all duration-300 group",
-        isDark ? "bg-slate-900 border-slate-800" : "bg-white border-black/[0.05]"
-      )}
-    >
-      <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center mb-6 transition-transform group-hover:scale-110", colorMap[color as keyof typeof colorMap])}>
-        <Icon className="w-6 h-6" />
-      </div>
-      <p className={cn("text-[10px] font-black uppercase tracking-widest mb-1", isDark ? "text-slate-500" : "text-gray-400")}>{label}</p>
-      <h4 className={cn("text-3xl font-black tracking-tight", isDark ? "text-white" : "text-space-gray")}>{value}</h4>
-      <div className="flex items-center gap-1 mt-2 text-gray-400">
-        <Clock className="w-3.5 h-3.5" />
-        <span className="text-[10px] font-bold">{subtext}</span>
-      </div>
-    </button>
-  );
-}
-
-function FunnelItem({ label, count, percentage, color, isDark }: any) {
+function FunnelItem({ label, count, percentage, color, T }: any) {
   return (
     <div className="space-y-2">
-      <div className="flex items-center justify-between text-xs font-bold">
-        <span className={cn(isDark ? "text-slate-400" : "text-gray-500")}>{label}</span>
-        <span className={isDark ? "text-white" : "text-space-gray"}>{count}</span>
+      <div className="flex items-center justify-between">
+        <span style={{ color: T.muted }} className="text-xs font-semibold">{label}</span>
+        <span style={{ color: T.heading }} className="text-xs font-black tabular-nums">{count}</span>
       </div>
-      <div className={cn("h-2 w-full rounded-full overflow-hidden", isDark ? "bg-slate-800" : "bg-apple-gray")}>
-        <motion.div 
+      <div style={{ background: T.innerBg }} className="h-1.5 w-full rounded-full overflow-hidden">
+        <motion.div
           initial={{ width: 0 }}
           animate={{ width: percentage }}
-          transition={{ duration: 1, ease: "easeOut" }}
-          className={cn("h-full rounded-full", color)}
+          transition={{ duration: 1.2, ease: 'easeOut' }}
+          style={{ background: color }}
+          className="h-full rounded-full"
         />
       </div>
+      <p style={{ color: T.dim }} className="text-[10px] font-bold">{percentage} conversion</p>
     </div>
   );
 }
 
-function PenToolIcon({ className }: { className?: string }) {
+// ─── SVG icon helpers ─────────────────────────────────────────────────────────
+
+function PenToolIcon({ className, style }: { className?: string; style?: React.CSSProperties }) {
   return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+    <svg className={className} style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+        d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
     </svg>
   );
 }
 
-function ShieldCheckIcon({ className }: { className?: string }) {
+function ShieldCheckIcon({ className, style }: { className?: string; style?: React.CSSProperties }) {
   return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+    <svg className={className} style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
     </svg>
   );
 }

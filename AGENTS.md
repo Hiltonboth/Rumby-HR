@@ -29,6 +29,7 @@ ZivoHR is a high-integrity Payroll and HR Management system tailored for the Zim
 - **Floor 11: The Dark Dimension** – [100%] Dark mode consistency. *Status: All cards and dashboards updated with adaptive theme-aware styling.*
 - **Floor 12: Mobile Optimization** – [100%] Responsive precision. *Status: Fully adaptive layout from 320px to 4k with touch-optimized targets.*
 - **Floor 13: Integrated Documentation** – [100%] Help Center. *Status: Self-service documentation and Zimbabwean Labor Case Library accessible from within the app.*
+- **Floor 14: Internationalization & Localization** – [100%] Multi-language support. *Status: English, Shona, Ndebele, Chinese, and Afrikaans integration live with sidebar selector.*
 - **Compliance Radar**: [100%] Real-time expiry alerts integrated on main Dashboard.
 
 ## Security Standards

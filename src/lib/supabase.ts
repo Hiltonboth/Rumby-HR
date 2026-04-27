@@ -26,9 +26,9 @@ export const supabase = createClient(
       autoRefreshToken: true,
       detectSessionInUrl: true,
       flowType: 'pkce',
-    }
+    } 
   }
 );
 
 // Helper to check if supabase is ready for real requests
-export const isSupabaseConfigured = () => isConfigured;
+export const isSupabaseConfigured = () => isConfigured;   

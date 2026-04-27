@@ -454,6 +454,17 @@ CREATE TABLE IF NOT EXISTS time_entries (
   created_at      TIMESTAMPTZ DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS company_settings (
+  id                     UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  company_id             UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  statutory_rates        JSONB DEFAULT '{}',
+  payroll_lock_day       INT DEFAULT 25,
+  allow_employee_uploads BOOLEAN DEFAULT TRUE,
+  created_at             TIMESTAMPTZ DEFAULT NOW(),
+  updated_at             TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(company_id)
+);
+
 -- Notifications Hub
 CREATE TABLE IF NOT EXISTS notifications (
   id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -483,6 +494,7 @@ $$ LANGUAGE sql SECURITY DEFINER STABLE;
 -- Enable RLS on ALL tables
 ALTER TABLE companies ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE company_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE employees ENABLE ROW LEVEL SECURITY;
 ALTER TABLE departments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE leave_types ENABLE ROW LEVEL SECURITY;
@@ -513,12 +525,30 @@ ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
 
 -- UNIVERSAL POLICIES
 
+-- Companies Policies
+DROP POLICY IF EXISTS "companies_read_member" ON companies;
+CREATE POLICY "companies_read_member" ON companies 
+  FOR SELECT USING (
+    id IN (SELECT company_id FROM user_profiles WHERE user_profiles.id = auth.uid())
+  );
+
+DROP POLICY IF EXISTS "companies_insert_authorized" ON companies;
+CREATE POLICY "companies_insert_authorized" ON companies 
+  FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+
+DROP POLICY IF EXISTS "companies_update_admin" ON companies;
+CREATE POLICY "companies_update_admin" ON companies 
+  FOR UPDATE USING (
+    id IN (SELECT company_id FROM user_profiles WHERE user_profiles.id = auth.uid() AND role IN ('owner', 'admin'))
+  );
+
 -- User Profiles Policies
 DROP POLICY IF EXISTS "user_profiles_self_read" ON user_profiles;
 CREATE POLICY "user_profiles_self_read" ON user_profiles FOR SELECT USING (auth.uid() = id);
 
 DROP POLICY IF EXISTS "user_profiles_company_read" ON user_profiles;
-CREATE POLICY "user_profiles_company_read" ON user_profiles FOR SELECT USING (company_id = my_company_id());
+CREATE POLICY "user_profiles_company_read" ON user_profiles 
+  FOR SELECT USING (company_id = (SELECT company_id FROM user_profiles WHERE id = auth.uid()));
 
 DROP POLICY IF EXISTS "user_profiles_self_update" ON user_profiles;
 CREATE POLICY "user_profiles_self_update" ON user_profiles FOR UPDATE USING (auth.uid() = id);
@@ -554,6 +584,7 @@ SELECT apply_company_isolation('community_posts');
 SELECT apply_company_isolation('kudos');
 SELECT apply_company_isolation('time_entries');
 SELECT apply_company_isolation('notifications');
+SELECT apply_company_isolation('company_settings');
 
 -- Seed 2024 ZIMRA PAYE bands (Universal Utility - read by any company)
 CREATE TABLE IF NOT EXISTS zimra_tax_bands (

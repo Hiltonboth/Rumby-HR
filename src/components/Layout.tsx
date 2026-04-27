@@ -107,158 +107,205 @@ export default function Layout({ children, activeTab, setActiveTab, currentCompa
   return (
     <div className={`min-h-screen flex overflow-x-hidden transition-colors duration-500 ${isDark ? 'bg-slate-950' : 'bg-slate-50'}`}>
       {/* Sidebar */}
-      <motion.aside 
-        initial={false}
-        animate={{ width: isSidebarCollapsed ? 80 : 256 }}
-        className={`border-r fixed h-full hidden lg:flex flex-col shadow-sm z-50 overflow-hidden transition-colors ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}
-      >
-        <div className={`p-6 border-b flex items-center justify-between ${isDark ? 'border-slate-800' : 'border-slate-100'}`}>
-          <AnimatePresence mode="wait">
-            {!isSidebarCollapsed && (
-              <motion.div 
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -10 }}
-                className="flex items-center gap-3 overflow-hidden"
-              >
-                {currentCompany.logoUrl ? (
-                  <div className="w-10 h-10 rounded-xl flex-shrink-0 shadow-lg overflow-hidden border border-slate-200 cursor-pointer">
-                    <img src={currentCompany.logoUrl} alt="Logo" className="w-full h-full object-cover" />
+        <motion.aside 
+          initial={false}
+          animate={{ width: isSidebarCollapsed ? 80 : 256 }}
+          className={cn(
+            "border-r fixed h-full hidden lg:flex flex-col shadow-sm z-50 overflow-hidden transition-all duration-300",
+            isDark ? "bg-slate-950 border-white/5" : "bg-white border-slate-200"
+          )}
+        >
+          <div className={cn(
+            "p-6 border-b flex items-center justify-between transition-colors",
+            isDark ? "border-white/5" : "border-slate-100"
+          )}>
+            <AnimatePresence mode="wait">
+              {!isSidebarCollapsed && (
+                <motion.div 
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -10 }}
+                  className="flex items-center gap-3 overflow-hidden"
+                >
+                  {currentCompany.logoUrl ? (
+                    <div className={cn(
+                      "w-10 h-10 rounded-xl flex-shrink-0 shadow-lg overflow-hidden border cursor-pointer transition-colors",
+                      isDark ? "border-white/10" : "border-slate-200"
+                    )}>
+                      <img src={currentCompany.logoUrl} alt="Logo" className="w-full h-full object-cover" />
+                    </div>
+                  ) : (
+                    <Logo className="w-10 h-10" />
+                  )}
+                  <div className="min-w-0">
+                    <h2 className={cn("font-bold text-sm leading-tight truncate", isDark ? "text-white" : "text-slate-900")}>{currentCompany.name}</h2>
+                    <p className="text-[10px] font-bold text-indigo-500 uppercase tracking-widest">{currentCompany.plan} Plan</p>
                   </div>
-                ) : (
-                  <Logo className="w-10 h-10" />
+                </motion.div>
+              )}
+              {isSidebarCollapsed && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  className={cn(
+                    "w-10 h-10 rounded-xl flex-shrink-0 shadow-lg mx-auto overflow-hidden border transition-colors",
+                    isDark ? "border-white/10" : "border-slate-200"
+                  )}
+                >
+                  {currentCompany.logoUrl ? (
+                     <img src={currentCompany.logoUrl} alt="Logo" className="w-full h-full object-cover" />
+                  ) : (
+                     <Logo className="w-full h-full" />
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+            
+            {!isSidebarCollapsed && (
+              <button 
+                onClick={() => setIsSidebarCollapsed(true)}
+                className={cn(
+                  "p-2 rounded-lg transition-all",
+                  isDark ? "hover:bg-white/5 text-slate-400 hover:text-white" : "hover:bg-slate-100 text-slate-400 hover:text-slate-900"
                 )}
-                <div className="min-w-0">
-                  <h2 className={`font-bold text-sm leading-tight truncate ${isDark ? 'text-white' : 'text-slate-900'}`}>{currentCompany.name}</h2>
-                  <p className="text-[10px] font-bold text-indigo-500 uppercase tracking-widest">{currentCompany.plan} Plan</p>
-                </div>
-              </motion.div>
-            )}
-            {isSidebarCollapsed && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                className="w-10 h-10 rounded-xl flex-shrink-0 shadow-lg mx-auto overflow-hidden border border-slate-200"
               >
-                {currentCompany.logoUrl ? (
-                   <img src={currentCompany.logoUrl} alt="Logo" className="w-full h-full object-cover" />
-                ) : (
-                   <Logo className="w-full h-full" />
-                )}
-              </motion.div>
+                <Menu className="w-5 h-5" />
+              </button>
             )}
-          </AnimatePresence>
+          </div>
+
+          {isSidebarCollapsed && (
+            <div className={cn("p-4 border-b flex justify-center", isDark ? "border-white/5" : "border-slate-100")}>
+              <button 
+                onClick={() => setIsSidebarCollapsed(false)}
+                className={cn(
+                  "p-2 rounded-lg transition-all",
+                  isDark ? "hover:bg-white/5 text-slate-400 hover:text-white" : "hover:bg-slate-100 text-slate-400 hover:text-slate-900"
+                )}
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            </div>
+          )}
+
+          <nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto custom-scrollbar">
+            {displayMenuItems.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id)}
+                className={cn(
+                  "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all duration-200 group relative",
+                  activeTab === item.id 
+                    ? (item.id === 'owner_kpis' ? "bg-red-600 text-white shadow-md shadow-red-600/20" : "bg-accent text-white shadow-md shadow-accent/20")
+                    : cn(
+                        isDark 
+                          ? "text-slate-400 hover:text-white hover:bg-white/5" 
+                          : "text-slate-500 hover:text-slate-900 hover:bg-slate-100/50"
+                      ),
+                  isSidebarCollapsed && "justify-center px-0"
+                )}
+              >
+                <item.icon className={cn(
+                  "w-5 h-5 flex-shrink-0 transition-colors", 
+                  activeTab === item.id 
+                    ? "text-white" 
+                    : cn(isDark ? "text-slate-500 group-hover:text-white" : "text-slate-400 group-hover:text-accent")
+                )} />
+                {!isSidebarCollapsed && (
+                  <motion.span
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="truncate"
+                  >
+                    {item.label}
+                  </motion.span>
+                )}
+                {isSidebarCollapsed && (
+                  <div className={cn(
+                    "absolute left-full ml-2 px-2 py-1 text-[10px] rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-50 shadow-xl transition-all",
+                    isDark ? "bg-slate-800 text-white" : "bg-slate-900 text-white"
+                  )}>
+                    {item.label}
+                  </div>
+                )}
+              </button>
+            ))}
+            
+            <div className={cn("pt-4 mt-4 border-t space-y-4", isDark ? "border-white/5" : "border-slate-100")}>
+              <div className="px-4">
+                 <p className={cn("text-[10px] font-bold uppercase tracking-widest mb-2 px-1", isDark ? "text-slate-500" : "text-slate-400")}>Language</p>
+                 <select 
+                   value={language}
+                   onChange={(e) => setLanguage(e.target.value as Language)}
+                   className={cn(
+                     "w-full rounded-xl px-3 py-2 text-xs font-bold outline-none border transition-all cursor-pointer",
+                     isDark 
+                      ? "bg-slate-800 text-white border-white/5 hover:border-white/10 focus:ring-1 focus:ring-accent/20" 
+                      : "bg-slate-100 text-slate-700 border-slate-200 focus:ring-1 focus:ring-accent/20"
+                   )}
+                 >
+                   <option value="en" className={isDark ? "bg-slate-800" : ""}>English (US)</option>
+                   <option value="sn" className={isDark ? "bg-slate-800" : ""}>Shona (ZW)</option>
+                   <option value="nd" className={isDark ? "bg-slate-800" : ""}>Ndebele (ZW)</option>
+                   <option value="zh" className={isDark ? "bg-slate-800" : ""}>Chinese (CN)</option>
+                   <option value="af" className={isDark ? "bg-slate-800" : ""}>Afrikaans (SA)</option>
+                 </select>
+              </div>
+
+              <button
+                 onClick={onGoHome}
+                className={cn(
+                  "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all group relative",
+                  isDark 
+                    ? "text-slate-400 hover:text-white hover:bg-white/5" 
+                    : "text-slate-500 hover:text-slate-900 hover:bg-slate-100/50",
+                  isSidebarCollapsed && "justify-center px-0"
+                )}
+              >
+                <LayoutDashboard className={cn(
+                  "w-5 h-5 flex-shrink-0 transition-colors",
+                  isDark ? "text-slate-500 group-hover:text-white" : "text-slate-400 group-hover:text-accent"
+                )} />
+                {!isSidebarCollapsed && <span>Landing Page</span>}
+                {isSidebarCollapsed && (
+                  <div className={cn(
+                    "absolute left-full ml-2 px-2 py-1 text-[10px] rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-50 shadow-xl transition-all",
+                    isDark ? "bg-slate-800 text-white" : "bg-slate-900 text-white"
+                  )}>
+                    Landing Page
+                  </div>
+                )}
+              </button>
+            </div>
+          </nav>
           
           {!isSidebarCollapsed && (
-            <button 
-              onClick={() => setIsSidebarCollapsed(true)}
-              className="p-2 hover:bg-apple-gray rounded-lg text-gray-400 hover:text-accent transition-all"
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className={cn(
+                "p-4 border-t transition-colors",
+                isDark ? "border-white/5 bg-white/[0.02]" : "border-slate-100 bg-slate-50/50"
+              )}
             >
-              <Menu className="w-5 h-5" />
-            </button>
+              <div className="flex items-center gap-3 p-2">
+                <div className={cn(
+                  "w-8 h-8 rounded-full flex items-center justify-center transition-colors",
+                  isDark ? "bg-accent/20 text-accent" : "bg-accent/10 text-accent"
+                )}>
+                  <Zap className="w-4 h-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className={cn("text-[10px] font-bold uppercase tracking-widest", isDark ? "text-slate-500" : "text-slate-400")}>Storage</p>
+                  <div className={cn("w-full h-1.5 rounded-full mt-1 overflow-hidden", isDark ? "bg-white/5" : "bg-slate-200")}>
+                    <div className="w-1/2 h-full bg-accent rounded-full" />
+                  </div>
+                </div>
+              </div>
+            </motion.div>
           )}
-        </div>
-
-        {isSidebarCollapsed && (
-          <div className="p-4 border-b border-black/[0.05] flex justify-center">
-            <button 
-              onClick={() => setIsSidebarCollapsed(false)}
-              className="p-2 hover:bg-apple-gray rounded-lg text-gray-400 hover:text-accent transition-all"
-            >
-              <ChevronRight className="w-5 h-5" />
-            </button>
-          </div>
-        )}
-
-        <nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto custom-scrollbar">
-          {displayMenuItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => setActiveTab(item.id)}
-              className={cn(
-                "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all duration-200 group relative",
-                activeTab === item.id 
-                  ? (item.id === 'owner_kpis' ? "bg-[#D32F2F] text-white shadow-md shadow-red-500/20" : "bg-accent text-white shadow-md shadow-accent/20")
-                  : "text-gray-500 hover:text-space-gray hover:bg-apple-gray/50",
-                isSidebarCollapsed && "justify-center px-0"
-              )}
-            >
-              <item.icon className={cn("w-5 h-5 flex-shrink-0", activeTab === item.id ? "text-white" : "text-gray-400 group-hover:text-accent")} />
-              {!isSidebarCollapsed && (
-                <motion.span
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="truncate"
-                >
-                  {item.label}
-                </motion.span>
-              )}
-              {isSidebarCollapsed && (
-                <div className="absolute left-full ml-2 px-2 py-1 bg-space-gray text-white text-[10px] rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-50 shadow-xl">
-                  {item.label}
-                </div>
-              )}
-            </button>
-          ))}
-          
-          <div className="pt-4 mt-4 border-t border-black/[0.05] space-y-4">
-            <div className="px-4">
-               <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 px-1">Language</p>
-               <select 
-                 value={language}
-                 onChange={(e) => setLanguage(e.target.value as Language)}
-                 className={cn(
-                   "w-full bg-apple-gray/50 rounded-xl px-3 py-2 text-xs font-bold outline-none border border-black/[0.05] focus:ring-1 focus:ring-accent/20 transition-all cursor-pointer",
-                   isDark ? "bg-slate-800 text-white border-slate-700" : "bg-apple-gray text-slate-700 border-slate-100"
-                 )}
-               >
-                 <option value="en">English (US)</option>
-                 <option value="sn">Shona (ZW)</option>
-                 <option value="nd">Ndebele (ZW)</option>
-                 <option value="zh">Chinese (CN)</option>
-                 <option value="af">Afrikaans (SA)</option>
-               </select>
-            </div>
-
-            <button
-               onClick={onGoHome}
-              className={cn(
-                "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-gray-500 hover:text-accent hover:bg-accent/5 transition-all group relative",
-                isSidebarCollapsed && "justify-center px-0"
-              )}
-            >
-              <LayoutDashboard className="w-5 h-5 flex-shrink-0" />
-              {!isSidebarCollapsed && <span>Landing Page</span>}
-              {isSidebarCollapsed && (
-                <div className="absolute left-full ml-2 px-2 py-1 bg-space-gray text-white text-[10px] rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-50 shadow-xl">
-                  Landing Page
-                </div>
-              )}
-            </button>
-          </div>
-        </nav>
-        
-        {!isSidebarCollapsed && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="p-4 border-t border-black/[0.05] bg-apple-gray/10"
-          >
-            <div className="flex items-center gap-3 p-2">
-              <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent">
-                <Zap className="w-4 h-4" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Storage</p>
-                <div className="w-full h-1.5 bg-black/[0.05] rounded-full mt-1">
-                  <div className="w-1/2 h-full bg-accent rounded-full" />
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </motion.aside>
+        </motion.aside>
 
       {/* Main Content */}
       <motion.main 
@@ -421,24 +468,36 @@ export default function Layout({ children, activeTab, setActiveTab, currentCompa
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed inset-y-0 left-0 w-72 bg-white z-[80] lg:hidden flex flex-col shadow-2xl"
+              className={cn(
+                "fixed inset-y-0 left-0 w-72 z-[80] lg:hidden flex flex-col shadow-2xl transition-colors duration-300",
+                isDark ? "bg-slate-950" : "bg-white"
+              )}
             >
-              <div className="p-6 border-b border-black/[0.05] flex items-center justify-between">
+              <div className={cn(
+                "p-6 border-b flex items-center justify-between transition-colors",
+                isDark ? "border-white/5" : "border-slate-100"
+              )}>
                 <div className="flex items-center gap-3">
                   {currentCompany.logoUrl ? (
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg overflow-hidden border border-slate-200">
+                    <div className={cn(
+                      "w-10 h-10 rounded-xl flex items-center justify-center shadow-lg overflow-hidden border transition-colors",
+                      isDark ? "border-white/10" : "border-slate-200"
+                    )}>
                       <img src={currentCompany.logoUrl} alt="Logo" className="w-full h-full object-cover" />
                     </div>
                   ) : (
                     <Logo className="w-10 h-10" />
                   )}
-                  <h2 className={`font-bold transition-colors ${isDark ? 'text-white' : 'text-slate-900'}`}>{currentCompany.name}</h2>
+                  <h2 className={cn("font-bold transition-colors", isDark ? "text-white" : "text-slate-900")}>{currentCompany.name}</h2>
                 </div>
                 <button 
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="p-2 hover:bg-apple-gray rounded-full transition-colors"
+                  className={cn(
+                    "p-2 rounded-full transition-colors",
+                    isDark ? "hover:bg-white/5 text-slate-400 hover:text-white" : "hover:bg-slate-100 text-slate-400 hover:text-slate-900"
+                  )}
                 >
-                  <X className="w-5 h-5 text-gray-400" />
+                  <X className="w-5 h-5" />
                 </button>
               </div>
               <nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto">
@@ -452,24 +511,40 @@ export default function Layout({ children, activeTab, setActiveTab, currentCompa
                     className={cn(
                       "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all duration-200",
                       activeTab === item.id 
-                        ? (item.id === 'owner_kpis' ? "bg-[#F44336] text-white shadow-md shadow-red-500/20" : "bg-accent text-white shadow-md shadow-accent/20")
-                        : "text-gray-500 hover:text-space-gray hover:bg-apple-gray/50"
+                        ? (item.id === 'owner_kpis' ? "bg-red-600 text-white shadow-md shadow-red-500/20" : "bg-accent text-white shadow-md shadow-accent/20")
+                        : (isDark 
+                            ? "text-slate-400 hover:text-white hover:bg-white/5" 
+                            : "text-slate-500 hover:text-slate-900 hover:bg-slate-100/50"
+                          )
                     )}
                   >
-                    <item.icon className={cn("w-5 h-5", activeTab === item.id ? "text-white" : "text-gray-400")} />
+                    <item.icon className={cn(
+                      "w-5 h-5 transition-colors", 
+                      activeTab === item.id 
+                        ? "text-white" 
+                        : (isDark ? "text-slate-500" : "text-slate-400")
+                    )} />
                     {item.label}
                   </button>
                 ))}
                 
-                <div className="pt-4 mt-4 border-t border-black/[0.05]">
+                <div className={cn("pt-4 mt-4 border-t", isDark ? "border-white/5" : "border-slate-100")}>
                   <button
                     onClick={() => {
                       onGoHome?.();
                       setIsMobileMenuOpen(false);
                     }}
-                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-gray-500 hover:text-accent hover:bg-accent/5 transition-all"
+                    className={cn(
+                      "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all",
+                      isDark 
+                        ? "text-slate-400 hover:text-white hover:bg-white/5" 
+                        : "text-slate-500 hover:text-slate-900 hover:bg-slate-100/50"
+                    )}
                   >
-                    <LayoutDashboard className="w-5 h-5" />
+                    <LayoutDashboard className={cn(
+                      "w-5 h-5 transition-colors",
+                      isDark ? "text-slate-500" : "text-slate-400"
+                    )} />
                     Landing Page
                   </button>
                 </div>

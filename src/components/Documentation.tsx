@@ -40,8 +40,9 @@ const DOC_SECTIONS = [
         keyFeatures: [
           { title: 'Step 1: Create Project', desc: 'Go to supabase.com and create a new project.' },
           { title: 'Step 2: Get Credentials', desc: 'Go to Project Settings -> API and copy the Project URL and Anon Key.' },
-          { title: 'Step 3: Update Settings', desc: 'In AI Studio, go to Settings (gear icon) and add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY variables.' },
-          { title: 'Step 4: SQL Migration', desc: 'Copy and run the contents of supabase-schema.sql in the SQL Editor on Supabase.' }
+          { title: 'Step 3: Update Settings', desc: 'In AI Studio settings OR Vercel Project Settings -> Environment Variables, add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.' },
+          { title: 'Step 4: SQL Migration', desc: 'Copy and run the contents of supabase-schema.sql in the SQL Editor on Supabase.' },
+          { title: 'Step 5: Redirects', desc: 'Ensure your site URL (e.g., rumby-hr.vercel.app) is added to Supabase Auth -> Redirect URLs.' }
         ]
       }
     ]

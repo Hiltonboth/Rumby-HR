@@ -12,6 +12,8 @@ import {
   Zap,
   Loader2,
   Sparkles,
+  Sun,
+  Moon,
 } from 'lucide-react';
 import { 
   AreaChart, 
@@ -60,8 +62,70 @@ interface DashboardProps {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
+function ThemeToggle({ isDark, toggle, T }: { isDark: boolean; toggle: () => void; T: any }) {
+  return (
+    <motion.button
+      onClick={toggle}
+      whileTap={{ scale: 0.92 }}
+      whileHover={{ scale: 1.05 }}
+      style={{
+        background: isDark
+          ? 'linear-gradient(135deg, #1c1d30 0%, #12131e 100%)'
+          : 'linear-gradient(135deg, #ffffff 0%, #f0f1fa 100%)',
+        borderColor: T.cardBorder,
+        color: T.heading,
+      }}
+      className="relative flex items-center gap-2 px-3.5 py-2.5 rounded-xl border transition-all duration-300 overflow-hidden group"
+      aria-label="Toggle theme"
+    >
+      <div
+        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl"
+        style={{
+          background: isDark
+            ? 'radial-gradient(ellipse at center, rgba(251,191,36,0.08) 0%, transparent 70%)'
+            : 'radial-gradient(ellipse at center, rgba(124,58,237,0.06) 0%, transparent 70%)',
+        }}
+      />
+
+      <motion.div
+        animate={{ rotate: isDark ? 0 : 180, opacity: isDark ? 1 : 0 }}
+        transition={{ duration: 0.3 }}
+        className="absolute"
+      >
+        <Moon className="w-4 h-4 text-indigo-400" />
+      </motion.div>
+
+      <motion.div
+        animate={{ rotate: isDark ? -180 : 0, opacity: isDark ? 0 : 1 }}
+        transition={{ duration: 0.3 }}
+        className="absolute"
+      >
+        <Sun className="w-4 h-4 text-amber-500" />
+      </motion.div>
+
+      <span className="w-4 h-4" />
+
+      <span className="text-xs font-bold relative z-10" style={{ color: isDark ? '#94a3b8' : '#64748b' }}>
+        {isDark ? 'Dark' : 'Light'}
+      </span>
+
+      <div
+        className="w-8 h-4 rounded-full relative flex-shrink-0 transition-colors duration-300"
+        style={{ background: isDark ? '#7c3aed' : '#e2e8f0' }}
+      >
+        <motion.div
+          animate={{ x: isDark ? 16 : 2 }}
+          transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+          className="absolute top-0.5 w-3 h-3 rounded-full bg-white shadow-sm"
+        />
+      </div>
+    </motion.button>
+  );
+}
+
 export default function Dashboard({ onNavigate, userProfile }: DashboardProps) {
-  const { isDark } = useTheme();
+  const { theme, toggleTheme } = useTheme();
+  const isDark = theme === 'dark';
   const { t } = useLanguage();
   const [timeframe, setTimeframe]                   = useState<number>(6);
   const [stats, setStats]                           = useState<any>(null);
@@ -253,6 +317,8 @@ export default function Dashboard({ onNavigate, userProfile }: DashboardProps) {
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5">
+            <ThemeToggle isDark={isDark} toggle={toggleTheme} T={T} />
+
             <select
               value={timeframe}
               onChange={e => setTimeframe(Number(e.target.value))}

@@ -1,8 +1,14 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Sanitize inputs to prevent "Invalid path" errors caused by trailing slashes or spaces
-const supabaseUrl = (import.meta.env.VITE_SUPABASE_URL || '').trim().replace(/\/$/, '');
-const supabaseAnonKey = (import.meta.env.VITE_SUPABASE_ANON_KEY || '').trim();
+// Sanitize inputs to prevent "Invalid path" errors caused by trailing slashes, spaces, or quotes
+const supabaseUrl = (import.meta.env.VITE_SUPABASE_URL || '')
+  .trim()
+  .replace(/\/$/, '')
+  .replace(/^['"]|['"]$/g, '');
+
+const supabaseAnonKey = (import.meta.env.VITE_SUPABASE_ANON_KEY || '')
+  .trim()
+  .replace(/^['"]|['"]$/g, '');
 
 const isConfigured = supabaseUrl && supabaseUrl !== 'https://your-project-id.supabase.co' && supabaseAnonKey && supabaseAnonKey !== 'your-anon-key';
 

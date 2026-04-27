@@ -154,27 +154,6 @@ export default function Dashboard({ onNavigate, userProfile }: DashboardProps) {
       ? [{ label: 'Onboarding', value: stats.activeOnboardings, subtext: 'New hire progress', icon: Zap, accent: 'purple', trend: 'Active', nav: 'onboarding' }] : []),
   ];
 
-  const SKYSCRAPER_FLOORS = [
-    { id: 1, name: 'Core Identity', status: 'completed' },
-    { id: 2, name: 'Company Tenancy', status: 'completed' },
-    { id: 3, name: 'Employee Management', status: 'completed' },
-    { id: 4, name: 'Leave & Attendance', status: 'completed' },
-    { id: 5, name: 'Payroll Engine', status: 'completed' },
-    { id: 6, name: 'Document Vault', status: 'completed' },
-    { id: 7, name: 'Performance Hub', status: 'completed' },
-    { id: 8, name: 'The Treasury', status: 'completed' },
-    { id: 9, name: 'Asset & IT Shield', status: 'completed' },
-    { id: 10, name: 'Recruitment & Onboarding', status: 'completed' },
-    { id: 11, name: 'The Dark Dimension', status: 'completed' },
-    { id: 12, name: 'Mobile Optimization', status: 'completed' },
-    { id: 13, name: 'Integrated Documentation', status: 'completed' },
-    { id: 14, name: 'Internationalization', status: 'in_progress' },
-    { id: 15, name: 'Final Polish', status: 'scheduled' }
-  ];
-
-  const completedFloors = SKYSCRAPER_FLOORS.filter(f => f.status === 'completed').length;
-  const progressPercent = Math.round((completedFloors / SKYSCRAPER_FLOORS.length) * 100);
-
   return (
     <div style={{ background: T.pageBg }} className="min-h-screen transition-colors duration-300">
 
@@ -299,77 +278,6 @@ export default function Dashboard({ onNavigate, userProfile }: DashboardProps) {
               className="flex items-center gap-2 px-5 py-2.5 text-sm font-bold rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white hover:from-violet-500 hover:to-indigo-500 transition-all shadow-lg shadow-violet-500/20 hover:shadow-violet-500/30 hover:-translate-y-0.5 active:translate-y-0"
             >
               <DollarSign className="w-4 h-4" /> Run Payroll
-            </button>
-          </div>
-        </motion.div>
-
-        {/* Skyscraper Progress */}
-        <motion.div variants={fadeUp} className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-          <div 
-            className="lg:col-span-2 rounded-[2rem] p-8 border shadow-sm relative overflow-hidden"
-            style={{ background: T.cardBg, borderColor: T.cardBorder }}
-          >
-            <div className="relative z-10">
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <h3 style={{ color: T.heading }} className="text-xl font-black tracking-tight tracking-tight">The ZivoHR Skyscraper</h3>
-                  <p style={{ color: T.muted }} className="text-sm">Building the future of African HR, floor by floor.</p>
-                </div>
-                <div className="text-right">
-                  <div className="text-3xl font-black text-indigo-500">{progressPercent}%</div>
-                  <div style={{ color: T.muted }} className="text-[10px] font-bold uppercase tracking-widest">Complete</div>
-                </div>
-              </div>
-              
-              <div className="relative h-4 bg-black/5 rounded-full overflow-hidden mb-8">
-                <motion.div 
-                  initial={{ width: 0 }}
-                  animate={{ width: `${progressPercent}%` }}
-                  transition={{ duration: 1.5, ease: "easeOut" }}
-                  className="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-400"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {SKYSCRAPER_FLOORS.map((floor) => (
-                  <div 
-                    key={floor.id}
-                    className={cn(
-                      "p-3 rounded-xl border text-[10px] font-bold flex items-center gap-2 transition-all",
-                      floor.status === 'completed' 
-                        ? (isDark ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" : "bg-emerald-50 border-emerald-100 text-emerald-700")
-                        : floor.status === 'in_progress'
-                        ? (isDark ? "bg-indigo-500/10 border-indigo-500/20 text-indigo-400 animate-pulse" : "bg-indigo-50 border-indigo-100 text-indigo-700 animate-pulse")
-                        : (isDark ? "bg-slate-800/50 border-slate-700 text-slate-500" : "bg-slate-50 border-slate-100 text-slate-400")
-                    )}
-                  >
-                    <div className={cn(
-                      "w-4 h-4 rounded-full flex items-center justify-center text-[8px]",
-                      floor.status === 'completed' ? "bg-emerald-500 text-white" : "bg-current opacity-20"
-                    )}>
-                      {floor.status === 'completed' ? "✓" : floor.id}
-                    </div>
-                    <span className="truncate">{floor.name}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div 
-            className="rounded-[2rem] p-8 border shadow-sm flex flex-col justify-center text-center space-y-4"
-            style={{ background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)', borderColor: 'transparent' }}
-          >
-            <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-2 backdrop-blur-sm">
-              <Sparkles className="w-8 h-8 text-white" />
-            </div>
-            <h3 className="text-2xl font-black text-white px-4">Almost at the Top!</h3>
-            <p className="text-white/70 text-sm px-4">Floor 14 (Internationalization) is live. Switching languages is now just a tap away.</p>
-            <button 
-              onClick={() => onNavigate('settings')}
-              className="mt-4 mx-8 py-3 bg-white text-indigo-600 rounded-xl font-bold text-sm shadow-xl shadow-indigo-900/20 hover:scale-[1.02] transition-transform"
-            >
-              Adjust Settings
             </button>
           </div>
         </motion.div>

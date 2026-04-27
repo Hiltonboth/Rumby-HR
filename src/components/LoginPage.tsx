@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Mail, Lock, ArrowRight, Github, Chrome, AlertCircle, Building, User, ArrowLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { supabase } from '../lib/supabase';
@@ -36,8 +36,18 @@ export default function LoginPage({ isSignup: initialIsSignup = false, onSuccess
   const [password, setPassword] = useState('');
   const [companyName, setCompanyName] = useState('');
   const [fullName, setFullName] = useState('');
+  const [invitedCompanyId, setInvitedCompanyId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const companyId = params.get('company_id');
+    if (companyId) {
+      setInvitedCompanyId(companyId);
+      setIsSignup(true);
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,6 +63,7 @@ export default function LoginPage({ isSignup: initialIsSignup = false, onSuccess
           options: {
             data: {
               full_name: fullName,
+              company_id: invitedCompanyId,
             }
           }
         });

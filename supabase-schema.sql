@@ -49,14 +49,35 @@ CREATE TABLE IF NOT EXISTS user_profiles (
 -- FUNCTION: Handle new user registration (Email or Social)
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
+DECLARE
+  company_id_val UUID;
 BEGIN
-  INSERT INTO public.user_profiles (id, email, full_name, avatar_url)
+  -- Defensive parsing of company_id from metadata
+  BEGIN
+    IF (new.raw_user_meta_data->>'company_id') IS NOT NULL AND (new.raw_user_meta_data->>'company_id') <> '' THEN
+      company_id_val := (new.raw_user_meta_data->>'company_id')::uuid;
+    ELSE
+      company_id_val := NULL;
+    END IF;
+  EXCEPTION WHEN OTHERS THEN
+    company_id_val := NULL;
+  END;
+
+  INSERT INTO public.user_profiles (id, email, full_name, avatar_url, role, company_id)
   VALUES (
     new.id,
     new.email,
     COALESCE(new.raw_user_meta_data->>'full_name', new.raw_user_meta_data->>'name', ''),
-    new.raw_user_meta_data->>'avatar_url'
-  );
+    new.raw_user_meta_data->>'avatar_url',
+    COALESCE(new.raw_user_meta_data->>'role', 'employee'),
+    company_id_val
+  )
+  ON CONFLICT (id) DO UPDATE SET
+    email = EXCLUDED.email,
+    full_name = EXCLUDED.full_name,
+    avatar_url = EXCLUDED.avatar_url,
+    role = COALESCE(user_profiles.role, EXCLUDED.role),
+    company_id = COALESCE(user_profiles.company_id, EXCLUDED.company_id);
   RETURN new;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -123,6 +144,7 @@ CREATE TABLE IF NOT EXISTS employees (
 );
 
 -- Link department head back to employees
+ALTER TABLE departments DROP CONSTRAINT IF EXISTS fk_head;
 ALTER TABLE departments ADD CONSTRAINT fk_head FOREIGN KEY (head_id) REFERENCES employees(id) ON DELETE SET NULL;
 
 -- =============================================================
@@ -548,7 +570,7 @@ CREATE POLICY "user_profiles_self_read" ON user_profiles FOR SELECT USING (auth.
 
 DROP POLICY IF EXISTS "user_profiles_company_read" ON user_profiles;
 CREATE POLICY "user_profiles_company_read" ON user_profiles 
-  FOR SELECT USING (company_id = (SELECT company_id FROM user_profiles WHERE id = auth.uid()));
+  FOR SELECT USING (company_id = my_company_id());
 
 DROP POLICY IF EXISTS "user_profiles_self_update" ON user_profiles;
 CREATE POLICY "user_profiles_self_update" ON user_profiles FOR UPDATE USING (auth.uid() = id);
@@ -597,4 +619,5 @@ CREATE TABLE IF NOT EXISTS zimra_tax_bands (
   created_at   TIMESTAMPTZ DEFAULT NOW()
 );
 ALTER TABLE zimra_tax_bands ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "public_read_tax" ON zimra_tax_bands;
 CREATE POLICY "public_read_tax" ON zimra_tax_bands FOR SELECT USING (true);

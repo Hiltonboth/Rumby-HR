@@ -32,6 +32,11 @@ ZivoHR is a high-integrity Payroll and HR Management system tailored for the Zim
 - **Floor 14: Internationalization & Localization** – [100%] Multi-language support. *Status: English, Shona, Ndebele, Chinese, and Afrikaans integration live with sidebar selector.*
 - **Compliance Radar**: [100%] Real-time expiry alerts integrated on main Dashboard.
 
+## Data Integrity & Schema Safety
+- **Schema Validation**: Never guess column names. If a "column not found" error occurs, verify against `supabase-schema.sql` or the Supabase dashboard before removing code.
+- **RLS Awareness**: Always assume RLS is active. UI errors like "permission denied" must be traced back to Row Level Security policies.
+- **Maker-Checker Logic**: Ensure critical operations (like company creation) verify that the user's profile is updated correctly in the same transaction flow where possible.
+
 ## Security Standards
 - **Zero-Trust RLS**: Every table must have RLS enabled. No blanket reads.
 - **Identity Integrity**: `authorId` or `ownerId` must match `request.auth.uid`.

@@ -52,7 +52,6 @@ export default function WorkspaceSetup({ userProfile, onComplete }: WorkspaceSet
           nec_sector: formData.nec_sector,
           zimra_bp_number: formData.zimra_bp_number,
           phone: formData.phone,
-          accent_color: '#007AFF',
           plan: 'pro'
         })
         .select()

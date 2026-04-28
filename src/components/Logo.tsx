@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { cn } from '../lib/utils';
 
 export const Logo = ({ className = "w-10 h-10", dark = false }: { className?: string, dark?: boolean }) => {

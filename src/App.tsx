@@ -22,8 +22,10 @@ import AssetTracker from './components/AssetTracker';
 import WorkspaceSetup from './components/WorkspaceSetup';
 import CompanySettings from './components/CompanySettings';
 import Treasury from './components/Treasury';
+import { Logo } from './components/Logo';
 import { supabase } from './lib/supabase';
 import { Employee, Company, UserProfile } from './types';
+import { motion } from 'motion/react';
 import { cn } from './lib/utils';
 // Note: handleFirestoreError will be replaced/removed as we move to Supabase
 
@@ -74,7 +76,7 @@ export default function App() {
                 id: company.id,
                 name: company.name,
                 logoUrl: company.logo_url,
-                accentColor: company.accent_color,
+                accentColor: '#007AFF',
                 plan: company.plan,
                 industry: company.industry,
                 country: company.country,
@@ -359,21 +361,8 @@ export default function App() {
                             {['#007AFF', '#5856D6', '#FF2D55', '#AF52DE', '#FF9500'].map(color => (
                               <button
                                 key={color}
-                                onClick={async () => {
-                                  try {
-                                    const { error: colorError } = await supabase
-                                      .from('companies')
-                                      .update({ accent_color: color })
-                                      .eq('id', currentCompany.id);
-
-                                    if (colorError) {
-                                      console.error("Error updating accent color:", colorError);
-                                    } else {
-                                      setCurrentCompany(prev => prev ? { ...prev, accentColor: color } : null);
-                                    }
-                                  } catch (error) {
-                                    console.error("Error updating accent color:", error);
-                                  }
+                                onClick={() => {
+                                  setCurrentCompany(prev => prev ? { ...prev, accentColor: color } : null);
                                 }}
                                 className="w-8 h-8 rounded-full border-2 border-white shadow-sm transition-transform hover:scale-110"
                                 style={{ backgroundColor: color }}
@@ -461,17 +450,41 @@ export default function App() {
   if (isAuthLoading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-white gap-8">
-        <div className="animate-pulse">
-          <Building2 className="w-16 h-16 text-accent" />
-        </div>
-        <div className="text-center space-y-2">
-          <h2 className="text-2xl font-black text-slate-900 italic uppercase tracking-tight">ZivoHR</h2>
-          <div className="flex items-center gap-2 justify-center">
-            <div className="w-2 h-2 bg-accent rounded-full animate-bounce [animation-delay:-0.3s]" />
-            <div className="w-2 h-2 bg-accent rounded-full animate-bounce [animation-delay:-0.15s]" />
-            <div className="w-2 h-2 bg-accent rounded-full animate-bounce" />
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+          className="relative"
+        >
+          <div className="absolute inset-0 bg-accent/20 blur-3xl rounded-full scale-150 animate-pulse" />
+          <Logo className="w-24 h-24 relative" />
+        </motion.div>
+        
+        <div className="text-center space-y-4">
+          <div className="space-y-1">
+            <h2 className="text-3xl font-black text-slate-900 italic uppercase tracking-tight">ZivoHR</h2>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">The Heart of your Workspace</p>
           </div>
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] pt-4">Securing your workspace</p>
+          
+          <div className="flex items-center gap-2 justify-center">
+            <motion.div 
+              animate={{ scale: [1, 1.2, 1] }} 
+              transition={{ repeat: Infinity, duration: 1, delay: 0 }}
+              className="w-2 h-2 bg-accent rounded-full" 
+            />
+            <motion.div 
+              animate={{ scale: [1, 1.2, 1] }} 
+              transition={{ repeat: Infinity, duration: 1, delay: 0.2 }}
+              className="w-2 h-2 bg-accent rounded-full" 
+            />
+            <motion.div 
+              animate={{ scale: [1, 1.2, 1] }} 
+              transition={{ repeat: Infinity, duration: 1, delay: 0.4 }}
+              className="w-2 h-2 bg-accent rounded-full" 
+            />
+          </div>
+          
+          <p className="text-xs font-bold text-slate-500 pt-2">Securing your session...</p>
         </div>
       </div>
     );

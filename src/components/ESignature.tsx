@@ -26,6 +26,8 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
+import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from './ThemeContext';
 import SignaturePad from './SignaturePad';
 import jsPDF from 'jspdf';
 
@@ -83,10 +85,10 @@ const MOCK_DOCS: EDoc[] = [
     content: 'This employment contract is between ZivoHR and Alex Rivera...',
     fields: [],
     auditTrail: [
-      { action: 'Document Created', user: 'Sarah Jenkins', timestamp: '2024-04-05 09:00' },
-      { action: 'Signature Requested', user: 'Sarah Jenkins', timestamp: '2024-04-05 09:05' },
+      { action: 'Document Created', user: 'System', timestamp: '2024-04-05 09:00' },
+      { action: 'Signature Requested', user: 'Staff', timestamp: '2024-04-05 09:05' },
       { action: 'Signed', user: 'Alex Rivera', timestamp: '2024-04-05 14:20' },
-      { action: 'Signed', user: 'Sarah Jenkins', timestamp: '2024-04-05 15:45' }
+      { action: 'Signed', user: 'Staff', timestamp: '2024-04-05 15:45' }
     ]
   },
   {
@@ -103,13 +105,15 @@ const MOCK_DOCS: EDoc[] = [
     content: 'Non-Disclosure Agreement between ZivoHR and Stellar Tech...',
     fields: [],
     auditTrail: [
-      { action: 'Document Created', user: 'Sarah Jenkins', timestamp: '2024-04-07 10:00' },
+      { action: 'Document Created', user: 'System', timestamp: '2024-04-07 10:00' },
       { action: 'Signed', user: 'Legal Dept', timestamp: '2024-04-07 11:30' }
     ]
   }
 ];
 
 export default function ESignature() {
+  const { userProfile } = useAuth();
+  const { isDark } = useTheme();
   const [docs, setDocs] = useState<EDoc[]>(() => {
     const saved = localStorage.getItem('rumby_docs');
     return saved ? JSON.parse(saved) : MOCK_DOCS;
@@ -174,7 +178,7 @@ export default function ESignature() {
       fields: [],
       content: 'This is a sample document content for ' + newDocName + '. It contains standard legal clauses and terms of agreement.',
       auditTrail: [
-        { action: 'Document Uploaded', user: 'Sarah Jenkins', timestamp: new Date().toLocaleString() }
+        { action: 'Document Uploaded', user: userProfile?.fullName || 'User', timestamp: new Date().toLocaleString() }
       ]
     };
     setDocs([newDoc, ...docs]);
@@ -215,7 +219,7 @@ export default function ESignature() {
       status: 'Pending',
       auditTrail: [
         ...editorDoc.auditTrail,
-        { action: 'Fields Configured & Sent', user: 'Sarah Jenkins', timestamp: new Date().toLocaleString() }
+        { action: 'Fields Configured & Sent', user: userProfile?.fullName || 'User', timestamp: new Date().toLocaleString() }
       ]
     };
     setDocs(prev => prev.map(d => d.id === updatedDoc.id ? updatedDoc : d));
@@ -234,7 +238,7 @@ export default function ESignature() {
             fields: doc.fields.map(f => ({ ...f, value: fieldValues[f.id] || f.value })),
             auditTrail: [
               ...doc.auditTrail,
-              { action: 'Document Signed', user: 'Sarah Jenkins', timestamp }
+              { action: 'Document Signed', user: userProfile?.fullName || 'User', timestamp }
             ]
           } 
         : doc
@@ -779,7 +783,7 @@ export default function ESignature() {
                     <div className="space-y-3">
                       <div className="flex justify-between text-xs">
                         <span className="text-gray-500">Owner</span>
-                        <span className="font-bold text-space-gray">Sarah Jenkins</span>
+                        <span className="font-bold text-space-gray">{userProfile?.fullName || 'User'}</span>
                       </div>
                       <div className="flex justify-between text-xs">
                         <span className="text-gray-500">Uploaded</span>

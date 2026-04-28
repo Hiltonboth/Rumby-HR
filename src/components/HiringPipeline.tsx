@@ -83,7 +83,10 @@ export default function HiringPipeline({ userProfile }: HiringPipelineProps) {
 
   useEffect(() => {
     async function loadData() {
-      if (!userProfile?.companyId) return;
+      if (!userProfile?.companyId) {
+        setLoading(false);
+        return;
+      }
       try {
         setLoading(true);
         const [appList, jobList] = await Promise.all([

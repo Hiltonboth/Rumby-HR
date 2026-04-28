@@ -1587,7 +1587,10 @@ export default function Payroll({ userProfile }: { userProfile: UserProfile | nu
 
   useEffect(() => {
     async function initPayroll() {
-      if (!userProfile?.companyId) return;
+      if (!userProfile?.companyId) {
+        setLoading(false);
+        return;
+      }
       
       try {
         setLoading(true);

@@ -52,7 +52,10 @@ export default function ESignaturesHub({ userProfile }: ESignaturesHubProps) {
 
   useEffect(() => {
     async function loadData() {
-      if (!userProfile?.companyId) return;
+      if (!userProfile?.companyId) {
+        setLoading(false);
+        return;
+      }
       try {
         setLoading(true);
         const [envData, tempData, empData] = await Promise.all([

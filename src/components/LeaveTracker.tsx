@@ -51,7 +51,10 @@ export default function LeaveTracker({ userProfile }: LeaveTrackerProps) {
 
   useEffect(() => {
     async function init() {
-      if (!userProfile?.companyId) return;
+      if (!userProfile?.companyId) {
+        setLoading(false);
+        return;
+      }
       try {
         setLoading(true);
         // 1. Get employee ID linked to this user

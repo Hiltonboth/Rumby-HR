@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Bell, Command, LayoutDashboard, Users, Briefcase, TrendingUp, CreditCard, Heart, Settings, Zap, ChevronRight, Menu, X, Calendar, Clock, CheckCircle2, ArrowLeft, PartyPopper, ShieldCheck, PenTool, Upload, MessageCircle, BookOpen, Key, Shield, Monitor, Landmark } from 'lucide-react';
+import { Search, Bell, Command, LayoutDashboard, Users, Briefcase, TrendingUp, CreditCard, Heart, Settings, Zap, ChevronRight, Menu, X, Calendar, Clock, CheckCircle2, ArrowLeft, PartyPopper, ShieldCheck, PenTool, Upload, MessageCircle, BookOpen, Key, Shield, Monitor, Landmark, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
 import { Company } from '../types';
 import ConfirmationModal from './ConfirmationModal';
+import { supabase } from '../lib/supabase';
 
 import { useTheme } from './ThemeContext';
 import { Logo } from './Logo';
@@ -34,7 +35,39 @@ export default function Layout({ children, activeTab, setActiveTab, currentCompa
   const [activeSettingsView, setActiveSettingsView] = useState<'main' | 'security' | 'roles' | 'company'>('main');
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [logoUploadError, setLogoUploadError] = useState<string | null>(null);
+  const [editableFullName, setEditableFullName] = useState(userProfile?.fullName || '');
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (userProfile?.fullName) {
+      setEditableFullName(userProfile.fullName);
+    }
+  }, [userProfile]);
+
+  const handleSaveProfile = async () => {
+    if (!userProfile?.uid) return;
+    try {
+      setIsSavingProfile(true);
+      const { error } = await supabase
+        .from('user_profiles')
+        .upsert({
+          id: userProfile.uid,
+          full_name: editableFullName,
+          email: userProfile.email,
+          role: userProfile.role,
+          company_id: userProfile.companyId
+        });
+
+      if (error) throw error;
+      alert('Profile updated successfully! Please refresh to see changes.');
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      alert('Failed to update profile');
+    } finally {
+      setIsSavingProfile(false);
+    }
+  };
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -421,15 +454,24 @@ export default function Layout({ children, activeTab, setActiveTab, currentCompa
                 className="flex items-center gap-2 md:gap-3 hover:opacity-80 transition-opacity"
               >
               <div className="text-right hidden md:block">
-                <p className={cn("text-xs font-bold", isDark ? "text-white" : "text-space-gray")}>{userProfile?.fullName || 'Sarah Jenkins'}</p>
-                <p className={cn("text-[10px] font-bold uppercase tracking-widest", isDark ? "text-slate-500" : "text-gray-400")}>{userProfile?.role === 'platform_owner' ? 'Platform Owner' : 'HR Manager'}</p>
+                <p className={cn("text-xs font-bold", isDark ? "text-white" : "text-space-gray")}>{userProfile?.fullName || userProfile?.email?.split('@')[0] || 'User'}</p>
+                <p className={cn("text-[10px] font-bold uppercase tracking-widest", isDark ? "text-slate-500" : "text-gray-400")}>
+                  {userProfile?.role === 'platform_owner' ? 'Platform Owner' : 
+                   userProfile?.role === 'owner' ? 'Company Owner' :
+                   userProfile?.role === 'admin' ? 'HR Manager' : 'Employee'}
+                </p>
               </div>
-                <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl overflow-hidden border border-black/[0.05] shadow-sm">
-                  <img 
-                    src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop" 
-                    alt="User"
-                    referrerPolicy="no-referrer"
-                  />
+                <div className={cn("w-8 h-8 md:w-10 md:h-10 rounded-xl overflow-hidden border border-black/[0.05] shadow-sm flex items-center justify-center transition-colors", isDark ? "bg-slate-800" : "bg-apple-gray")}>
+                  {userProfile?.avatarUrl ? (
+                    <img 
+                      src={userProfile.avatarUrl} 
+                      alt="User"
+                      referrerPolicy="no-referrer"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <Users className={cn("w-5 h-5", isDark ? "text-slate-500" : "text-gray-400")} />
+                  )}
                 </div>
               </button>
             </div>
@@ -618,12 +660,16 @@ export default function Layout({ children, activeTab, setActiveTab, currentCompa
                       <h3 className={cn("text-xs font-bold uppercase tracking-widest", isDark ? "text-slate-600" : "text-gray-400")}>Profile Information</h3>
                       <div className="flex flex-col md:flex-row gap-6 items-start">
                         <div className="relative group">
-                          <div className={cn("w-24 h-24 rounded-3xl overflow-hidden border-4 shadow-inner transition-colors", isDark ? "border-slate-800" : "border-apple-gray")}>
-                            <img 
-                              src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=200&fit=crop" 
-                              alt="Sarah Jenkins"
-                              className="w-full h-full object-cover"
-                            />
+                          <div className={cn("w-24 h-24 rounded-3xl overflow-hidden border-4 shadow-inner transition-colors flex items-center justify-center", isDark ? "border-slate-800 bg-slate-800" : "border-apple-gray bg-apple-gray")}>
+                            {userProfile?.avatarUrl ? (
+                              <img 
+                                src={userProfile.avatarUrl} 
+                                alt="User Profile"
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <Users className={cn("w-10 h-10", isDark ? "text-slate-600" : "text-gray-300")} />
+                            )}
                           </div>
                           <button className="absolute -bottom-2 -right-2 p-2 bg-accent text-white rounded-xl shadow-lg hover:scale-110 transition-transform">
                             <PenTool className="w-4 h-4" />
@@ -634,7 +680,9 @@ export default function Layout({ children, activeTab, setActiveTab, currentCompa
                             <label className={cn("text-[10px] font-bold uppercase ml-1", isDark ? "text-slate-600" : "text-gray-400")}>Full Name</label>
                             <input 
                               type="text" 
-                              defaultValue="Sarah Jenkins"
+                              value={editableFullName}
+                              onChange={(e) => setEditableFullName(e.target.value)}
+                              placeholder="Your full name"
                               className={cn(
                                 "w-full border-none rounded-xl px-4 py-3 text-sm font-bold outline-none focus:ring-2 focus:ring-accent/20 transition-colors",
                                 isDark ? "bg-slate-800 text-white" : "bg-apple-gray text-space-gray"
@@ -642,12 +690,13 @@ export default function Layout({ children, activeTab, setActiveTab, currentCompa
                             />
                           </div>
                           <div className="space-y-1.5">
-                            <label className={cn("text-[10px] font-bold uppercase ml-1", isDark ? "text-slate-600" : "text-gray-400")}>Job Title</label>
+                            <label className={cn("text-[10px] font-bold uppercase ml-1", isDark ? "text-slate-600" : "text-gray-400")}>Email Address</label>
                             <input 
-                              type="text" 
-                              defaultValue="HR Manager"
+                              type="email" 
+                              value={userProfile?.email || ''}
+                              readOnly
                               className={cn(
-                                "w-full border-none rounded-xl px-4 py-3 text-sm font-bold outline-none focus:ring-2 focus:ring-accent/20 transition-colors",
+                                "w-full border-none rounded-xl px-4 py-3 text-sm font-bold outline-none opacity-60 cursor-not-allowed",
                                 isDark ? "bg-slate-800 text-white" : "bg-apple-gray text-space-gray"
                               )}
                             />
@@ -725,6 +774,16 @@ export default function Layout({ children, activeTab, setActiveTab, currentCompa
                         </div>
                       </button>
                     </section>
+                    <div className="flex justify-end pt-4">
+                      <button 
+                        onClick={handleSaveProfile}
+                        disabled={isSavingProfile}
+                        className="btn-primary px-8 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2"
+                      >
+                        {isSavingProfile ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                        Save Profile Changes
+                      </button>
+                    </div>
                   </>
                 )}
 

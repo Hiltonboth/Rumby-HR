@@ -47,7 +47,10 @@ export default function AssetTracker({ userProfile }: { userProfile: UserProfile
 
   useEffect(() => {
     async function load() {
-      if (!userProfile?.companyId) return;
+      if (!userProfile?.companyId) {
+        setLoading(false);
+        return;
+      }
       try {
         setLoading(true);
         const [assetList, empList] = await Promise.all([

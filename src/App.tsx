@@ -494,7 +494,7 @@ export default function App() {
         <Documentation onBack={() => setView('landing')} />
       ) : view === 'login' || view === 'signup' ? (
         <LoginPage isSignup={view === 'signup'} onBackToHome={() => setView('landing')} onSuccess={() => setView('app')} />
-      ) : userProfile && !userProfile.companyId && userProfile.role !== 'platform_owner' ? (
+      ) : userProfile && (!userProfile.companyId || userProfile.companyId === '') && userProfile.role !== 'platform_owner' ? (
         <WorkspaceSetup 
           userProfile={userProfile} 
           onComplete={() => {

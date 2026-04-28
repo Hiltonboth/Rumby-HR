@@ -73,6 +73,8 @@ export default function Treasury({ userProfile }: TreasuryProps) {
   useEffect(() => {
     if (userProfile?.companyId) {
       fetchData();
+    } else {
+      setLoading(false);
     }
   }, [userProfile]);
 

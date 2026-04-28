@@ -18,7 +18,10 @@ export default function TeamDirectory({ onSelectEmployee, userProfile }: TeamDir
 
   useEffect(() => {
     async function fetchEmployees() {
-      if (!userProfile?.companyId) return;
+      if (!userProfile?.companyId) {
+        setIsLoading(false);
+        return;
+      }
       try {
         setIsLoading(true);
         const data = await employeeService.getEmployees(userProfile.companyId);

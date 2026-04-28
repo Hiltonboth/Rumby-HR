@@ -52,19 +52,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         if (profileError) {
           console.error("Error fetching profile:", profileError);
+          // Create an in-memory profile for new users so they can still see their Info 
+          // while being forced to WorkspaceSetup
+          const tempProfile: UserProfile = {
+            uid: supabaseUser.id,
+            email: supabaseUser.email || '',
+            role: 'employee',
+            companyId: '',
+            fullName: supabaseUser.user_metadata?.full_name || supabaseUser.email?.split('@')[0] || 'User'
+          };
+
           // Fallback for platform owner email
           if (supabaseUser.email === 'hmarumure@gmail.com') {
-             const ownerProfile: UserProfile = { 
-               uid: supabaseUser.id, 
-               role: 'platform_owner', 
-               companyId: 'global', 
-               email: supabaseUser.email!, 
-               fullName: 'Hudson Marumure' 
-             };
-             setUserProfile(ownerProfile);
-             setLoading(false);
-             return;
+             tempProfile.role = 'platform_owner';
+             tempProfile.companyId = 'global';
+             tempProfile.fullName = 'Hudson Marumure';
           }
+          
+          setUserProfile(tempProfile);
+          setLoading(false);
+          return;
         }
 
         if (profile) {
@@ -76,16 +83,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             fullName: profile.full_name,
             avatarUrl: profile.avatar_url
           });
-        } else if (supabaseUser.email === 'hmarumure@gmail.com') {
-           // Double check for platform owner even if profile missing
-           const ownerProfile: UserProfile = { 
-             uid: supabaseUser.id, 
-             role: 'platform_owner', 
-             companyId: 'global', 
-             email: supabaseUser.email!, 
-             fullName: 'Hudson Marumure' 
-           };
-           setUserProfile(ownerProfile);
         }
       } catch (err) {
         console.error("Auth context error:", err);

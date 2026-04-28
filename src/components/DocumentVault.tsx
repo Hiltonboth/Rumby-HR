@@ -50,7 +50,10 @@ export default function DocumentVault({ userProfile, targetEmployeeId }: Documen
 
   useEffect(() => {
     async function init() {
-      if (!userProfile?.companyId) return;
+      if (!userProfile?.companyId) {
+        setLoading(false);
+        return;
+      }
       try {
         setLoading(true);
         if (userProfile.role === 'hr') {

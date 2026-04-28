@@ -171,28 +171,28 @@ export default function LoginPage({ isSignup: initialIsSignup = false, onSuccess
                   <div className="space-y-2">
                     <label className={cn("text-[11px] font-black uppercase tracking-widest px-1", isDark ? "text-slate-400" : "text-slate-900")}>Full Name</label>
                     <div className="relative">
-                      <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                       <input 
                         required
                         type="text" 
                         value={fullName}
                         onChange={(e) => setFullName(e.target.value)}
                         placeholder="Jane Doe"
-                        className="input-aura pl-10 w-full font-bold"
+                        className="input-aura pl-10 w-full font-bold placeholder:text-slate-400"
                       />
                     </div>
                   </div>
                   <div className="space-y-2">
                     <label className={cn("text-[11px] font-black uppercase tracking-widest px-1", isDark ? "text-slate-400" : "text-slate-900")}>Company Name</label>
                     <div className="relative">
-                      <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                       <input 
                         required
                         type="text" 
                         value={companyName}
                         onChange={(e) => setCompanyName(e.target.value)}
                         placeholder="Acme Corp"
-                        className="input-aura pl-10 w-full font-bold"
+                        className="input-aura pl-10 w-full font-bold placeholder:text-slate-400"
                       />
                     </div>
                   </div>
@@ -203,14 +203,14 @@ export default function LoginPage({ isSignup: initialIsSignup = false, onSuccess
             <div className="space-y-2">
               <label className={cn("text-[11px] font-black uppercase tracking-widest px-1", isDark ? "text-slate-400" : "text-slate-900")}>Email Address</label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                 <input 
                   required
                   type="email" 
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@company.com"
-                  className="input-aura pl-10 w-full font-bold"
+                  className="input-aura pl-10 w-full font-bold placeholder:text-slate-400"
                 />
               </div>
             </div>
@@ -218,21 +218,21 @@ export default function LoginPage({ isSignup: initialIsSignup = false, onSuccess
             <div className="space-y-2">
               <label className={cn("text-[11px] font-black uppercase tracking-widest px-1", isDark ? "text-slate-400" : "text-slate-900")}>Password</label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                 <input 
                   required
                   type="password" 
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="input-aura pl-10 w-full font-bold"
+                  className="input-aura pl-10 w-full font-bold placeholder:text-slate-400"
                 />
               </div>
             </div>
 
             {error && (
-              <div className={`p-3 border rounded-xl flex items-center gap-2 text-sm ${error.includes('Success') ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-red-50 border-red-100 text-red-600'}`}>
-                <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              <div className={`p-4 border-2 rounded-xl flex items-center gap-3 text-sm font-bold shadow-sm ${error.includes('Success') ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : 'bg-red-50 border-red-100 text-red-700'}`}>
+                <AlertCircle className="w-5 h-5 flex-shrink-0" />
                 {error}
               </div>
             )}
@@ -277,11 +277,11 @@ export default function LoginPage({ isSignup: initialIsSignup = false, onSuccess
           </div>
         </div>
 
-        <p className={`text-center text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+        <p className={`text-center text-sm font-medium ${isDark ? 'text-slate-400' : 'text-slate-700'}`}>
           {isSignup ? 'Already have an account?' : "Don't have an account?"}{' '}
           <button 
             onClick={() => setIsSignup(!isSignup)}
-            className="text-indigo-500 font-bold hover:underline"
+            className="text-accent font-black hover:underline px-1"
           >
             {isSignup ? 'Sign In' : 'Sign Up'}
           </button>

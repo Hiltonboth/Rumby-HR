@@ -196,7 +196,7 @@ export default function WorkspaceSetup({ userProfile, onComplete }: WorkspaceSet
                 >
                   <div className="text-center space-y-3">
                     <h1 className="text-4xl md:text-5xl font-black tracking-tight text-slate-900 italic">Company Identity</h1>
-                    <p className="text-slate-600 max-w-md mx-auto font-medium">Tell us about the business you're building with ZivoHR.</p>
+                    <p className="text-slate-700 max-w-md mx-auto font-medium">Tell us about the business you're building with ZivoHR.</p>
                   </div>
 
                   <div className="card-aura p-10 bg-white border border-slate-200 shadow-xl grid grid-cols-1 md:grid-cols-2 gap-10">
@@ -204,13 +204,13 @@ export default function WorkspaceSetup({ userProfile, onComplete }: WorkspaceSet
                       <div className="space-y-2">
                         <label className="text-[11px] font-black text-slate-900 uppercase tracking-widest px-1">Legal Entity Name</label>
                         <div className="relative">
-                          <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                          <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
                           <input 
                             type="text" 
                             value={formData.name}
                             onChange={(e) => setFormData({...formData, name: e.target.value})}
                             placeholder="Zivo Solutions P/L"
-                            className="w-full pl-12 pr-4 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-slate-900 outline-none focus:border-accent/40 focus:ring-4 focus:ring-accent/5 transition-all placeholder:text-slate-300"
+                            className="w-full pl-12 pr-4 py-4 bg-slate-50 border-2 border-slate-200 rounded-2xl font-bold text-slate-900 outline-none focus:border-accent/40 focus:ring-4 focus:ring-accent/5 transition-all placeholder:text-slate-400"
                           />
                         </div>
                       </div>
@@ -218,11 +218,11 @@ export default function WorkspaceSetup({ userProfile, onComplete }: WorkspaceSet
                       <div className="space-y-2">
                         <label className="text-[11px] font-black text-slate-900 uppercase tracking-widest px-1">Industry</label>
                         <div className="relative">
-                          <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                          <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
                           <select 
                             value={formData.industry}
                             onChange={(e) => setFormData({...formData, industry: e.target.value})}
-                            className="w-full pl-12 pr-4 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-slate-900 outline-none focus:border-accent/40 focus:ring-4 focus:ring-accent/5 transition-all appearance-none cursor-pointer"
+                            className="w-full pl-12 pr-4 py-4 bg-slate-50 border-2 border-slate-200 rounded-2xl font-bold text-slate-900 outline-none focus:border-accent/40 focus:ring-4 focus:ring-accent/5 transition-all appearance-none cursor-pointer"
                           >
                             <option>Technology</option>
                             <option>Retail</option>
@@ -237,11 +237,11 @@ export default function WorkspaceSetup({ userProfile, onComplete }: WorkspaceSet
                       <div className="space-y-2">
                         <label className="text-[11px] font-black text-slate-900 uppercase tracking-widest px-1">Company Size</label>
                         <div className="relative">
-                          <Users2 className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                          <Users2 className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
                           <select 
                             value={formData.size_range}
                             onChange={(e) => setFormData({...formData, size_range: e.target.value})}
-                            className="w-full pl-12 pr-4 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-slate-900 outline-none focus:border-accent/40 focus:ring-4 focus:ring-accent/5 transition-all appearance-none cursor-pointer"
+                            className="w-full pl-12 pr-4 py-4 bg-slate-50 border-2 border-slate-200 rounded-2xl font-bold text-slate-900 outline-none focus:border-accent/40 focus:ring-4 focus:ring-accent/5 transition-all appearance-none cursor-pointer"
                           >
                             {SIZE_RANGES.map(s => <option key={s}>{s}</option>)}
                           </select>
@@ -249,10 +249,10 @@ export default function WorkspaceSetup({ userProfile, onComplete }: WorkspaceSet
                       </div>
                     </div>
 
-                    <div className="bg-slate-50 p-8 rounded-3xl space-y-4 flex flex-col justify-center border border-slate-100">
-                      <div className="p-3 bg-white w-fit rounded-xl shadow-sm border border-slate-100"><Sparkles className="w-6 h-6 text-accent" /></div>
+                    <div className="bg-slate-50 p-8 rounded-3xl space-y-4 flex flex-col justify-center border-2 border-slate-100">
+                      <div className="p-3 bg-white w-fit rounded-xl shadow-sm border border-slate-200"><Sparkles className="w-6 h-6 text-accent" /></div>
                       <h3 className="font-bold text-slate-900">Why this matters?</h3>
-                      <p className="text-sm text-slate-600 leading-relaxed font-medium">
+                      <p className="text-sm text-slate-700 leading-relaxed font-semibold">
                         Industry and size help us tailor your compliance settings and NEC sector defaults. Zivo learns from your business type to automate your HR workload.
                       </p>
                     </div>
@@ -280,7 +280,7 @@ export default function WorkspaceSetup({ userProfile, onComplete }: WorkspaceSet
                 >
                   <div className="text-center space-y-3">
                     <h1 className="text-4xl md:text-5xl font-black tracking-tight text-slate-900 italic">HR & Compliance</h1>
-                    <p className="text-slate-600 max-w-md mx-auto font-medium">Configure your regulatory and financial defaults for Payroll.</p>
+                    <p className="text-slate-700 max-w-md mx-auto font-medium">Configure your regulatory and financial defaults for Payroll.</p>
                   </div>
 
                   <div className="card-aura p-10 bg-white border border-slate-200 shadow-xl grid grid-cols-1 md:grid-cols-2 gap-10">
@@ -288,11 +288,11 @@ export default function WorkspaceSetup({ userProfile, onComplete }: WorkspaceSet
                       <div className="space-y-2">
                         <label className="text-[11px] font-black text-slate-900 uppercase tracking-widest px-1">NEC Sector (Zimbabwe)</label>
                         <div className="relative">
-                          <Scale className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                          <Scale className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
                           <select 
                             value={formData.nec_sector}
                             onChange={(e) => setFormData({...formData, nec_sector: e.target.value})}
-                            className="w-full pl-12 pr-4 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-slate-900 outline-none focus:border-accent/40 focus:ring-4 focus:ring-accent/5 transition-all appearance-none cursor-pointer"
+                            className="w-full pl-12 pr-4 py-4 bg-slate-50 border-2 border-slate-200 rounded-2xl font-bold text-slate-900 outline-none focus:border-accent/40 focus:ring-4 focus:ring-accent/5 transition-all appearance-none cursor-pointer"
                           >
                             {NEC_SECTORS.map(s => <option key={s}>{s}</option>)}
                           </select>
@@ -305,7 +305,7 @@ export default function WorkspaceSetup({ userProfile, onComplete }: WorkspaceSet
                           <select 
                             value={formData.country}
                             onChange={(e) => setFormData({...formData, country: e.target.value})}
-                            className="w-full px-4 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-slate-900 outline-none focus:border-accent/40 focus:ring-4 focus:ring-accent/5 transition-all appearance-none cursor-pointer"
+                            className="w-full px-4 py-4 bg-slate-50 border-2 border-slate-200 rounded-2xl font-bold text-slate-900 outline-none focus:border-accent/40 focus:ring-4 focus:ring-accent/5 transition-all appearance-none cursor-pointer"
                           >
                             <option>Zimbabwe</option>
                             <option>South Africa</option>
@@ -316,7 +316,7 @@ export default function WorkspaceSetup({ userProfile, onComplete }: WorkspaceSet
                           <select 
                             value={formData.currency}
                             onChange={(e) => setFormData({...formData, currency: e.target.value})}
-                            className="w-full px-4 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-slate-900 outline-none focus:border-accent/40 focus:ring-4 focus:ring-accent/5 transition-all appearance-none cursor-pointer"
+                            className="w-full px-4 py-4 bg-slate-50 border-2 border-slate-200 rounded-2xl font-bold text-slate-900 outline-none focus:border-accent/40 focus:ring-4 focus:ring-accent/5 transition-all appearance-none cursor-pointer"
                           >
                             <option>USD</option>
                             <option>ZiG</option>
@@ -332,15 +332,15 @@ export default function WorkspaceSetup({ userProfile, onComplete }: WorkspaceSet
                           value={formData.zimra_bp_number}
                           onChange={(e) => setFormData({...formData, zimra_bp_number: e.target.value})}
                           placeholder="e.g. 200123456"
-                          className="w-full px-4 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-slate-900 outline-none focus:border-accent/40 focus:ring-4 focus:ring-accent/5 transition-all placeholder:text-slate-300"
+                          className="w-full px-4 py-4 bg-slate-50 border-2 border-slate-200 rounded-2xl font-bold text-slate-900 outline-none focus:border-accent/40 focus:ring-4 focus:ring-accent/5 transition-all placeholder:text-slate-400"
                         />
                       </div>
                     </div>
 
-                    <div className="bg-amber-50 p-8 rounded-3xl space-y-4 border border-amber-100 flex flex-col justify-center">
-                      <div className="p-3 bg-white w-fit rounded-xl shadow-sm border border-amber-100"><ShieldCheck className="w-6 h-6 text-amber-600" /></div>
+                    <div className="bg-amber-50 p-8 rounded-3xl space-y-4 border-2 border-amber-100 flex flex-col justify-center">
+                      <div className="p-3 bg-white w-fit rounded-xl shadow-sm border border-amber-200"><ShieldCheck className="w-6 h-6 text-amber-600" /></div>
                       <h3 className="font-bold text-slate-900">Zivo Regulatory Shield</h3>
-                      <p className="text-sm text-slate-700 leading-relaxed font-medium">
+                      <p className="text-sm text-slate-800 leading-relaxed font-semibold">
                         We've pre-configured ZIMRA tax bands and NSSA rules for Zimbabwe-based companies. Selecting your NEC sector ensures minimum wage compliance is handled automatically.
                       </p>
                     </div>
@@ -375,29 +375,29 @@ export default function WorkspaceSetup({ userProfile, onComplete }: WorkspaceSet
                 >
                   <div className="text-center space-y-3">
                     <h1 className="text-4xl md:text-5xl font-black tracking-tight text-slate-900 italic">Confirm Launch</h1>
-                    <p className="text-slate-600 max-w-md mx-auto font-medium">Review your settings and initialize your ZivoHR workspace.</p>
+                    <p className="text-slate-700 max-w-md mx-auto font-medium">Review your settings and initialize your ZivoHR workspace.</p>
                   </div>
 
                   <div className="card-aura p-10 bg-white border border-slate-200 shadow-xl space-y-8">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 divide-y md:divide-y-0 md:divide-x divide-slate-100">
                       <div className="space-y-4">
-                        <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Workspace Details</h3>
+                        <h3 className="text-[11px] font-black text-slate-500 uppercase tracking-widest">Workspace Details</h3>
                         <div className="space-y-2">
                           <p className="text-2xl font-black text-slate-900 italic uppercase">{formData.name}</p>
-                          <p className="text-sm font-bold text-slate-600 bg-slate-50 px-3 py-1 rounded-lg w-fit">{formData.industry} • {formData.size_range}</p>
+                          <p className="text-sm font-bold text-slate-700 bg-slate-100 px-3 py-1.5 rounded-lg w-fit border border-slate-200">{formData.industry} • {formData.size_range}</p>
                         </div>
                       </div>
                       <div className="pt-8 md:pt-0 md:pl-8 space-y-4">
-                        <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Compliance Profile</h3>
+                        <h3 className="text-[11px] font-black text-slate-500 uppercase tracking-widest">Compliance Profile</h3>
                         <div className="space-y-2">
                           <p className="text-lg font-bold text-slate-900">NEC Sector: {formData.nec_sector}</p>
-                          <p className="text-sm font-bold text-slate-600 bg-amber-50 text-amber-700 px-3 py-1 rounded-lg w-fit">{formData.country} ({formData.currency})</p>
+                          <p className="text-sm font-bold text-slate-800 bg-amber-100 text-amber-900 px-3 py-1.5 rounded-lg w-fit border border-amber-200">{formData.country} ({formData.currency})</p>
                         </div>
                       </div>
                     </div>
 
                     {error && (
-                      <div className="p-5 bg-red-50 border-2 border-red-100 rounded-2xl text-red-600 text-sm font-bold flex items-center gap-3">
+                      <div className="p-5 bg-red-50 border-2 border-red-200 rounded-2xl text-red-700 text-sm font-bold flex items-center gap-3">
                         <AlertCircle className="w-6 h-6 shrink-0" />
                         {error}
                       </div>
@@ -407,7 +407,7 @@ export default function WorkspaceSetup({ userProfile, onComplete }: WorkspaceSet
                       <div className="p-2.5 bg-accent rounded-xl text-white shadow-lg shadow-accent/20"><Sparkles className="w-6 h-6" /></div>
                       <div className="space-y-1">
                         <h4 className="text-base font-bold text-accent">Auto-Generation Enabled</h4>
-                        <p className="text-sm text-accent/80 font-medium">Launching will automatically seed your holiday calendars, leave types, and tax configurations based on Zimbabwean laws.</p>
+                        <p className="text-sm text-accent/90 font-semibold">Launching will automatically seed your holiday calendars, leave types, and tax configurations based on Zimbabwean laws.</p>
                       </div>
                     </div>
                   </div>

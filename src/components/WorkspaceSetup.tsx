@@ -59,7 +59,7 @@ export default function WorkspaceSetup({ userProfile, onComplete }: WorkspaceSet
 
       if (companyError) throw companyError;
 
-      // 2. Update User Profile (using upsert to handle missing profiles)
+      // 2. Update User Profile (Safe Upsert)
       const { error: profileError } = await supabase
         .from('user_profiles')
         .upsert({
@@ -67,7 +67,10 @@ export default function WorkspaceSetup({ userProfile, onComplete }: WorkspaceSet
           role: 'owner',
           company_id: companyData.id,
           full_name: userProfile.fullName || userProfile.email.split('@')[0],
-          email: userProfile.email
+          email: userProfile.email,
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'id'
         });
 
       if (profileError) throw profileError;

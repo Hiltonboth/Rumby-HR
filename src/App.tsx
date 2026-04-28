@@ -449,58 +449,57 @@ export default function App() {
 
   if (isAuthLoading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-white gap-8">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-white gap-8 overflow-hidden">
         <motion.div 
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ 
-            duration: 0.8,
-            ease: "easeOut"
-          }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
           className="relative"
         >
-          {/* Animated background glow */}
+          {/* Pulsing Aura */}
           <motion.div 
             animate={{ 
-              scale: [1, 1.5, 1],
-              opacity: [0.1, 0.3, 0.1]
+              scale: [1, 1.4, 1],
+              opacity: [0.2, 0.4, 0.2]
             }}
-            transition={{ 
-              duration: 3,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
+            transition={{ duration: 3, repeat: Infinity }}
             className="absolute inset-0 bg-accent blur-3xl rounded-full"
           />
-          
-          <Logo className="w-32 h-32 relative drop-shadow-2xl" />
+          <Logo className="w-32 h-32 relative drop-shadow-[0_20px_50px_rgba(0,122,255,0.3)]" />
         </motion.div>
         
-        <div className="text-center space-y-6">
-          <div className="space-y-2">
+        <div className="text-center space-y-6 relative">
+          <div className="space-y-1">
             <h2 className="text-4xl font-black text-slate-900 italic uppercase tracking-tighter">ZivoHR</h2>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] ml-1">The Heart of your Workspace</p>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.5em] ml-2">The Heart of your Workspace</p>
           </div>
           
           <div className="flex items-center gap-3 justify-center">
-            {[0, 0.1, 0.2].map((delay, i) => (
+            {[0, 2, 4].map((delay) => (
               <motion.div 
-                key={i}
+                key={delay}
                 animate={{ 
-                  y: [0, -10, 0],
-                  opacity: [0.3, 1, 0.3]
+                  y: [0, -8, 0],
+                  opacity: [0.3, 1, 0.3],
+                  scale: [1, 1.2, 1]
                 }} 
                 transition={{ 
                   repeat: Infinity, 
-                  duration: 1.2, 
-                  delay: delay 
+                  duration: 1.5, 
+                  delay: delay * 0.1 
                 }}
                 className="w-2.5 h-2.5 bg-accent rounded-full shadow-lg shadow-accent/20" 
               />
             ))}
           </div>
           
-          <p className="text-sm font-bold text-slate-500 animate-pulse">Securing your session...</p>
+          <motion.p 
+            animate={{ opacity: [0.5, 1, 0.5] }}
+            transition={{ duration: 2, repeat: Infinity }}
+            className="text-xs font-bold text-slate-500 tracking-widest uppercase"
+          >
+            Securing your session...
+          </motion.p>
         </div>
       </div>
     );

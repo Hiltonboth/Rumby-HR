@@ -36,7 +36,7 @@ export const analyticsService = {
 
     // 5. Documents
     const { data: envData } = await supabase
-      .from('document_envelopes')
+      .from('signature_envelopes')
       .select('status')
       .eq('company_id', companyId);
     

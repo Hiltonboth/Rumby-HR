@@ -64,6 +64,8 @@ export default function LoginPage({ isSignup: initialIsSignup = false, onSuccess
             data: {
               full_name: fullName,
               company_id: invitedCompanyId,
+              company_name: companyName,
+              role: invitedCompanyId ? 'employee' : 'owner',
             }
           }
         });

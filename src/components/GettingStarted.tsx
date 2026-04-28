@@ -17,13 +17,16 @@ import { UserProfile } from '../types';
 
 import { useTheme } from './ThemeContext';
 
+import { cn } from '../lib/utils';
+
 interface GettingStartedProps {
   userProfile: UserProfile | null;
   onNavigate: (tab: string) => void;
 }
 
 export default function GettingStarted({ userProfile, onNavigate }: GettingStartedProps) {
-  const { isDark } = useTheme();
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
   const [tasks, setTasks] = useState([
     { id: 'profile', title: 'Complete your Company Profile', icon: Building2, desc: 'Set up your branding, country, and currency defaults.', status: 'completed', tab: 'settings' },
     { id: 'departments', title: 'Define your Departments', icon: Target, desc: 'Organize your team into departments and reporting lines.', status: 'pending', tab: 'settings' },
@@ -169,8 +172,4 @@ export default function GettingStarted({ userProfile, onNavigate }: GettingStart
       </div>
     </motion.div>
   );
-}
-
-function cn(...classes: any[]) {
-  return classes.filter(Boolean).join(' ');
 }

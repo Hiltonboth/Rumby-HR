@@ -137,7 +137,10 @@ export default function Dashboard({ onNavigate, userProfile }: DashboardProps) {
 
   useEffect(() => {
     async function loadDashboardData() {
-      if (!userProfile?.companyId) return;
+      if (!userProfile?.companyId) {
+        setLoading(false);
+        return;
+      }
       try {
         setLoading(true);
         const [dashStats, trendData, headData, expiryData] = await Promise.all([
@@ -147,9 +150,9 @@ export default function Dashboard({ onNavigate, userProfile }: DashboardProps) {
           analyticsService.getExpiringContracts(userProfile.companyId),
         ]);
         setStats(dashStats);
-        setSalaryTrends(trendData);
-        setHeadcountTrends(headData);
-        setExpiringContracts(expiryData);
+        setSalaryTrends(trendData || []);
+        setHeadcountTrends(headData || []);
+        setExpiringContracts(expiryData || []);
 
         if (userProfile.role === 'employee') {
           const checklist = await onboardingService.getChecklist(userProfile.uid);
@@ -162,7 +165,7 @@ export default function Dashboard({ onNavigate, userProfile }: DashboardProps) {
       }
     }
     loadDashboardData();
-  }, [userProfile, timeframe]);
+  }, [userProfile?.companyId, timeframe]);
 
   const handleCompleteTask = async (taskId: string, currentStatus: boolean) => {
     try {

@@ -36,11 +36,11 @@ CREATE TABLE IF NOT EXISTS companies (
 -- =============================================================
 CREATE TABLE IF NOT EXISTS user_profiles (
   id          UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-  company_id  UUID REFERENCES companies(id) ON DELETE SET NULL,
+  company_id  UUID REFERENCES companies(id) ON DELETE SET NULL, -- Ensure this is nullable
   full_name   TEXT,
   email       TEXT NOT NULL,
   avatar_url  TEXT,
-  role        TEXT NOT NULL DEFAULT 'employee', -- 'owner' | 'admin' | 'hr' | 'manager' | 'employee'
+  role        TEXT NOT NULL DEFAULT 'employee',
   is_active   BOOLEAN DEFAULT TRUE,
   created_at  TIMESTAMPTZ DEFAULT NOW(),
   updated_at  TIMESTAMPTZ DEFAULT NOW()
@@ -48,36 +48,38 @@ CREATE TABLE IF NOT EXISTS user_profiles (
 
 -- FUNCTION: Handle new user registration (Email or Social)
 CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER AS $$
-DECLARE
-  company_id_val UUID;
+RETURNS TRIGGER 
+SET search_path = public
+AS $$
 BEGIN
-  -- Defensive parsing of company_id from metadata
-  BEGIN
-    IF (new.raw_user_meta_data->>'company_id') IS NOT NULL AND (new.raw_user_meta_data->>'company_id') <> '' THEN
-      company_id_val := (new.raw_user_meta_data->>'company_id')::uuid;
-    ELSE
-      company_id_val := NULL;
-    END IF;
-  EXCEPTION WHEN OTHERS THEN
-    company_id_val := NULL;
-  END;
-
-  INSERT INTO public.user_profiles (id, email, full_name, avatar_url, role, company_id)
+  -- Simple insert, let the application handle metadata refinement if this is 
+  -- slightly off. The key is to ensure the row EXISTS so login doesn't hang.
+  INSERT INTO public.user_profiles (
+    id, 
+    email, 
+    full_name, 
+    role, 
+    company_id
+  )
   VALUES (
     new.id,
     new.email,
-    COALESCE(new.raw_user_meta_data->>'full_name', new.raw_user_meta_data->>'name', ''),
-    new.raw_user_meta_data->>'avatar_url',
+    COALESCE(new.raw_user_meta_data->>'full_name', ''),
     COALESCE(new.raw_user_meta_data->>'role', 'employee'),
-    company_id_val
+    CASE 
+      WHEN (new.raw_user_meta_data->>'company_id') IS NOT NULL AND (new.raw_user_meta_data->>'company_id') <> '' 
+      THEN (new.raw_user_meta_data->>'company_id')::uuid 
+      ELSE NULL 
+    END
   )
   ON CONFLICT (id) DO UPDATE SET
     email = EXCLUDED.email,
     full_name = EXCLUDED.full_name,
-    avatar_url = EXCLUDED.avatar_url,
-    role = COALESCE(user_profiles.role, EXCLUDED.role),
-    company_id = COALESCE(user_profiles.company_id, EXCLUDED.company_id);
+    updated_at = NOW();
+    
+  RETURN new;
+EXCEPTION WHEN OTHERS THEN
+  -- Last resort: Always return NEW to ensure Auth signup doesn't block
   RETURN new;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -607,6 +609,29 @@ SELECT apply_company_isolation('kudos');
 SELECT apply_company_isolation('time_entries');
 SELECT apply_company_isolation('notifications');
 SELECT apply_company_isolation('company_settings');
+
+-- FUNCTION: Seed default data for a new company
+CREATE OR REPLACE FUNCTION public.seed_company_data(target_company_id UUID)
+RETURNS VOID AS $$
+BEGIN
+  -- Insert default leave types
+  INSERT INTO public.leave_types (company_id, name, description, default_accrual_days, color, is_paid)
+  VALUES 
+    (target_company_id, 'Annual Leave', 'Standard vacation time', 21, '#10B981', TRUE),
+    (target_company_id, 'Sick Leave', 'Medical recovery time', 12, '#EF4444', TRUE),
+    (target_company_id, 'Maternity Leave', 'Post-pregnancy leave', 98, '#EC4899', TRUE),
+    (target_company_id, 'Study Leave', 'Time for exams and preparation', 5, '#3B82F6', TRUE);
+
+  -- Insert default company settings
+  INSERT INTO public.company_settings (company_id, statutory_rates)
+  VALUES (target_company_id, '{
+    "nssa_employee_rate": 0.045,
+    "nssa_employer_rate": 0.045,
+    "aids_levy_rate": 0.03
+  }'::jsonb)
+  ON CONFLICT (company_id) DO NOTHING;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Seed 2024 ZIMRA PAYE bands (Universal Utility - read by any company)
 CREATE TABLE IF NOT EXISTS zimra_tax_bands (

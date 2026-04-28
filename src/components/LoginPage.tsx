@@ -169,30 +169,30 @@ export default function LoginPage({ isSignup: initialIsSignup = false, onSuccess
                   className="space-y-4"
                 >
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-gray-400 uppercase tracking-widest px-1">Full Name</label>
+                    <label className={cn("text-[11px] font-black uppercase tracking-widest px-1", isDark ? "text-slate-400" : "text-slate-900")}>Full Name</label>
                     <div className="relative">
-                      <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                       <input 
                         required
                         type="text" 
                         value={fullName}
                         onChange={(e) => setFullName(e.target.value)}
                         placeholder="Jane Doe"
-                        className="input-aura pl-10 w-full"
+                        className="input-aura pl-10 w-full font-bold"
                       />
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-gray-400 uppercase tracking-widest px-1">Company Name</label>
+                    <label className={cn("text-[11px] font-black uppercase tracking-widest px-1", isDark ? "text-slate-400" : "text-slate-900")}>Company Name</label>
                     <div className="relative">
-                      <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                       <input 
                         required
                         type="text" 
                         value={companyName}
                         onChange={(e) => setCompanyName(e.target.value)}
                         placeholder="Acme Corp"
-                        className="input-aura pl-10 w-full"
+                        className="input-aura pl-10 w-full font-bold"
                       />
                     </div>
                   </div>
@@ -201,31 +201,31 @@ export default function LoginPage({ isSignup: initialIsSignup = false, onSuccess
             </AnimatePresence>
 
             <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-400 uppercase tracking-widest px-1">Email Address</label>
+              <label className={cn("text-[11px] font-black uppercase tracking-widest px-1", isDark ? "text-slate-400" : "text-slate-900")}>Email Address</label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <input 
                   required
                   type="email" 
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@company.com"
-                  className="input-aura pl-10 w-full"
+                  className="input-aura pl-10 w-full font-bold"
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-400 uppercase tracking-widest px-1">Password</label>
+              <label className={cn("text-[11px] font-black uppercase tracking-widest px-1", isDark ? "text-slate-400" : "text-slate-900")}>Password</label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <input 
                   required
                   type="password" 
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="input-aura pl-10 w-full"
+                  className="input-aura pl-10 w-full font-bold"
                 />
               </div>
             </div>

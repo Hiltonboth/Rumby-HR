@@ -460,8 +460,19 @@ export default function App() {
 
   if (isAuthLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="w-8 h-8 border-4 border-accent border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen flex flex-col items-center justify-center bg-white gap-8">
+        <div className="animate-pulse">
+          <Building2 className="w-16 h-16 text-accent" />
+        </div>
+        <div className="text-center space-y-2">
+          <h2 className="text-2xl font-black text-slate-900 italic uppercase tracking-tight">ZivoHR</h2>
+          <div className="flex items-center gap-2 justify-center">
+            <div className="w-2 h-2 bg-accent rounded-full animate-bounce [animation-delay:-0.3s]" />
+            <div className="w-2 h-2 bg-accent rounded-full animate-bounce [animation-delay:-0.15s]" />
+            <div className="w-2 h-2 bg-accent rounded-full animate-bounce" />
+          </div>
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] pt-4">Securing your workspace</p>
+        </div>
       </div>
     );
   }

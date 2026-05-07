@@ -403,7 +403,7 @@ export default function LandingPage({ onGetStarted, onLogin, onDocumentation, us
             transition={{ delay: 0.1 }}
             className={`text-4xl md:text-6xl xl:text-8xl font-black leading-[1.02] tracking-tight mb-8 ${isDark ? 'text-white' : 'text-slate-900'}`}
           >
-            Your <span className="bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-400 bg-clip-text text-transparent">Integrated HR Platform</span>
+            Your <span className="bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-400 bg-clip-text text-transparent">All-in-One HR Platform for SMEs</span>
           </motion.h1>
           <motion.p 
             initial={{ opacity: 0, y: 20 }}

@@ -770,6 +770,13 @@
 @media (max-width: 1024px) {
   .ts-grid { grid-template-columns: repeat(2, 1fr); }
 }
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
 @media (max-width: 768px) {
   .ts-grid { grid-template-columns: 1fr; }
   .wa-section { padding: 0 16px 60px; }

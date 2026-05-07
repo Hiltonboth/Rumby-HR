@@ -96,7 +96,7 @@ export default function LandingPage({ onGetStarted, onLogin, onDocumentation, us
       d: 'A landmark case that redefined termination on notice, leading to immediate legislative reforms in Zimbabwean labor law.', 
       cat: 'Termination', 
       judge: 'Hon. Justice Makarau',
-      av: 'https://api.dicebear.com/9.x/micah/svg?seed=Justice'
+      av: 'https://api.dicebear.com/9.x/notionists/svg?seed=Justice&backgroundColor=6366f1'
     },
     { 
       t: 'Fixed Term Contracts', 
@@ -104,7 +104,7 @@ export default function LandingPage({ onGetStarted, onLogin, onDocumentation, us
       d: 'Analysis of legitimate expectation of renewal and strict interpretation of fixed-term contracts in the Zimbabwean context.', 
       cat: 'Contracts', 
       judge: 'Advocate L. Uriri',
-      av: 'https://api.dicebear.com/9.x/micah/svg?seed=Legal'
+      av: 'https://api.dicebear.com/9.x/notionists/svg?seed=Legal&backgroundColor=8b5cf6'
     },
     { 
       t: 'Unfair Dismissal', 
@@ -112,7 +112,7 @@ export default function LandingPage({ onGetStarted, onLogin, onDocumentation, us
       d: 'Detailed exploration of procedural versus substantive fairness and the Labor Court powers in reinstatement.', 
       cat: 'Discipline', 
       judge: 'Dr. G. Madhuku',
-      av: 'https://api.dicebear.com/9.x/micah/svg?seed=Expert'
+      av: 'https://api.dicebear.com/9.x/notionists/svg?seed=Expert&backgroundColor=4f46e5'
     },
     { 
       t: 'Salaries & Benefits', 
@@ -120,7 +120,7 @@ export default function LandingPage({ onGetStarted, onLogin, onDocumentation, us
       d: 'Critical analysis of collective bargaining agreements and the employer capability to vary salaries unilaterally.', 
       cat: 'Remuneration', 
       judge: 'Hon. Justice Gwaunza',
-      av: 'https://api.dicebear.com/9.x/micah/svg?seed=Gwaunza'
+      av: 'https://api.dicebear.com/9.x/notionists/svg?seed=Gwaunza&backgroundColor=10b981'
     },
     { 
       t: 'Constructive Dismissal', 
@@ -128,14 +128,22 @@ export default function LandingPage({ onGetStarted, onLogin, onDocumentation, us
       d: 'Examines the high threshold for proving employer-forced resignation in the Supreme Court.', 
       cat: 'Termination', 
       judge: 'Hon. Justice Hlatshwayo',
-      av: 'https://api.dicebear.com/9.x/micah/svg?seed=Hlatshwayo'
+      av: 'https://api.dicebear.com/9.x/notionists/svg?seed=Hlatshwayo&backgroundColor=6366f1'
     }
   ];
 
+  const CASE_DURATION = 8000;
+
   useEffect(() => {
     const timer = setInterval(() => {
-      setActiveCaseIndex((prev) => (prev + 1) % laborCases.length);
-    }, 6000);
+      setCaseProgress((prev) => {
+        if (prev >= 100) {
+          setActiveCaseIndex((curr) => (curr + 1) % laborCases.length);
+          return 0;
+        }
+        return prev + (100 / (CASE_DURATION / 100));
+      });
+    }, 100);
     return () => clearInterval(timer);
   }, [laborCases.length]);
 
@@ -1796,81 +1804,80 @@ export default function LandingPage({ onGetStarted, onLogin, onDocumentation, us
       </section>
 
       {/* ─── LABOR CASES ─── */}
-      <section id="labor-cases" className="py-20 md:py-36 px-4 md:px-6 bg-indigo-500/[0.01] border-y border-indigo-500/5 scroll-mt-24 overflow-hidden">
-        <div className="max-w-[1200px] mx-auto text-center">
-          <div className="mb-12 md:mb-20">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-[10px] font-black uppercase tracking-widest text-indigo-500 mb-6 font-mono">⚖️ Legal Intelligence</div>
-            <h2 className={cn("text-3xl md:text-6xl font-black mb-6 leading-tight tracking-tight px-4", isDark ? 'text-white' : 'text-slate-900')}>Zimbabwean Labor<br className="hidden md:block" /> Case Analysis</h2>
+      <section id="labor-cases" className="tabs-section bg-indigo-500/[0.01]">
+        <div className="section-inner text-center">
+          <div className="mb-10 md:mb-16">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-[9px] font-black uppercase tracking-widest text-indigo-500 mb-4 transition-all hover:bg-indigo-500/20 font-mono">⚖️ Legal Intelligence</div>
+            <h2 className={cn("section-title mb-4", isDark ? 'text-white' : 'text-slate-900')}>
+              Zimbabwean Labor <span className="text-indigo-300">Case Analysis</span>
+            </h2>
             <p className={cn("text-sm md:text-xl font-bold opacity-60 max-w-2xl mx-auto px-4", isDark ? "text-slate-400" : "text-slate-600")}>Stay informed with expert analysis of landmark Zimbabwean labor cases and their implications for your business.</p>
           </div>
           
-          <div className="flex flex-wrap justify-center gap-3 md:gap-4 mb-16 md:mb-20 max-w-5xl mx-auto px-2">
+          <div className="tabs-nav no-scrollbar pb-2 md:pb-0">
             {laborCases.map((c, i) => (
               <button 
                 key={i} 
                 onClick={() => { setActiveCaseIndex(i); setCaseProgress(0); }}
                 className={cn(
-                  "relative group px-4 md:px-6 py-3 md:py-4 rounded-xl md:rounded-2xl border transition-all flex items-center gap-3 overflow-hidden",
-                  activeCaseIndex === i 
-                    ? (isDark ? "bg-white/5 border-indigo-500/40" : "bg-indigo-500/5 border-indigo-500/30") 
-                    : (isDark ? "bg-transparent border-white/5 opacity-50 hover:opacity-100" : "bg-transparent border-slate-200 opacity-60 hover:opacity-100")
+                  "tab-btn group flex items-center gap-2 md:gap-3 shrink-0 py-2.5 md:py-4",
+                  activeCaseIndex === i && "active"
                 )}
               >
                 <div className={cn(
-                  "relative w-6 h-6 md:w-8 md:h-8 rounded-full overflow-hidden border border-indigo-500/20",
+                  "relative w-4 h-4 md:w-8 md:h-8 rounded-full overflow-hidden border border-indigo-500/20",
                   activeCaseIndex === i ? "bg-indigo-500" : "bg-slate-500/20"
                 )}>
                   <img src={c.av} alt={c.judge} className="w-full h-full object-cover grayscale brightness-110" referrerPolicy="no-referrer" />
                 </div>
                 <div className="text-left">
-                  <div className={cn("text-[8px] md:text-[9px] font-black uppercase tracking-widest leading-none mb-1", activeCaseIndex === i ? "text-indigo-500" : "text-slate-500")}>{c.cat}</div>
-                  <div className={cn("text-[10px] md:text-xs font-black truncate max-w-[100px] md:max-w-[120px]", isDark ? "text-white" : "text-slate-900")}>{c.t}</div>
+                  <div className={cn("text-[7px] md:text-[9px] font-black uppercase tracking-widest leading-none mb-0.5", activeCaseIndex === i ? "text-indigo-500" : "text-slate-500")}>{c.cat}</div>
+                  <div className={cn("text-[9px] md:text-xs font-black whitespace-nowrap", isDark ? "text-white" : "text-slate-900")}>{c.t}</div>
                 </div>
                 {activeCaseIndex === i && (
-                  <div className="absolute bottom-0 left-0 h-1 bg-indigo-500 transition-all duration-100" style={{ width: `${caseProgress}%` }} />
+                  <div className="tab-progress" style={{ width: `${caseProgress}%`, transition: 'none' }} />
                 )}
               </button>
             ))}
           </div>
           
-          <div className="flex justify-center min-h-[440px] md:min-h-[400px]">
+          <div className="tab-content transition-all min-h-[440px] md:min-h-[400px]">
             <AnimatePresence mode="wait">
               <motion.div 
                 key={activeCaseIndex}
-                initial={{ opacity: 0, x: 40, filter: "blur(10px)" }}
-                animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
-                exit={{ opacity: 0, x: -40, filter: "blur(10px)" }}
+                initial={{ opacity: 0, y: 20, filter: "blur(10px)" }}
+                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                exit={{ opacity: 0, y: -20, filter: "blur(10px)" }}
                 transition={{ duration: 0.5, ease: [0.2, 0, 0, 1] }}
-                className="max-w-4xl w-full"
+                className="w-full"
               >
-                <div className="mb-10 group cursor-default">
-                  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 text-[10px] font-black uppercase tracking-widest mb-8">
+                <div className="mb-8 md:mb-10 group cursor-default">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 md:px-4 md:py-1.5 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 text-[9px] md:text-[10px] font-black uppercase tracking-widest mb-6 md:mb-8 transition-transform hover:scale-105">
                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                     Active Case Reference
+                     Active Reference
                   </div>
                   
-                  <h3 className={cn("text-3xl md:text-5xl font-black mb-6 leading-tight tracking-tight", isDark ? 'text-white' : 'text-slate-900')}>
+                  <h3 className={cn("text-2xl md:text-5xl font-black mb-4 md:mb-6 leading-tight tracking-tight", isDark ? 'text-white' : 'text-slate-900')}>
                     {laborCases[activeCaseIndex].t}
                   </h3>
                   
-                  <div className="inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-indigo-500/5 text-indigo-500 text-sm md:text-base font-black uppercase tracking-[0.15em] mb-12 border border-indigo-500/10 font-mono">
+                  <div className="inline-flex items-center gap-2 px-4 py-2 md:px-6 md:py-3 rounded-xl md:rounded-2xl bg-indigo-500/5 text-indigo-500 text-[11px] md:text-base font-black uppercase tracking-[0.1em] md:tracking-[0.15em] mb-8 md:mb-10 border border-indigo-500/10 font-mono shadow-sm">
                     {laborCases[activeCaseIndex].c}
                   </div>
                   
-                  <div className="relative max-w-3xl mx-auto">
-                    <p className={cn("text-lg md:text-2xl font-bold leading-relaxed mb-12 opacity-80", isDark ? "text-slate-400" : "text-slate-600")}>
+                  <div className="relative max-w-2xl mx-auto px-4">
+                    <p className={cn("text-base md:text-2xl font-bold leading-relaxed mb-8 md:mb-12 opacity-80", isDark ? "text-slate-400" : "text-slate-600")}>
                       "{laborCases[activeCaseIndex].d}"
                     </p>
-                    {/* Decorative quotes */}
-                    <div className="absolute -top-12 -left-4 text-9xl font-serif text-indigo-500/10 select-none">“</div>
-                    <div className="absolute -bottom-20 -right-4 text-9xl font-serif text-indigo-500/10 select-none">”</div>
+                    <div className="absolute -top-8 md:-top-12 -left-2 md:-left-4 text-7xl md:text-9xl font-serif text-indigo-500/10 select-none">“</div>
+                    <div className="absolute -bottom-16 md:-bottom-20 -right-2 md:-right-4 text-7xl md:text-9xl font-serif text-indigo-500/10 select-none">”</div>
                   </div>
                 </div>
 
-                <div className="flex flex-col items-center gap-10">
-                  <div className="flex flex-col items-center gap-4">
+                <div className="flex flex-col items-center gap-6 md:gap-8">
+                  <div className="flex flex-col items-center gap-3 md:gap-4">
                     <div className={cn(
-                      "relative w-24 h-24 rounded-full p-1 bg-gradient-to-br from-indigo-500 to-purple-600 shadow-2xl",
+                      "relative w-16 h-16 md:w-20 md:h-20 rounded-full p-0.5 md:p-1 bg-gradient-to-br from-indigo-500 to-purple-600 shadow-xl",
                       isDark ? "shadow-indigo-500/20" : "shadow-indigo-500/10"
                     )}>
                       <div className="w-full h-full rounded-full overflow-hidden bg-white dark:bg-slate-900">
@@ -1881,28 +1888,29 @@ export default function LandingPage({ onGetStarted, onLogin, onDocumentation, us
                           referrerPolicy="no-referrer" 
                         />
                       </div>
-                      <div className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-emerald-500 border-4 border-white dark:border-slate-950 flex items-center justify-center shadow-lg">
-                        <Shield className="w-4 h-4 text-white" />
+                      <div className="absolute -bottom-0.5 -right-0.5 w-6 h-6 md:w-7 md:h-7 rounded-full bg-emerald-500 border-2 md:border-4 border-white dark:border-slate-950 flex items-center justify-center shadow-lg">
+                        <Shield className="w-3 h-3 md:w-3.5 md:h-3.5 text-white" />
                       </div>
                     </div>
                     <div className="text-center">
-                      <div className={cn("text-lg font-black", isDark ? "text-white" : "text-slate-900")}>{laborCases[activeCaseIndex].judge}</div>
-                      <div className="text-[11px] font-bold text-slate-500 uppercase tracking-[0.2em]">Legal Advisory Council</div>
+                      <div className={cn("text-base md:text-lg font-black", isDark ? "text-white" : "text-slate-900")}>{laborCases[activeCaseIndex].judge}</div>
+                      <div className="text-[9px] md:text-[10px] font-bold text-slate-500 uppercase tracking-[0.15em] md:tracking-[0.2em]">Legal Advisory Council</div>
                     </div>
                   </div>
                   
-                  <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+                  {/* ─── ACTION BUTTONS ─── */}
+                  <div className="flex flex-row items-center justify-center gap-2 md:gap-3 w-full sm:w-auto mt-2 px-4">
                     <button onClick={onLogin} className={cn(
-                      "group px-12 py-5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-3",
-                      isDark ? "bg-white text-black hover:scale-105" : "bg-indigo-600 text-white shadow-xl shadow-indigo-600/20 hover:scale-105"
+                      "flex-1 sm:flex-none px-4 py-3 md:px-7 md:py-3.5 rounded-lg md:rounded-xl font-black text-[8px] md:text-[10px] uppercase tracking-[0.12em] md:tracking-[0.15em] transition-all flex items-center justify-center gap-2 whitespace-nowrap",
+                      isDark ? "bg-white text-black hover:scale-105" : "bg-indigo-600 text-white shadow-lg shadow-indigo-600/20 hover:scale-105"
                     )}>
-                      Access Complete Library <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                      Full Library <ChevronRight className="w-3 h-3 md:w-4 md:h-4" />
                     </button>
                     <button className={cn(
-                      "px-10 py-5 rounded-2xl border font-black text-xs uppercase tracking-[0.2em] transition-all",
+                      "flex-1 sm:flex-none px-4 py-3 md:px-7 md:py-3.5 rounded-lg md:rounded-xl border font-black text-[8px] md:text-[10px] uppercase tracking-[0.12em] md:tracking-[0.15em] transition-all whitespace-nowrap",
                       isDark ? "bg-white/5 border-white/10 text-white hover:bg-white/10" : "bg-transparent border-indigo-500/20 text-indigo-600 hover:bg-indigo-500/5 shadow-sm"
                     )}>
-                      Full Analysis PDF
+                      Analysis PDF
                     </button>
                   </div>
                 </div>

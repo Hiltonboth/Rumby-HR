@@ -58,14 +58,14 @@ const TOOLS_TABS = [
   { id: 'vault', icon: '🔒', label: 'Vault', title: 'The Vault', sub: 'Encrypted storage for employee contracts, IDs, and sensitive documents.' },
   { id: 'asset', icon: '💻', label: 'IT Asset', title: 'Asset & IT Shield', sub: 'Track laptops, hardware, and software licenses with full lifecycle management.' },
   { id: 'api', icon: '🔌', label: 'API', title: 'Expert API', sub: 'Connect ZivoHR with your existing ERP or accounting software seamlessly.' },
-  { id: 'security', icon: '🔐', label: 'Security', title: 'Security First', sub: 'Enterprise-grade encryption and secure cloud infrastructure for your data.' }
+  { id: 'security', icon: '🛡️', label: 'Compliance', title: 'Regulatory Compliance', sub: 'Automated ZIMRA, NSSA, and NEC reporting with real-time statutory updates.' }
 ];
 
 const LIBRARY_TABS = [
-  { id: 'contracts', icon: '📄', label: 'Contracts', title: 'Employment Contracts', sub: 'Standard and fixed-term contract templates compliant with the Labor Act.' },
-  { id: 'policy', icon: '🛡️', label: 'Policy', title: 'HR Policy Manual', sub: 'A complete guide to workplace policies, from leave to disciplinary procedures.' },
-  { id: 'review', icon: '📊', label: 'Reviews', title: 'Performance Review', sub: 'Templates and frameworks for effective employee evaluations.' },
-  { id: 'disciplinary', icon: '⚖️', label: 'Discipline', title: 'Disciplinary Code', sub: 'Step-by-step guides for handling workplace misconduct fairly.' }
+  { id: 'contracts', icon: '📄', label: 'Contracts', title: 'Typical Employment Contracts', sub: 'Standard and fixed-term contract templates compliant with the Labor Act.' },
+  { id: 'policy', icon: '🛡️', label: 'Policy', title: 'Typical HR Policy Manual', sub: 'A complete guide to workplace policies, from leave to disciplinary procedures.' },
+  { id: 'review', icon: '📊', label: 'Reviews', title: 'Typical Performance Review', sub: 'Templates and frameworks for effective employee evaluations.' },
+  { id: 'disciplinary', icon: '⚖️', label: 'Discipline', title: 'Typical Disciplinary Code', sub: 'Step-by-step guides for handling workplace misconduct fairly.' }
 ];
 
 const TAB_DURATION = 6000;
@@ -88,6 +88,7 @@ export default function LandingPage({ onGetStarted, onLogin, onDocumentation, us
   const [libraryProgress, setLibraryProgress] = useState(0);
 
   const [activeCaseIndex, setActiveCaseIndex] = useState(0);
+  const [caseProgress, setCaseProgress] = useState(0);
   const laborCases = [
     { 
       t: 'Retrenchment Procedures', 
@@ -252,6 +253,15 @@ export default function LandingPage({ onGetStarted, onLogin, onDocumentation, us
         }
         return prev + 1;
       });
+
+      // Labor Cases Progress
+      setCaseProgress(prev => {
+        if (prev >= 100) {
+          setActiveCaseIndex(current => (current + 1) % laborCases.length);
+          return 0;
+        }
+        return prev + 1;
+      });
     }, TAB_DURATION / 100);
 
     return () => clearInterval(timer);
@@ -400,10 +410,10 @@ export default function LandingPage({ onGetStarted, onLogin, onDocumentation, us
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.3 }}
-            className="flex flex-col sm:flex-row gap-4"
+            className="flex flex-row flex-wrap items-center justify-start gap-3 md:gap-4"
           >
-            <button onClick={handleGetStarted} className="px-6 md:px-10 py-4 md:py-5 rounded-2xl md:rounded-3xl bg-indigo-600 text-white font-black text-sm md:text-lg shadow-xl shadow-indigo-600/20 hover:scale-105 transition-all">Start Free Trial</button>
-            <button onClick={handleTalkToSales} className={cn("px-6 md:px-10 py-4 md:py-5 rounded-2xl md:rounded-3xl border font-black text-sm md:text-lg flex items-center justify-center gap-2 hover:bg-white/5 transition-all", isDark ? "border-white/10 text-white" : "border-indigo-500/10 text-indigo-600")}>Book Demo →</button>
+            <button onClick={handleGetStarted} className="px-5 md:px-10 py-3 md:py-5 rounded-xl md:rounded-3xl bg-indigo-600 text-white font-black text-[12px] md:text-lg shadow-xl shadow-indigo-600/20 hover:scale-105 transition-all">Start Free Trial</button>
+            <button onClick={handleTalkToSales} className={cn("px-5 md:px-10 py-3 md:py-5 rounded-xl md:rounded-3xl border font-black text-[12px] md:text-lg flex items-center justify-center gap-2 hover:bg-transparent transition-all", isDark ? "border-white/10 text-white" : "border-indigo-500/10 text-indigo-600")}>Book Demo →</button>
           </motion.div>
           
           <motion.div 
@@ -448,18 +458,21 @@ export default function LandingPage({ onGetStarted, onLogin, onDocumentation, us
               
               {/* Main Content */}
               <div className="p-4 space-y-4">
-                <div className="grid grid-cols-3 gap-2">
-                  {[
-                    { l: 'Employees', v: '124' },
-                    { l: 'Jobs', v: '8', full: 'Active Jobs' },
-                    { l: 'Rating', v: '94%', full: 'Satisfaction' }
-                  ].map(s => (
-                    <div key={s.l} className={`p-2.5 md:p-3 rounded-xl border flex flex-col justify-center ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-gradient-to-br from-indigo-500/7 to-purple-500/4 border-indigo-500/10'}`}>
-                      <div className="text-[7px] md:text-[8px] font-black uppercase tracking-widest text-indigo-400 mb-1 truncate">{s.full || s.l}</div>
-                      <div className={`text-base md:text-xl font-black ${isDark ? 'text-indigo-300' : 'text-indigo-800'}`}>{s.v}</div>
-                    </div>
-                  ))}
-                </div>
+                  <div className="grid grid-cols-3 gap-1 md:gap-2">
+                    {[
+                      { l: 'Staff', v: '124', full: 'Employees' },
+                      { l: 'Jobs', v: '8', full: 'Active Jobs' },
+                      { l: 'Rating', v: '94%', full: 'Satisfaction' }
+                    ].map(s => (
+                      <div key={s.l} className={`p-1.5 md:p-3 rounded-lg md:rounded-xl border flex flex-col justify-center overflow-hidden ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-gradient-to-br from-indigo-500/7 to-purple-500/4 border-indigo-500/10'}`}>
+                        <div className="text-[6px] md:text-[8px] font-black uppercase tracking-tight md:tracking-widest text-indigo-400 mb-0.5 md:mb-1 truncate">
+                          <span className="hidden md:inline">{s.full}</span>
+                          <span className="md:hidden">{s.l}</span>
+                        </div>
+                        <div className={`text-sm md:text-xl font-black ${isDark ? 'text-indigo-300' : 'text-indigo-800'}`}>{s.v}</div>
+                      </div>
+                    ))}
+                  </div>
                 
                 <div className={`p-3 rounded-xl border ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-[#f8f7ff]/80 border-indigo-500/8'}`}>
                   <div className="text-[8px] font-black uppercase tracking-widest text-indigo-400 mb-3">Payroll Overview</div>
@@ -988,22 +1001,22 @@ export default function LandingPage({ onGetStarted, onLogin, onDocumentation, us
       </section>
 
       {/* ─── COMPLIANCE BANNER ─── */}
-      <section className="px-6 pb-20 md:pb-28">
-        <div className="max-w-[1200px] mx-auto rounded-[2.5rem] bg-gradient-to-br from-[#1e1b4b] via-[#312e81] to-[#3730a3] p-10 md:p-16 grid lg:grid-cols-2 gap-12 items-center relative overflow-hidden shadow-2xl">
+      <section className="px-3 md:px-6 pb-12 md:pb-28">
+        <div className="max-w-[1200px] mx-auto rounded-[2rem] md:rounded-[2.5rem] bg-gradient-to-br from-[#1e1b4b] via-[#312e81] to-[#3730a3] p-6 md:p-16 grid lg:grid-cols-2 gap-8 md:gap-12 items-center relative overflow-hidden shadow-2xl">
           <div className="relative z-10">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-400/15 border border-slate-400/20 text-[10px] font-black uppercase tracking-widest text-[#a5b4fc] mb-6">🛡️ Secure & Compliant</div>
-            <h2 className="text-3xl md:text-5xl font-black text-white leading-tight mb-4">Secure Payroll & Compliance</h2>
-            <p className="text-slate-300 text-lg leading-relaxed mb-10">Run payroll, manage NSSA contributions, and stay compliant with local labor laws — all in one powerful, easy-to-use platform.</p>
-            <div className="flex flex-wrap gap-4">
-              <button onClick={handleGetStarted} className="px-8 py-4 rounded-[1rem] bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-black shadow-lg shadow-indigo-500/50 hover:-translate-y-0.5 transition-transform">Start Free Trial</button>
-              <button onClick={handleTalkToSales} className="px-8 py-4 rounded-[1rem] bg-white/10 border border-white/20 text-white font-black hover:bg-white/20 transition-all">Book a Demo →</button>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-400/15 border border-slate-400/20 text-[9px] font-black uppercase tracking-widest text-[#a5b4fc] mb-4 md:mb-6">🛡️ Secure & Compliant</div>
+            <h2 className="text-2xl md:text-5xl font-black text-white leading-tight mb-3 md:mb-4">Secure Payroll & Compliance</h2>
+            <p className="text-slate-300 text-sm md:text-lg leading-relaxed mb-6 md:mb-8">Run payroll, manage NSSA contributions, and stay compliant with local labor laws — all in one powerful, easy-to-use platform.</p>
+            <div className="flex flex-row items-center gap-2 md:gap-4">
+              <button onClick={handleGetStarted} className="flex-1 sm:flex-none px-4 py-3.5 md:px-10 md:py-4 rounded-xl md:rounded-[1rem] bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-black text-[11px] md:text-sm shadow-xl shadow-indigo-500/30 hover:scale-105 transition-all whitespace-nowrap">Start Free Trial</button>
+              <button onClick={handleTalkToSales} className="flex-1 sm:flex-none px-4 py-3.5 md:px-10 md:py-4 rounded-xl md:rounded-[1rem] bg-white/10 border border-white/20 text-white font-black text-[11px] md:text-sm hover:bg-white/20 transition-all whitespace-nowrap">Book a Demo</button>
             </div>
           </div>
-          <div className="flex justify-center items-center relative">
-            <div className="w-60 h-60 md:w-80 md:h-80 border border-indigo-400/15 rounded-full flex items-center justify-center animate-[pulse_3s_infinite]">
-              <div className="w-48 h-48 md:w-64 md:h-64 border border-indigo-400/20 rounded-full flex items-center justify-center animate-[pulse_3s_infinite_0.5s]">
-                <div className="w-32 h-32 md:w-44 md:h-44 border border-indigo-400/25 rounded-full flex items-center justify-center animate-[pulse_3s_infinite_1s]">
-                  <div className="text-6xl md:text-7xl">🛡️</div>
+          <div className="flex justify-center items-center relative py-4 lg:py-0">
+            <div className="w-40 h-40 md:w-80 md:h-80 border border-indigo-400/15 rounded-full flex items-center justify-center animate-[pulse_3s_infinite]">
+              <div className="w-32 h-32 md:w-64 md:h-64 border border-indigo-400/20 rounded-full flex items-center justify-center animate-[pulse_3s_infinite_0.5s]">
+                <div className="w-24 h-24 md:w-44 md:h-44 border border-indigo-400/25 rounded-full flex items-center justify-center animate-[pulse_3s_infinite_1s]">
+                  <div className="text-4xl md:text-7xl">🛡️</div>
                 </div>
               </div>
             </div>
@@ -1023,15 +1036,17 @@ export default function LandingPage({ onGetStarted, onLogin, onDocumentation, us
               WhatsApp Chat
             </div>
             <h2>Manage HR directly from WhatsApp.</h2>
-            <p>Approve leave, view payslips, and answer employee queries without leaving your favorite chat app. Built for the way Africa works.</p>
-            <div className="wa-btns">
+            <p className="text-sm md:text-base opacity-75 mb-6 md:mb-8 max-w-xl mx-auto md:mx-0">Approve leave, view payslips, and answer employee queries without leaving your favorite chat app. Built for the way Africa works.</p>
+            <div className="flex flex-row items-center justify-center md:justify-start gap-2 md:gap-3">
               <button 
                 onClick={() => window.open('https://wa.me/263772240081?text=Hi!%20I%20want%20to%20know%20more%20about%20ZivoHR.', '_blank')}
-                className="wa-btn-primary"
+                className="flex-1 sm:flex-none px-4 py-3.5 md:px-10 md:py-4 rounded-xl md:rounded-2xl bg-[#25D366] text-white font-black text-[11px] md:text-sm shadow-xl shadow-[#25D366]/20 hover:scale-105 transition-all whitespace-nowrap"
               >
                 Chat with Us
               </button>
-              <button className="wa-btn-outline">Learn More</button>
+              <button className="flex-1 sm:flex-none px-4 py-3.5 md:px-10 md:py-4 rounded-xl md:rounded-2xl bg-white/10 border border-white/20 text-white font-black text-[11px] md:text-sm hover:bg-white/20 transition-all whitespace-nowrap">
+                Learn More
+              </button>
             </div>
           </div>
           <div style={{ display:'flex', justifyContent:'center' }}>
@@ -1083,48 +1098,6 @@ export default function LandingPage({ onGetStarted, onLogin, onDocumentation, us
         </div>
       </section>
 
-      {/* ─── PRICING ─── */}
-      <section id="pricing" className="py-20 md:py-28 px-6 max-w-[1200px] mx-auto text-center scroll-mt-24">
-        <h2 className={`text-4xl md:text-5xl font-black mb-4 ${isDark ? 'text-white' : 'text-slate-900'}`}>Simple, <span className="text-indigo-500">Transparent</span> Pricing</h2>
-        <p className={`text-lg mb-16 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Choose the plan that's right for your growing team. No hidden fees.</p>
-        
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {[
-            { n: 'Starter (Small)', p: '$30', d: 'Up to 20 employees. Perfect for small teams.', f: ['Up to 20 employees', 'Core HR features', 'Payroll Included', 'Email Support'] },
-            { n: 'Starter (Growth)', p: '$50', d: '21+ employees. Scale your operations.', f: ['21+ employees', 'Core HR features', 'Payroll Included', 'Priority Email Support'] },
-            { n: 'Pro', p: '$75', d: 'Advanced automation for modern teams.', f: ['All Starter features', 'Performance Reviews', 'Employee Engagement', 'HR Automation'], popular: true },
-            { n: 'Exec', p: 'Custom', d: 'Tailor-made solution with expert advice.', f: ['Unlimited employees', 'Specific HR Advice', 'Dedicated Account Manager', 'Custom Integrations'] }
-          ].map(plan => (
-            <motion.div 
-              key={plan.n}
-              whileHover={{ y: -5 }}
-              className={`p-8 rounded-[2.5rem] border text-left flex flex-col h-full relative overflow-hidden ${plan.popular ? 'border-indigo-500 ring-4 ring-indigo-500/5' : isDark ? 'bg-slate-900/40 border-slate-800' : 'bg-white border-indigo-500/12 shadow-sm'}`}
-            >
-              {plan.popular && <div className="absolute top-4 right-4 px-3 py-1 rounded-full bg-indigo-500 text-white text-[8px] font-black uppercase tracking-widest">Popular</div>}
-              <h3 className={`text-lg font-black mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>{plan.n}</h3>
-              <p className="text-[10px] font-bold text-slate-500 mb-6 leading-relaxed">{plan.d}</p>
-              <div className="flex items-baseline gap-1 mb-8">
-                <span className={`text-4xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{plan.p}</span>
-                {plan.p !== 'Custom' && <span className="text-xs font-bold text-slate-500">/mo</span>}
-              </div>
-              <ul className="space-y-4 mb-10 flex-1">
-                {plan.f.map(f => (
-                  <li key={f} className="flex items-center gap-3 text-[11px] font-bold text-slate-500">
-                    <div className="w-4 h-4 rounded-full bg-indigo-500/10 flex items-center justify-center text-[8px] text-indigo-500">✓</div>
-                    {f}
-                  </li>
-                ))}
-              </ul>
-              <button 
-                onClick={plan.p === 'Custom' ? () => window.open('https://wa.me/263772240081?text=I%20want%20to%20talk%20to%20sales%20about%20the%20Exec%20plan.') : () => window.open('https://wa.me/263772240081?text=Hi!%20I%20want%20to%20subscribe%20to%20the%20' + plan.n + '%20plan.', '_blank')}
-                className={`w-full py-4 rounded-2xl font-black text-xs transition-all ${plan.popular ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/30' : isDark ? 'bg-slate-800 text-white hover:bg-slate-700' : 'bg-indigo-500/5 text-indigo-500 hover:bg-indigo-500/10'}`}
-              >
-                {plan.p === 'Custom' ? 'Talk to Sales' : 'Get Started Now'}
-              </button>
-            </motion.div>
-          ))}
-        </div>
-      </section>
 
       {/* ─── MORE POWERFUL TOOLS TABS ─── */}
       <section className="tabs-section">
@@ -1286,44 +1259,67 @@ export default function LandingPage({ onGetStarted, onLogin, onDocumentation, us
                     </li>
                   ))}
                 </ul>
-                <button className="tab-cta">View All Integrations →</button>
+                <button className={cn("tab-cta", isDark ? "text-indigo-400" : "text-indigo-600")}>View All Integrations →</button>
               </div>
               <div className="visual-panel !p-0 overflow-hidden relative group flex flex-col items-center justify-center">
                 <div className="absolute inset-0 bg-grid opacity-10"></div>
                 
-                {/* Integration Grid (Documenso style) */}
+                {/* Integration Grid with Flowing Connections */}
                 <div className="relative z-10 w-full px-8 flex flex-col items-center gap-12">
-                   <div className="grid grid-cols-3 gap-6 w-full max-w-sm">
-                      {[
-                        { n: 'CABS', color: 'bg-blue-600', delay: 0 },
-                        { n: 'Sage', color: 'bg-emerald-600', delay: 0.1 },
-                        { n: 'Xero', color: 'bg-sky-500', delay: 0.2 },
-                        { n: 'CBZ', color: 'bg-red-600', delay: 0.3 },
-                        { n: 'EcoCash', color: 'bg-blue-500', delay: 0.4 },
-                        { n: 'Zapier', color: 'bg-orange-500', delay: 0.5 }
-                      ].map((tool, i) => (
+                   <div className="relative flex items-center justify-center">
+                     {/* Pulsing Central Hub */}
+                     <div className="relative w-20 h-20 rounded-3xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center z-20 backdrop-blur-xl">
+                        <Logo className="w-10 h-10 text-indigo-500" />
                         <motion.div 
-                          key={tool.n}
-                          initial={{ opacity: 0, scale: 0.8 }}
-                          whileInView={{ opacity: 1, scale: 1 }}
-                          transition={{ delay: tool.delay, duration: 0.5 }}
-                          className={cn(
-                            "aspect-square rounded-2xl border flex items-center justify-center flex-col transition-all group/icon",
-                            isDark ? "bg-slate-900/80 border-white/5 hover:border-indigo-500/50" : "bg-white border-indigo-500/10 hover:shadow-xl hover:shadow-indigo-500/10"
-                          )}
-                        >
-                           <div className={cn("w-10 h-10 rounded-xl mb-2 flex items-center justify-center text-xs font-black text-white shadow-lg shadow-black/20", tool.color)}>
-                              {tool.n[0]}
-                           </div>
-                           <span className={cn("text-[9px] font-black uppercase tracking-widest", isDark ? "text-slate-400" : "text-slate-500")}>{tool.n}</span>
-                        </motion.div>
-                      ))}
+                          animate={{ scale: [1, 1.5, 1], opacity: [0.1, 0, 0.1] }}
+                          transition={{ duration: 3, repeat: Infinity }}
+                          className="absolute inset-0 rounded-3xl bg-indigo-500"
+                        />
+                     </div>
+
+                     {/* Rotating Bank Icons */}
+                     <div className="absolute inset-0 w-[280px] h-[280px] -left-[100px] -top-[100px] pointer-events-none">
+                        {[
+                          { n: 'CABS', color: 'bg-blue-600', angle: 0 },
+                          { n: 'Sage', color: 'bg-emerald-600', angle: 60 },
+                          { n: 'Xero', color: 'bg-sky-500', angle: 120 },
+                          { n: 'CBZ', color: 'bg-red-600', angle: 180 },
+                          { n: 'EcoCash', color: 'bg-blue-500', angle: 240 },
+                          { n: 'Zapier', color: 'bg-orange-500', angle: 300 }
+                        ].map((tool, i) => (
+                          <motion.div 
+                            key={tool.n}
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
+                            className="absolute inset-0 flex items-center justify-center"
+                          >
+                            <motion.div 
+                              style={{ rotate: -360 }}
+                              animate={{ rotate: 0 }}
+                              transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
+                              className="absolute"
+                              initial={{ x: 120 * Math.cos(tool.angle * Math.PI / 180), y: 120 * Math.sin(tool.angle * Math.PI / 180) }}
+                            >
+                              <div className={cn(
+                                "w-12 h-12 rounded-2xl border flex items-center justify-center text-xs font-black text-white shadow-2xl transition-all hover:scale-110",
+                                tool.color,
+                                isDark ? "border-white/10" : "border-black/5"
+                              )}>
+                                {tool.n[0]}
+                              </div>
+                            </motion.div>
+                          </motion.div>
+                        ))}
+                     </div>
                    </div>
 
-                   <div className="text-center">
+                   <div className="text-center mt-12">
                       <div className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-500 mb-2">Integrations</div>
-                      <h3 className={cn("text-xl font-black mb-4", isDark ? "text-white" : "text-slate-900")}>Your Favorite Tools Work<br/>With ZivoHR</h3>
-                      <button className="px-6 py-2.5 rounded-xl bg-white dark:bg-slate-800 border dark:border-slate-700 text-[10px] font-black shadow-xl hover:scale-105 transition-transform">
+                      <h3 className={cn("text-xl md:text-2xl font-black mb-4", isDark ? "text-white" : "text-slate-900")}>Your Favorite Tools Work<br/>With ZivoHR</h3>
+                      <button className={cn(
+                        "px-6 py-3 rounded-xl font-black text-[11px] shadow-xl hover:scale-105 transition-all",
+                        isDark ? "bg-slate-800 text-white border border-white/5" : "bg-white text-slate-900 border border-indigo-500/10"
+                      )}>
                         Explore Marketplace
                       </button>
                    </div>
@@ -1595,55 +1591,75 @@ export default function LandingPage({ onGetStarted, onLogin, onDocumentation, us
               </div>
             </div>
 
-            {/* ══ SECURITY ══ */}
+            {/* ══ COMPLIANCE ══ */}
             <div className={cn("tab-panel", activeToolsTab === 'security' && "active")}>
               <div className="tab-info">
-                <div className="tab-icon-wrap bg-indigo-500/10 text-indigo-500">🔐</div>
-                <h2 className={isDark ? "text-white" : "text-slate-900"}>Highly Compliant</h2>
-                <p className={isDark ? "text-slate-400" : "text-slate-500"}>We treat your data with bank-grade integrity. Enterprise-level encryption and full local compliance right out of the box.</p>
+                <div className="tab-icon-wrap bg-indigo-500/10 text-indigo-500">🛡️</div>
+                <h2 className={isDark ? "text-white" : "text-slate-900"}>Regulatory Compliance</h2>
+                <p className={isDark ? "text-slate-400" : "text-slate-500"}>We treat your data with bank-grade integrity. Automated statutory reporting for ZIMRA, NSSA, and NEC right out of the box.</p>
                 <ul className="tab-list">
-                  {['AES-256 End-to-End Encryption', 'ZIMRA & NSSA Validated', 'SOC2 Compliant Infrastructure', 'Zero-Trust Data Protection'].map(item => (
+                  {['ZIMRA & NSSA Validated', 'Automated NEC Statutory Updates', 'Bank-Grade AES-256 Encryption', 'SOC2 Compliant Infrastructure'].map(item => (
                     <li key={item} className={isDark ? "text-slate-200" : "text-slate-900"}>
                       <span className="check-icon">✓</span>{item}
                     </li>
                   ))}
                 </ul>
-                <button className="tab-cta">Explore Security Pillar →</button>
+                <button className={cn("tab-cta", isDark ? "text-indigo-400" : "text-indigo-600")}>Explore Compliance Engine →</button>
               </div>
-              <div className="visual-panel !p-0 overflow-hidden relative flex flex-col items-center justify-center group bg-[#0f1115]">
+              <div className={cn("visual-panel !p-0 overflow-hidden relative flex flex-col items-center justify-center group transition-colors duration-500", isDark ? "bg-[#0b0e14]" : "bg-slate-50")}>
                 <div className="absolute inset-0 bg-grid opacity-[0.05]"></div>
                 
-                {/* Compliance Card (Documenso style) */}
+                {/* Compliance Card with enhanced animation */}
                 <motion.div 
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  className="relative z-10 w-full max-w-[300px] p-10 rounded-[2.5rem] bg-[#1a1c23] border border-white/10 shadow-2xl flex flex-col items-center text-center"
+                  initial={{ opacity: 0, y: 20, scale: 0.9 }}
+                  whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                  whileHover={{ translateY: -10 }}
+                  className={cn(
+                    "relative z-10 w-full max-w-[320px] p-8 md:p-10 rounded-[2.5rem] border shadow-2xl flex flex-col items-center text-center backdrop-blur-xl transition-all duration-500",
+                    isDark ? "bg-slate-900/60 border-white/10" : "bg-white border-indigo-500/10 shadow-indigo-500/10"
+                  )}
                 >
-                   <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center mb-8">
-                      <Shield className="w-6 h-6 text-emerald-500" />
-                   </div>
+                   <motion.div 
+                    animate={{ rotateY: [0, 180, 360] }}
+                    transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
+                    className="w-14 h-14 rounded-2xl bg-indigo-500/10 flex items-center justify-center mb-8"
+                   >
+                      <Shield className="w-7 h-7 text-indigo-500" />
+                   </motion.div>
                    
-                   <h3 className="text-2xl font-black text-white mb-2 italic">ZIMRA Compliant</h3>
-                   <p className="text-[11px] font-bold text-slate-500 mb-10 leading-relaxed">
-                     ZivoHR is a certified platform that establishes the criteria for high-integrity payroll and labor law compliance...
+                   <h3 className={cn("text-2xl font-black mb-3 tracking-tight", isDark ? "text-white" : "text-slate-900")}>ZIMRA Compliant</h3>
+                   <p className={cn("text-[11px] font-bold mb-10 leading-relaxed", isDark ? "text-slate-400" : "text-slate-600")}>
+                     ZivoHR is a high-integrity platform that establishes the criteria for Zimbabwean payroll and labor law compliance.
                    </p>
                    
                    {/* Glowing Status Badge */}
-                   <div className="w-full px-4 py-3 rounded-xl bg-emerald-500/5 border border-emerald-500/30 flex items-center justify-center gap-2 mb-8 shadow-[0_0_20px_rgba(16,185,129,0.1)]">
-                      <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_#10b981]"></div>
-                      <span className="text-[10px] font-black uppercase tracking-widest text-emerald-500">Status: Compliant</span>
+                   <div className="w-full px-5 py-4 rounded-2xl bg-emerald-500/5 border border-emerald-500/20 flex items-center justify-center gap-3 mb-8 shadow-lg">
+                      <motion.div 
+                        animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                        className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_12px_#10b981]"
+                      />
+                      <span className="text-[11px] font-black uppercase tracking-[0.2em] text-emerald-500">Verified: Compliant</span>
                    </div>
                    
-                   <button className="w-full py-4 rounded-2xl bg-white/5 border border-white/10 text-white font-black text-xs hover:bg-white/10 transition-colors">
+                   <button className={cn(
+                     "w-full py-4 rounded-2xl font-black text-xs transition-all",
+                     isDark ? "bg-white/5 border border-white/10 text-white hover:bg-white/10" : "bg-indigo-500/5 border border-indigo-500/10 text-indigo-600 hover:bg-indigo-500/10"
+                   )}>
                      Learn more
                    </button>
                 </motion.div>
 
                 {/* Technical Floating Elements */}
                 <motion.div 
+                   animate={{ rotate: -360 }}
+                   transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
+                   className={cn("absolute inset-0 opacity-[0.05] border-[1px] border-dashed rounded-full scale-[1.8]", isDark ? "border-indigo-500" : "border-indigo-300")}
+                />
+                <motion.div 
                    animate={{ rotate: 360 }}
-                   transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                   className="absolute inset-0 opacity-[0.03] border-[2px] border-dashed border-indigo-500 rounded-full scale-[1.5]"
+                   transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+                   className={cn("absolute inset-0 opacity-[0.03] border-[2px] border-dashed rounded-full scale-[1.2]", isDark ? "border-purple-500" : "border-purple-300")}
                 />
               </div>
             </div>
@@ -1675,219 +1691,268 @@ export default function LandingPage({ onGetStarted, onLogin, onDocumentation, us
           ))}
         </div>
 
-        <div className="tab-content !bg-transparent !border-0 min-h-[450px]">
-          {LIBRARY_TABS.map((tab) => (
-            <div key={tab.id} className={cn("tab-panel flex-col lg:flex-row gap-10", activeLibraryTab === tab.id && "active")}>
-              <div className="tab-info flex-1">
-                <div className="tab-icon-wrap bg-gradient-to-br from-indigo-500 to-purple-500 text-white shadow-lg">{tab.icon}</div>
-                <h2 className={isDark ? "text-white" : "text-slate-900"}>{tab.title}</h2>
-                <p className={isDark ? "text-slate-400" : "text-slate-500"}>{tab.sub}</p>
-                <div className="mt-8 space-y-4">
-                  {[
-                    'Legally Vetted',
-                    'Fully Customizable',
-                    'Instant Download',
-                    'Landmark Zimbabwe Cases Included'
-                  ].map(item => (
-                    <div key={item} className="flex items-center gap-3">
-                      <div className="text-indigo-500">✓</div>
-                      <span className={cn("text-xs font-bold", isDark ? "text-slate-300" : "text-slate-600")}>{item}</span>
-                    </div>
-                  ))}
+        <div className="tab-content !bg-transparent !border-0 min-h-[500px]">
+          <AnimatePresence mode="wait">
+            {LIBRARY_TABS.filter(t => t.id === activeLibraryTab).map((tab) => (
+              <motion.div 
+                key={tab.id}
+                initial={{ opacity: 0, scale: 0.95, filter: "blur(10px)" }}
+                animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+                exit={{ opacity: 0, scale: 1.05, filter: "blur(10px)" }}
+                transition={{ duration: 0.5, ease: [0.2, 0, 0, 1] }}
+                className="flex flex-col lg:flex-row gap-10 items-center"
+              >
+                <div className="tab-info flex-1 w-full text-left">
+                  <div className="tab-icon-wrap bg-gradient-to-br from-indigo-500 to-purple-500 text-white shadow-lg">{tab.icon}</div>
+                  <h2 className={cn("text-2xl md:text-3xl font-black mt-6 mb-4", isDark ? "text-white" : "text-slate-900")}>{tab.title}</h2>
+                  <p className={cn("text-base md:text-lg mb-8", isDark ? "text-slate-400" : "text-slate-500")}>{tab.sub}</p>
+                  <div className="space-y-4">
+                    {[
+                      'Legally Vetted',
+                      'Fully Customizable',
+                      'Instant Download',
+                      'Landmark Zimbabwe Cases Included'
+                    ].map(item => (
+                      <div key={item} className="flex items-center gap-3">
+                        <div className="text-indigo-500">✓</div>
+                        <span className={cn("text-sm font-bold", isDark ? "text-slate-300" : "text-slate-600")}>{item}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <button onClick={onLogin} className={cn(
+                    "mt-10 px-10 py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all",
+                    isDark ? "bg-white text-black hover:scale-105" : "bg-indigo-600 text-white shadow-xl shadow-indigo-600/20 hover:scale-105"
+                  )}>
+                    View {tab.label} Template →
+                  </button>
                 </div>
-                <button className="mt-10 px-8 py-4 rounded-2xl bg-indigo-500 text-white font-black text-xs shadow-lg shadow-indigo-500/20">View {tab.label} Template →</button>
-              </div>
-              <div className="visual-panel !p-0 overflow-hidden relative group">
-                <div className="absolute inset-0 bg-grid opacity-20"></div>
-                <div className="relative z-10 w-full h-full flex flex-col p-8 items-center justify-center">
-                   {/* Stacked Documents (Documenso style) */}
-                   <div className="relative h-48 w-full flex items-center justify-center perspective-[1000px] mb-8">
-                     {[1, 2, 3].map((i) => (
-                       <motion.div 
-                         key={i}
-                         animate={{ 
-                           rotateY: [i * -3, i * 3, i * -3],
-                           z: [i * -15, i * -10, i * -15],
-                           y: [i * 4, i * 1, i * 4]
-                         }}
-                         transition={{ duration: 5, repeat: Infinity, delay: i * 0.4, ease: "easeInOut" }}
-                         className={cn(
-                           "absolute w-44 h-56 rounded-2xl border p-5 shadow-2xl backdrop-blur-md",
-                           isDark ? "bg-slate-900 border-indigo-500/30" : "bg-white border-indigo-500/10",
-                           i === 3 ? "z-30" : i === 2 ? "z-20 opacity-70 translate-x-3" : "z-10 opacity-40 translate-x-6"
-                         )}
-                         style={{ transformStyle: 'preserve-3d' }}
-                       >
-                          <div className="flex justify-between items-center mb-4">
-                             <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-500">{tab.icon}</div>
-                             <div className="h-1.5 w-12 bg-indigo-500/20 rounded-full"></div>
-                          </div>
-                          <div className="space-y-3">
-                             <div className="h-2 w-3/4 bg-slate-200 dark:bg-slate-800 rounded-full"></div>
-                             <div className="space-y-1.5 opacity-60">
-                                <div className="h-1.5 w-full bg-slate-200 dark:bg-slate-800 rounded-full"></div>
-                                <div className="h-1.5 w-full bg-slate-200 dark:bg-slate-800 rounded-full"></div>
-                                <div className="h-1.5 w-4/12 bg-slate-200 dark:bg-slate-800 rounded-full"></div>
-                             </div>
-                             {i === 3 && (
-                               <motion.div 
-                                 animate={{ x: [-2, 2, -2] }}
-                                 transition={{ duration: 2, repeat: Infinity }}
-                                 className="mt-8 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between"
-                               >
-                                  <div className="flex gap-1">
-                                     <div className="w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center text-[6px] text-white">✓</div>
-                                     <span className="text-[8px] font-black uppercase text-slate-500 tracking-widest leading-none">Vetted</span>
-                                  </div>
-                                  <Download className="w-3.5 h-3.5 text-indigo-500 opacity-60" />
-                               </motion.div>
-                             )}
-                          </div>
-                       </motion.div>
-                     ))}
-                   </div>
-
-                   <button className="relative z-20 group-hover:scale-105 transition-transform px-6 py-2.5 rounded-xl bg-white dark:bg-slate-800 border dark:border-slate-700 text-[10px] font-black shadow-xl">
-                      Download Editable {tab.label}
-                   </button>
+                <div className="visual-panel !p-0 overflow-hidden relative group w-full lg:w-auto h-[400px] flex-1">
+                  <div className="absolute inset-0 bg-grid opacity-20"></div>
+                  <div className="relative z-10 w-full h-full flex flex-col p-8 items-center justify-center">
+                     {/* Stacked Documents (Documenso style) */}
+                     <div className="relative h-48 w-full flex items-center justify-center perspective-[1000px] mb-8">
+                       {[1, 2, 3].map((i) => (
+                         <motion.div 
+                           key={i}
+                           animate={{ 
+                             rotateY: [i * -3, i * 3, i * -3],
+                             z: [i * -15, i * -10, i * -15],
+                             y: [i * 4, i * 1, i * 4]
+                           }}
+                           transition={{ duration: 5, repeat: Infinity, delay: i * 0.4, ease: "easeInOut" }}
+                           className={cn(
+                             "absolute w-44 h-56 rounded-2xl border p-5 shadow-2xl backdrop-blur-md",
+                             isDark ? "bg-slate-900 border-indigo-500/30" : "bg-white border-indigo-500/10",
+                             i === 3 ? "z-30" : i === 2 ? "z-20 opacity-70 translate-x-3" : "z-10 opacity-40 translate-x-6"
+                           )}
+                           style={{ transformStyle: 'preserve-3d' }}
+                         >
+                            <div className="flex justify-between items-center mb-4">
+                               <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-500">{tab.icon}</div>
+                               <div className="h-1.5 w-12 bg-indigo-500/20 rounded-full"></div>
+                            </div>
+                            <div className="space-y-3">
+                               <div className="h-2 w-3/4 bg-slate-200 dark:bg-slate-800 rounded-full"></div>
+                               <div className="space-y-1.5 opacity-60">
+                                  <div className="h-1.5 w-full bg-slate-200 dark:bg-slate-800 rounded-full"></div>
+                                  <div className="h-1.5 w-full bg-slate-200 dark:bg-slate-800 rounded-full"></div>
+                                  <div className="h-1.5 w-4/12 bg-slate-200 dark:bg-slate-800 rounded-full"></div>
+                               </div>
+                               {i === 3 && (
+                                 <motion.div 
+                                   animate={{ x: [-2, 2, -2] }}
+                                   transition={{ duration: 2, repeat: Infinity }}
+                                   className="mt-8 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between"
+                                 >
+                                    <div className="flex gap-1">
+                                       <div className="w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center text-[6px] text-white">✓</div>
+                                       <span className="text-[8px] font-black uppercase text-slate-500 tracking-widest leading-none">Vetted</span>
+                                    </div>
+                                    <Download className="w-3.5 h-3.5 text-indigo-500 opacity-60" />
+                                 </motion.div>
+                               )}
+                            </div>
+                         </motion.div>
+                       ))}
+                     </div>
+  
+                     <button onClick={onLogin} className={cn(
+                       "relative z-20 hover:scale-105 transition-all px-8 py-3 rounded-xl font-black text-xs shadow-2xl",
+                       isDark ? "bg-slate-800 text-white border border-white/5" : "bg-white text-indigo-600 border border-indigo-500/10"
+                     )}>
+                        Download {tab.label} PDF
+                     </button>
+                  </div>
                 </div>
-              </div>
-            </div>
-          ))}
+              </motion.div>
+            ))}
+          </AnimatePresence>
         </div>
+
+
+
+
+
       </section>
 
       {/* ─── LABOR CASES ─── */}
-      <section id="labor-cases" className="py-20 md:py-32 px-4 md:px-6 bg-indigo-500/[0.02] border-y border-indigo-500/5 scroll-mt-24 overflow-hidden">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16">
-            <div className="max-w-xl">
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-[10px] font-black uppercase tracking-widest text-indigo-500 mb-6 font-mono">⚖️ Legal Intelligence</div>
-              <h2 className={cn("text-3xl md:text-5xl font-black mb-4 leading-tight", isDark ? 'text-white' : 'text-slate-900')}>Zimbabwean Labor<br className="hidden md:block" /> Case Library</h2>
-              <p className={cn("text-sm md:text-lg font-bold opacity-60", isDark ? "text-slate-400" : "text-slate-600")}>Stay informed with expert analysis of landmark Zimbabwean labor cases and their implications for your business.</p>
-            </div>
-            
-            <div className="flex gap-2">
-              {laborCases.map((_, i) => (
-                <button 
-                  key={i} 
-                  onClick={() => setActiveCaseIndex(i)}
-                  className={cn(
-                    "w-8 h-1 rounded-full transition-all duration-500",
-                    activeCaseIndex === i ? "bg-indigo-500 w-12" : "bg-indigo-500/20"
-                  )}
-                  aria-label={`Go to case ${i + 1}`}
-                />
-              ))}
-            </div>
+      <section id="labor-cases" className="py-20 md:py-36 px-4 md:px-6 bg-indigo-500/[0.01] border-y border-indigo-500/5 scroll-mt-24 overflow-hidden">
+        <div className="max-w-[1200px] mx-auto text-center">
+          <div className="mb-12 md:mb-20">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-[10px] font-black uppercase tracking-widest text-indigo-500 mb-6 font-mono">⚖️ Legal Intelligence</div>
+            <h2 className={cn("text-3xl md:text-6xl font-black mb-6 leading-tight tracking-tight px-4", isDark ? 'text-white' : 'text-slate-900')}>Zimbabwean Labor<br className="hidden md:block" /> Case Analysis</h2>
+            <p className={cn("text-sm md:text-xl font-bold opacity-60 max-w-2xl mx-auto px-4", isDark ? "text-slate-400" : "text-slate-600")}>Stay informed with expert analysis of landmark Zimbabwean labor cases and their implications for your business.</p>
           </div>
           
-          <div className="relative">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeCaseIndex}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.5, ease: [0.2, 0, 0, 1] }}
+          <div className="flex flex-wrap justify-center gap-3 md:gap-4 mb-16 md:mb-20 max-w-5xl mx-auto px-2">
+            {laborCases.map((c, i) => (
+              <button 
+                key={i} 
+                onClick={() => { setActiveCaseIndex(i); setCaseProgress(0); }}
                 className={cn(
-                  "relative p-6 md:p-14 rounded-[2rem] md:rounded-[2.5rem] border overflow-hidden flex flex-col lg:flex-row gap-8 md:gap-12 items-center",
-                  isDark ? 'bg-slate-900 border-white/5' : 'bg-white border-indigo-500/10 shadow-2xl shadow-indigo-500/5'
+                  "relative group px-4 md:px-6 py-3 md:py-4 rounded-xl md:rounded-2xl border transition-all flex items-center gap-3 overflow-hidden",
+                  activeCaseIndex === i 
+                    ? (isDark ? "bg-white/5 border-indigo-500/40" : "bg-indigo-500/5 border-indigo-500/30") 
+                    : (isDark ? "bg-transparent border-white/5 opacity-50 hover:opacity-100" : "bg-transparent border-slate-200 opacity-60 hover:opacity-100")
                 )}
               >
-                <div className="flex-1 w-full order-2 lg:order-1">
-                  <div className="flex flex-wrap items-center gap-3 mb-8">
-                    <div className="px-4 py-1.5 rounded-full bg-indigo-500/10 text-indigo-500 text-[10px] font-black uppercase tracking-widest leading-none">{laborCases[activeCaseIndex].cat}</div>
-                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 leading-none">
-                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                      <span className="text-[10px] font-black uppercase tracking-widest">Active Reference</span>
-                    </div>
+                <div className={cn(
+                  "relative w-6 h-6 md:w-8 md:h-8 rounded-full overflow-hidden border border-indigo-500/20",
+                  activeCaseIndex === i ? "bg-indigo-500" : "bg-slate-500/20"
+                )}>
+                  <img src={c.av} alt={c.judge} className="w-full h-full object-cover grayscale brightness-110" referrerPolicy="no-referrer" />
+                </div>
+                <div className="text-left">
+                  <div className={cn("text-[8px] md:text-[9px] font-black uppercase tracking-widest leading-none mb-1", activeCaseIndex === i ? "text-indigo-500" : "text-slate-500")}>{c.cat}</div>
+                  <div className={cn("text-[10px] md:text-xs font-black truncate max-w-[100px] md:max-w-[120px]", isDark ? "text-white" : "text-slate-900")}>{c.t}</div>
+                </div>
+                {activeCaseIndex === i && (
+                  <div className="absolute bottom-0 left-0 h-1 bg-indigo-500 transition-all duration-100" style={{ width: `${caseProgress}%` }} />
+                )}
+              </button>
+            ))}
+          </div>
+          
+          <div className="flex justify-center min-h-[440px] md:min-h-[400px]">
+            <AnimatePresence mode="wait">
+              <motion.div 
+                key={activeCaseIndex}
+                initial={{ opacity: 0, x: 40, filter: "blur(10px)" }}
+                animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
+                exit={{ opacity: 0, x: -40, filter: "blur(10px)" }}
+                transition={{ duration: 0.5, ease: [0.2, 0, 0, 1] }}
+                className="max-w-4xl w-full"
+              >
+                <div className="mb-10 group cursor-default">
+                  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 text-[10px] font-black uppercase tracking-widest mb-8">
+                     <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                     Active Case Reference
                   </div>
                   
-                  <h3 className={cn("text-2xl md:text-4xl font-black mb-4 leading-tight tracking-tight", isDark ? 'text-white' : 'text-slate-900')}>
+                  <h3 className={cn("text-3xl md:text-5xl font-black mb-6 leading-tight tracking-tight", isDark ? 'text-white' : 'text-slate-900')}>
                     {laborCases[activeCaseIndex].t}
                   </h3>
                   
-                  <div className="inline-flex items-center gap-3 px-4 py-2 rounded-xl bg-indigo-500/5 text-indigo-500 text-[11px] font-black uppercase tracking-[0.1em] mb-8 border border-indigo-500/10 font-mono">
+                  <div className="inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-indigo-500/5 text-indigo-500 text-sm md:text-base font-black uppercase tracking-[0.15em] mb-12 border border-indigo-500/10 font-mono">
                     {laborCases[activeCaseIndex].c}
                   </div>
                   
-                  <p className={cn("text-base md:text-xl font-bold leading-relaxed mb-10 opacity-70", isDark ? "text-slate-400" : "text-slate-600")}>
-                    {laborCases[activeCaseIndex].d}
-                  </p>
-                  
-                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-8 pt-10 border-t border-indigo-500/10">
-                    <div className="flex items-center gap-4">
-                      <div className="relative">
-                        <img src={laborCases[activeCaseIndex].av} alt={laborCases[activeCaseIndex].judge} className="w-12 h-12 rounded-full border-2 border-indigo-500/20 bg-indigo-500/5 shadow-lg" referrerPolicy="no-referrer" />
-                        <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 border-2 border-white dark:border-slate-900 flex items-center justify-center">
-                           <Shield className="w-2.5 h-2.5 text-white" />
-                        </div>
-                      </div>
-                      <div>
-                        <div className={cn("text-sm font-black", isDark ? "text-white" : "text-slate-900")}>{laborCases[activeCaseIndex].judge}</div>
-                        <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-none">Legal Analysis Expert</div>
-                      </div>
-                    </div>
-                    <button onClick={onLogin} className={cn(
-                      "group relative px-10 py-5 rounded-2xl font-black text-xs uppercase tracking-widest transition-all text-center overflow-hidden",
-                      isDark ? "bg-white text-black hover:scale-105" : "bg-indigo-600 text-white shadow-xl shadow-indigo-500/20 hover:scale-105"
-                    )}>
-                      <span className="relative z-10">Read Full Analysis →</span>
-                      <div className="absolute inset-x-0 bottom-0 h-0.5 bg-white/20 group-hover:h-full transition-all duration-300 pointer-events-none" />
-                    </button>
-                  </div>
-                </div>
-                
-                <div className="flex-1 w-full flex justify-center order-1 lg:order-2">
-                  <div className="relative w-full max-w-[400px] aspect-[4/5] rounded-[3rem] bg-gradient-to-br from-indigo-500/10 to-purple-500/10 border border-indigo-500/15 overflow-hidden group/visual p-1">
-                    <div className={cn("w-full h-full rounded-[2.8rem] flex flex-col p-8 items-center justify-center gap-8 transition-colors", isDark ? "bg-slate-900" : "bg-white")}>
-                       <div className="relative w-24 h-24 flex items-center justify-center">
-                          <motion.div 
-                            animate={{ rotate: 360 }}
-                            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                            className="absolute inset-0 rounded-full border-2 border-dashed border-indigo-500/30"
-                          />
-                          <FileText className="w-12 h-12 text-indigo-500" />
-                       </div>
-                       
-                       <div className="w-full space-y-4">
-                          {[70, 90, 80, 50].map((w, i) => (
-                             <motion.div 
-                               initial={{ width: 0 }}
-                               animate={{ width: `${w}%` }}
-                               key={i} 
-                               className="h-2 bg-indigo-500/10 rounded-full" 
-                             />
-                          ))}
-                       </div>
-                       
-                       <div className="flex gap-2">
-                          {[1,2,3].map(i => <div key={i} className="w-8 h-1 rounded-full bg-indigo-500/20" />)}
-                       </div>
-                    </div>
-                    {/* Floating elements */}
-                    <motion.div 
-                      animate={{ y: [0, -10, 0] }}
-                      transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                      className="absolute top-10 right-10 p-3 rounded-2xl bg-white dark:bg-slate-800 shadow-2xl border dark:border-slate-700"
-                    >
-                      <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-                    </motion.div>
-                    <motion.div 
-                      animate={{ y: [0, 10, 0] }}
-                      transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-                      className="absolute bottom-12 left-8 p-3 rounded-2xl bg-indigo-600 shadow-2xl text-white"
-                    >
-                      <Zap className="w-5 h-5" />
-                    </motion.div>
+                  <div className="relative max-w-3xl mx-auto">
+                    <p className={cn("text-lg md:text-2xl font-bold leading-relaxed mb-12 opacity-80", isDark ? "text-slate-400" : "text-slate-600")}>
+                      "{laborCases[activeCaseIndex].d}"
+                    </p>
+                    {/* Decorative quotes */}
+                    <div className="absolute -top-12 -left-4 text-9xl font-serif text-indigo-500/10 select-none">“</div>
+                    <div className="absolute -bottom-20 -right-4 text-9xl font-serif text-indigo-500/10 select-none">”</div>
                   </div>
                 </div>
 
-                <div className="absolute inset-0 bg-grid opacity-[0.03] pointer-events-none" />
+                <div className="flex flex-col items-center gap-10">
+                  <div className="flex flex-col items-center gap-4">
+                    <div className={cn(
+                      "relative w-24 h-24 rounded-full p-1 bg-gradient-to-br from-indigo-500 to-purple-600 shadow-2xl",
+                      isDark ? "shadow-indigo-500/20" : "shadow-indigo-500/10"
+                    )}>
+                      <div className="w-full h-full rounded-full overflow-hidden bg-white dark:bg-slate-900">
+                        <img 
+                          src={laborCases[activeCaseIndex].av} 
+                          alt={laborCases[activeCaseIndex].judge} 
+                          className="w-full h-full object-cover grayscale brightness-110" 
+                          referrerPolicy="no-referrer" 
+                        />
+                      </div>
+                      <div className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-emerald-500 border-4 border-white dark:border-slate-950 flex items-center justify-center shadow-lg">
+                        <Shield className="w-4 h-4 text-white" />
+                      </div>
+                    </div>
+                    <div className="text-center">
+                      <div className={cn("text-lg font-black", isDark ? "text-white" : "text-slate-900")}>{laborCases[activeCaseIndex].judge}</div>
+                      <div className="text-[11px] font-bold text-slate-500 uppercase tracking-[0.2em]">Legal Advisory Council</div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+                    <button onClick={onLogin} className={cn(
+                      "group px-12 py-5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-3",
+                      isDark ? "bg-white text-black hover:scale-105" : "bg-indigo-600 text-white shadow-xl shadow-indigo-600/20 hover:scale-105"
+                    )}>
+                      Access Complete Library <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                    </button>
+                    <button className={cn(
+                      "px-10 py-5 rounded-2xl border font-black text-xs uppercase tracking-[0.2em] transition-all",
+                      isDark ? "bg-white/5 border-white/10 text-white hover:bg-white/10" : "bg-transparent border-indigo-500/20 text-indigo-600 hover:bg-indigo-500/5 shadow-sm"
+                    )}>
+                      Full Analysis PDF
+                    </button>
+                  </div>
+                </div>
               </motion.div>
             </AnimatePresence>
           </div>
+        </div>
+      </section>
+
+
+      {/* ─── PRICING ─── */}
+      <section id="pricing" className="py-16 md:py-28 px-4 md:px-6 max-w-[1200px] mx-auto text-center scroll-mt-24">
+        <h2 className={`text-2xl md:text-4xl font-black mb-4 ${isDark ? 'text-white' : 'text-slate-900'}`}>Simple, <span className="text-indigo-500">Transparent</span> Pricing</h2>
+        <p className={`text-sm md:text-lg mb-10 md:mb-16 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Choose the plan that's right for your growing team. No hidden fees.</p>
+        
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+          {[
+            { n: 'Starter (Small)', p: '$30', d: 'Up to 20 employees. Perfect for small teams.', f: ['Up to 20 employees', 'Core HR features', 'Payroll Included', 'Email Support'] },
+            { n: 'Starter (Growth)', p: '$50', d: '21+ employees. Scale your operations.', f: ['21+ employees', 'Core HR features', 'Payroll Included', 'Priority Email Support'] },
+            { n: 'Pro', p: '$75', d: 'Advanced automation for modern teams.', f: ['All Starter features', 'Performance Reviews', 'Employee Engagement', 'HR Automation'], popular: true },
+            { n: 'Exec', p: 'Custom', d: 'Tailor-made solution with expert advice.', f: ['Unlimited employees', 'Specific HR Advice', 'Dedicated Account Manager', 'Custom Integrations'] }
+          ].map(plan => (
+            <motion.div 
+              key={plan.n}
+              whileHover={{ y: -5 }}
+              className={`p-6 md:p-8 rounded-3xl md:rounded-[2.5rem] border text-left flex flex-col h-full relative overflow-hidden ${plan.popular ? 'border-indigo-500 ring-4 ring-indigo-500/5' : isDark ? 'bg-slate-900/40 border-slate-800' : 'bg-white border-indigo-500/12 shadow-sm'}`}
+            >
+              {plan.popular && <div className="absolute top-4 right-4 px-3 py-1 rounded-full bg-indigo-500 text-white text-[8px] font-black uppercase tracking-widest">Popular</div>}
+              <h3 className={`text-base md:text-lg font-black mb-1 md:mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>{plan.n}</h3>
+              <p className="text-[9px] md:text-[10px] font-bold text-slate-500 mb-4 md:mb-6 leading-relaxed">{plan.d}</p>
+              <div className="flex items-baseline gap-1 mb-6 md:mb-8">
+                <span className={`text-3xl md:text-4xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{plan.p}</span>
+                {plan.p !== 'Custom' && <span className="text-[10px] md:text-xs font-bold text-slate-500">/mo</span>}
+              </div>
+              <ul className="space-y-3 md:space-y-4 mb-8 md:mb-10 flex-1">
+                {plan.f.map(f => (
+                  <li key={f} className="flex items-center gap-3 text-[10px] md:text-[11px] font-bold text-slate-500">
+                    <div className="w-4 h-4 rounded-full bg-indigo-500/10 flex items-center justify-center text-[8px] text-indigo-500 shrink-0">✓</div>
+                    <span className="leading-tight">{f}</span>
+                  </li>
+                ))}
+              </ul>
+              <button 
+                onClick={plan.p === 'Custom' ? () => window.open('https://wa.me/263772240081?text=I%20want%20to%20talk%20to%20sales%20about%20the%20Exec%20plan.') : () => window.open('https://wa.me/263772240081?text=Hi!%20I%20want%20to%20subscribe%20to%20the%20' + plan.n + '%20plan.', '_blank')}
+                className={`w-full py-3.5 md:py-4 rounded-xl md:rounded-2xl font-black text-[10px] md:text-xs transition-all ${plan.popular ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/30' : isDark ? 'bg-slate-800 text-white hover:bg-slate-700' : 'bg-indigo-500/5 text-indigo-500 hover:bg-indigo-500/10'}`}
+              >
+                {plan.p === 'Custom' ? 'Talk to Sales' : 'Get Started Now'}
+              </button>
+            </motion.div>
+          ))}
         </div>
       </section>
 
@@ -2038,14 +2103,14 @@ export default function LandingPage({ onGetStarted, onLogin, onDocumentation, us
       </section>
 
       {/* ─── FINAL CTA ─── */}
-      <section className="py-20 md:py-36 px-6">
-        <div className="max-w-[1200px] mx-auto rounded-[4rem] bg-indigo-600 p-12 md:p-24 text-center relative overflow-hidden shadow-2xl">
+      <section className="py-16 md:py-36 px-3 md:px-6">
+        <div className="max-w-[1200px] mx-auto rounded-[2rem] md:rounded-[4rem] bg-indigo-600 p-6 md:p-24 text-center relative overflow-hidden shadow-2xl">
           <div className="relative z-10">
-            <h2 className="text-4xl md:text-7xl font-black text-white leading-tight mb-8">Ready to write your <br /> <span className="text-indigo-200">success story?</span></h2>
-            <p className="text-indigo-100 text-lg md:text-xl font-bold max-w-2xl mx-auto mb-12">Join 500+ high-growth companies managing their workforce with the power of ZivoHR.</p>
-            <div className="flex flex-col sm:flex-row justify-center gap-4">
-              <button onClick={onGetStarted} className="px-12 py-5 rounded-3xl bg-white text-indigo-600 font-black text-lg shadow-xl shadow-black/10 hover:-translate-y-1 transition-all">Get Started for Free</button>
-              <button onClick={onLogin} className="px-12 py-5 rounded-3xl bg-indigo-500 text-white font-black text-lg border border-indigo-400 hover:bg-indigo-500/80 transition-all">Book a Demo</button>
+            <h2 className="text-3xl md:text-7xl font-black text-white leading-tight mb-6 md:mb-8">Ready to write your <br /> <span className="text-indigo-200">success story?</span></h2>
+            <p className="text-indigo-100 text-base md:text-xl font-bold max-w-2xl mx-auto mb-8 md:mb-12">Join 500+ high-growth companies managing their workforce with the power of ZivoHR.</p>
+            <div className="flex flex-row items-center justify-center gap-2 md:gap-4">
+              <button onClick={onGetStarted} className="flex-1 sm:flex-none px-4 py-4 md:px-12 md:py-5 rounded-xl md:rounded-3xl bg-white text-indigo-600 font-black text-[11px] md:text-lg shadow-xl shadow-black/10 hover:-translate-y-1 transition-all whitespace-nowrap">Get Started</button>
+              <button onClick={onLogin} className="flex-1 sm:flex-none px-4 py-4 md:px-12 md:py-5 rounded-xl md:rounded-3xl bg-indigo-500 text-white font-black text-[11px] md:text-lg border border-indigo-400 hover:bg-indigo-500/80 transition-all whitespace-nowrap">Book a Demo</button>
             </div>
           </div>
           <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 to-purple-600 opacity-50" />

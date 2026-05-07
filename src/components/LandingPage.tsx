@@ -328,7 +328,7 @@ export default function LandingPage({ onGetStarted, onLogin, onDocumentation, us
             {isDark ? <Sun className="w-5 h-5 text-amber-500" /> : <Moon className="w-5 h-5 text-indigo-500" />}
           </button>
           
-          <button onClick={handleGetStarted} className="px-4 md:px-6 py-2.5 rounded-full bg-indigo-600 text-white font-black text-xs md:text-sm shadow-indigo-600/25 shadow-lg hover:-translate-y-0.5 transition-all">
+          <button onClick={handleGetStarted} className="px-3.5 md:px-6 py-2.5 rounded-full bg-indigo-600 text-white font-black text-[11px] md:text-sm shadow-indigo-600/25 shadow-lg hover:-translate-y-0.5 transition-all">
             {user ? 'Dashboard' : 'Sign Up'}
           </button>
           
@@ -402,8 +402,8 @@ export default function LandingPage({ onGetStarted, onLogin, onDocumentation, us
             transition={{ delay: 0.3 }}
             className="flex flex-col sm:flex-row gap-4"
           >
-            <button onClick={handleGetStarted} className="px-10 py-5 rounded-3xl bg-indigo-600 text-white font-black text-lg shadow-xl shadow-indigo-600/20 hover:scale-105 transition-all">Start Free Trial</button>
-            <button onClick={handleTalkToSales} className={cn("px-10 py-5 rounded-3xl border font-black text-lg flex items-center justify-center gap-2 hover:bg-white/5 transition-all", isDark ? "border-white/10 text-white" : "border-indigo-500/10 text-indigo-600")}>Book Demo →</button>
+            <button onClick={handleGetStarted} className="px-6 md:px-10 py-4 md:py-5 rounded-2xl md:rounded-3xl bg-indigo-600 text-white font-black text-sm md:text-lg shadow-xl shadow-indigo-600/20 hover:scale-105 transition-all">Start Free Trial</button>
+            <button onClick={handleTalkToSales} className={cn("px-6 md:px-10 py-4 md:py-5 rounded-2xl md:rounded-3xl border font-black text-sm md:text-lg flex items-center justify-center gap-2 hover:bg-white/5 transition-all", isDark ? "border-white/10 text-white" : "border-indigo-500/10 text-indigo-600")}>Book Demo →</button>
           </motion.div>
           
           <motion.div 
@@ -451,12 +451,12 @@ export default function LandingPage({ onGetStarted, onLogin, onDocumentation, us
                 <div className="grid grid-cols-3 gap-2">
                   {[
                     { l: 'Employees', v: '124' },
-                    { l: 'Active Jobs', v: '8' },
-                    { l: 'Satisfaction', v: '94%' }
+                    { l: 'Jobs', v: '8', full: 'Active Jobs' },
+                    { l: 'Rating', v: '94%', full: 'Satisfaction' }
                   ].map(s => (
-                    <div key={s.l} className={`p-3 rounded-xl border ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-gradient-to-br from-indigo-500/7 to-purple-500/4 border-indigo-500/10'}`}>
-                      <div className="text-[8px] font-black uppercase tracking-widest text-indigo-400 mb-1">{s.l}</div>
-                      <div className={`text-xl font-black ${isDark ? 'text-indigo-300' : 'text-indigo-800'}`}>{s.v}</div>
+                    <div key={s.l} className={`p-2.5 md:p-3 rounded-xl border flex flex-col justify-center ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-gradient-to-br from-indigo-500/7 to-purple-500/4 border-indigo-500/10'}`}>
+                      <div className="text-[7px] md:text-[8px] font-black uppercase tracking-widest text-indigo-400 mb-1 truncate">{s.full || s.l}</div>
+                      <div className={`text-base md:text-xl font-black ${isDark ? 'text-indigo-300' : 'text-indigo-800'}`}>{s.v}</div>
                     </div>
                   ))}
                 </div>
@@ -1791,7 +1791,7 @@ export default function LandingPage({ onGetStarted, onLogin, onDocumentation, us
                 exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.5, ease: [0.2, 0, 0, 1] }}
                 className={cn(
-                  "relative p-8 md:p-14 rounded-[2.5rem] border overflow-hidden flex flex-col lg:flex-row gap-12 items-center",
+                  "relative p-6 md:p-14 rounded-[2rem] md:rounded-[2.5rem] border overflow-hidden flex flex-col lg:flex-row gap-8 md:gap-12 items-center",
                   isDark ? 'bg-slate-900 border-white/5' : 'bg-white border-indigo-500/10 shadow-2xl shadow-indigo-500/5'
                 )}
               >

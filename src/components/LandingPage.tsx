@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Shield, Zap, Users, BarChart3, ChevronRight, Star, CheckCircle2, ChevronDown, CreditCard, Menu, X, MessageCircle, Sparkles, FileText, Heart, PenTool, Book, Moon, Sun } from 'lucide-react';
+import { Shield, Zap, Users, BarChart3, ChevronRight, Star, CheckCircle2, ChevronDown, CreditCard, Menu, X, MessageCircle, Sparkles, FileText, Heart, PenTool, Book, Moon, Sun, Download } from 'lucide-react';
 import { motion, AnimatePresence, useScroll, useSpring } from 'motion/react';
 import { cn } from '../lib/utils';
 import { Logo } from './Logo';
@@ -52,8 +52,26 @@ const FEATURE_TABS = [
   { id: 'engagement', icon: '⭐', label: 'Engagement', title: 'Employee Engagement', sub: 'Listen to your employees and build a workplace they love.' }
 ];
 
+const TOOLS_TABS = [
+  { id: 'automation', icon: '⚙️', label: 'Automation', title: 'HR Automation', sub: 'Custom workflows for any HR process. From leave approvals to asset requests.' },
+  { id: 'bank', icon: '🏦', label: 'Banking', title: 'Bank Export Engine', sub: 'Ready-to-use export files for CABS, Nedbank, and many more Zimbabwean banks.' },
+  { id: 'vault', icon: '🔒', label: 'Vault', title: 'The Vault', sub: 'Encrypted storage for employee contracts, IDs, and sensitive documents.' },
+  { id: 'asset', icon: '💻', label: 'IT Asset', title: 'Asset & IT Shield', sub: 'Track laptops, hardware, and software licenses with full lifecycle management.' },
+  { id: 'api', icon: '🔌', label: 'API', title: 'Expert API', sub: 'Connect ZivoHR with your existing ERP or accounting software seamlessly.' },
+  { id: 'security', icon: '🔐', label: 'Security', title: 'Security First', sub: 'Enterprise-grade encryption and secure cloud infrastructure for your data.' }
+];
+
+const LIBRARY_TABS = [
+  { id: 'contracts', icon: '📄', label: 'Contracts', title: 'Employment Contracts', sub: 'Standard and fixed-term contract templates compliant with the Labor Act.' },
+  { id: 'policy', icon: '🛡️', label: 'Policy', title: 'HR Policy Manual', sub: 'A complete guide to workplace policies, from leave to disciplinary procedures.' },
+  { id: 'review', icon: '📊', label: 'Reviews', title: 'Performance Review', sub: 'Templates and frameworks for effective employee evaluations.' },
+  { id: 'disciplinary', icon: '⚖️', label: 'Discipline', title: 'Disciplinary Code', sub: 'Step-by-step guides for handling workplace misconduct fairly.' }
+];
+
 const TAB_DURATION = 6000;
 const TAB_ORDER = FEATURE_TABS.map(t => t.id);
+const TOOLS_ORDER = TOOLS_TABS.map(t => t.id);
+const LIBRARY_ORDER = LIBRARY_TABS.map(t => t.id);
 
 export default function LandingPage({ onGetStarted, onLogin, onDocumentation, user, onGoToDashboard }: LandingPageProps) {
   const { theme, toggleTheme } = useTheme();
@@ -62,6 +80,63 @@ export default function LandingPage({ onGetStarted, onLogin, onDocumentation, us
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeFeatureTab, setActiveFeatureTab] = useState('hiring');
   const [progress, setProgress] = useState(0);
+  
+  const [activeToolsTab, setActiveToolsTab] = useState('automation');
+  const [toolsProgress, setToolsProgress] = useState(0);
+
+  const [activeLibraryTab, setActiveLibraryTab] = useState('contracts');
+  const [libraryProgress, setLibraryProgress] = useState(0);
+
+  const [activeCaseIndex, setActiveCaseIndex] = useState(0);
+  const laborCases = [
+    { 
+      t: 'Retrenchment Procedures', 
+      c: 'Nyamande & Anor v Zuva Petroleum', 
+      d: 'A landmark case that redefined termination on notice, leading to immediate legislative reforms in Zimbabwean labor law.', 
+      cat: 'Termination', 
+      judge: 'Hon. Justice Makarau',
+      av: 'https://api.dicebear.com/9.x/micah/svg?seed=Justice'
+    },
+    { 
+      t: 'Fixed Term Contracts', 
+      c: 'Magodora & Ors v Care International', 
+      d: 'Analysis of legitimate expectation of renewal and strict interpretation of fixed-term contracts in the Zimbabwean context.', 
+      cat: 'Contracts', 
+      judge: 'Advocate L. Uriri',
+      av: 'https://api.dicebear.com/9.x/micah/svg?seed=Legal'
+    },
+    { 
+      t: 'Unfair Dismissal', 
+      c: 'Zimasco v Marikano', 
+      d: 'Detailed exploration of procedural versus substantive fairness and the Labor Court powers in reinstatement.', 
+      cat: 'Discipline', 
+      judge: 'Dr. G. Madhuku',
+      av: 'https://api.dicebear.com/9.x/micah/svg?seed=Expert'
+    },
+    { 
+      t: 'Salaries & Benefits', 
+      c: 'Dube v PSMAS', 
+      d: 'Critical analysis of collective bargaining agreements and the employer capability to vary salaries unilaterally.', 
+      cat: 'Remuneration', 
+      judge: 'Hon. Justice Gwaunza',
+      av: 'https://api.dicebear.com/9.x/micah/svg?seed=Gwaunza'
+    },
+    { 
+      t: 'Constructive Dismissal', 
+      c: 'Chirimuuta v ZUPCO', 
+      d: 'Examines the high threshold for proving employer-forced resignation in the Supreme Court.', 
+      cat: 'Termination', 
+      judge: 'Hon. Justice Hlatshwayo',
+      av: 'https://api.dicebear.com/9.x/micah/svg?seed=Hlatshwayo'
+    }
+  ];
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setActiveCaseIndex((prev) => (prev + 1) % laborCases.length);
+    }, 6000);
+    return () => clearInterval(timer);
+  }, [laborCases.length]);
 
   // ─── WHATSAPP CHAT LOGIC ───
   const [chatMessages, setChatMessages] = useState<any[]>([]);
@@ -142,11 +217,36 @@ export default function LandingPage({ onGetStarted, onLogin, onDocumentation, us
 
   useEffect(() => {
     const timer = setInterval(() => {
+      // Feature Tabs Progress
       setProgress(prev => {
         if (prev >= 100) {
           setActiveFeatureTab(current => {
             const nextIdx = (TAB_ORDER.indexOf(current) + 1) % TAB_ORDER.length;
             return TAB_ORDER[nextIdx];
+          });
+          return 0;
+        }
+        return prev + 1;
+      });
+
+      // Tools Tabs Progress
+      setToolsProgress(prev => {
+        if (prev >= 100) {
+          setActiveToolsTab(current => {
+            const nextIdx = (TOOLS_ORDER.indexOf(current) + 1) % TOOLS_ORDER.length;
+            return TOOLS_ORDER[nextIdx];
+          });
+          return 0;
+        }
+        return prev + 1;
+      });
+
+      // Library Tabs Progress
+      setLibraryProgress(prev => {
+        if (prev >= 100) {
+          setActiveLibraryTab(current => {
+            const nextIdx = (LIBRARY_ORDER.indexOf(current) + 1) % LIBRARY_ORDER.length;
+            return LIBRARY_ORDER[nextIdx];
           });
           return 0;
         }
@@ -211,42 +311,71 @@ export default function LandingPage({ onGetStarted, onLogin, onDocumentation, us
       <div className="orb orb3"></div>
 
       {/* ─── NAV ─── */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 md:px-10 md:py-5 border-b backdrop-blur-xl transition-all duration-300 ${isDark ? 'bg-slate-950/80 border-slate-800' : 'bg-[#f0f0ff]/85 border-indigo-500/12'}`}>
+      <nav className={`fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 md:px-10 py-4 md:py-5 border-b backdrop-blur-xl transition-all duration-300 ${isDark ? 'bg-slate-950/80 border-slate-800' : 'bg-[#f0f0ff]/85 border-indigo-500/12'}`}>
         <div className="flex items-center gap-3 cursor-pointer group" onClick={() => scrollToSection('hero')}>
           <Logo className="w-8 h-8 md:w-10 md:h-10 transition-transform group-hover:scale-110" />
           <div className={`text-xl md:text-2xl font-black tracking-tighter ${isDark ? 'text-white' : 'text-slate-900'}`}>Zivo<span className="text-indigo-500">HR</span></div>
         </div>
         
-        <div className="flex items-center gap-4 md:gap-7">
-          <div className="hidden md:flex items-center gap-7">
+        <div className="flex items-center gap-3 md:gap-7">
+          <div className="hidden lg:flex items-center gap-7">
             <button onClick={() => scrollToSection('features')} className="text-[13px] font-bold text-indigo-500 hover:opacity-70 transition-opacity">Features</button>
             <button onClick={() => scrollToSection('pricing')} className="text-[13px] font-bold text-indigo-500 hover:opacity-70 transition-opacity">Pricing</button>
             <button onClick={onDocumentation} className="text-[13px] font-bold text-indigo-500 hover:opacity-70 transition-opacity">Documentation</button>
           </div>
           
           <button onClick={toggleTheme} className={`w-10 h-10 rounded-xl border flex items-center justify-center text-lg transition-all hover:scale-110 ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white/75 border-indigo-500/12 shadow-sm'}`}>
-            {isDark ? '☀️' : '🌙'}
+            {isDark ? <Sun className="w-5 h-5 text-amber-500" /> : <Moon className="w-5 h-5 text-indigo-500" />}
           </button>
           
-          {user ? (
-            <button onClick={onGoToDashboard} className="px-5 py-2.5 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-black text-xs md:text-sm shadow-indigo-500/35 shadow-lg hover:-translate-y-0.5 transition-transform">
-              Dashboard
-            </button>
-          ) : (
-            <button onClick={onLogin} className="px-5 py-2.5 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-black text-xs md:text-sm shadow-indigo-500/35 shadow-lg hover:-translate-y-0.5 transition-transform">
-              Sign Up Free
-            </button>
-          )}
+          <button onClick={handleGetStarted} className="px-4 md:px-6 py-2.5 rounded-full bg-indigo-600 text-white font-black text-xs md:text-sm shadow-indigo-600/25 shadow-lg hover:-translate-y-0.5 transition-all">
+            {user ? 'Dashboard' : 'Sign Up'}
+          </button>
+          
+          <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="lg:hidden w-10 h-10 rounded-xl border flex items-center justify-center transition-all bg-indigo-500/5 border-indigo-500/10">
+            {isMobileMenuOpen ? <X className="w-5 h-5 text-indigo-500" /> : <Menu className="w-5 h-5 text-indigo-500" />}
+          </button>
         </div>
       </nav>
 
+      {/* ─── MOBILE MENU ─── */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className={cn("fixed inset-0 z-40 lg:hidden flex flex-col pt-24 px-6 gap-6", isDark ? "bg-slate-950" : "bg-white")}
+          >
+            {[
+              { label: 'Features', id: 'features' },
+              { label: 'Labor Cases', id: 'labor-cases' },
+              { label: 'Pricing', id: 'pricing' },
+              { label: 'FAQ', id: 'faq' }
+            ].map((link) => (
+              <button 
+                key={link.id} 
+                onClick={() => scrollToSection(link.id)}
+                className={cn("text-2xl font-black text-left", isDark ? "text-white" : "text-slate-900")}
+              >
+                {link.label}
+              </button>
+            ))}
+            <div className="mt-4 pt-10 border-t border-indigo-500/10 flex flex-col gap-4">
+              <button onClick={onLogin} className="w-full py-5 rounded-2xl bg-indigo-600 text-white font-black">Login to Account</button>
+              <button onClick={onDocumentation} className={cn("w-full py-5 rounded-2xl border font-black", isDark ? "border-white/10 text-white" : "border-indigo-500/10 text-indigo-600")}>Read Docs</button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* ─── HERO ─── */}
-      <section id="hero" className="relative pt-32 md:pt-40 pb-16 md:pb-24 px-6 max-w-[1200px] mx-auto grid lg:grid-cols-[1fr_1.1fr] gap-12 md:gap-14 items-center">
-        <div>
+      <section id="hero" className="relative pt-32 md:pt-48 pb-16 md:pb-32 px-4 md:px-6 max-w-7xl mx-auto grid lg:grid-cols-[1fr_1.1fr] gap-12 md:gap-20 items-center overflow-hidden lg:overflow-visible">
+        <div className="relative z-10">
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-indigo-500/20 bg-indigo-500/8 text-[11px] font-black uppercase tracking-widest text-indigo-500 mb-6"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-indigo-500/20 bg-indigo-500/8 text-[10px] md:text-[11px] font-black uppercase tracking-widest text-indigo-500 mb-8"
           >
             ✦ Trusted by leading African companies
           </motion.div>
@@ -254,27 +383,27 @@ export default function LandingPage({ onGetStarted, onLogin, onDocumentation, us
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className={`text-4xl md:text-6xl lg:text-7xl font-black leading-[1.05] tracking-tight mb-6 ${isDark ? 'text-white' : 'text-slate-900'}`}
+            className={`text-4xl md:text-6xl xl:text-8xl font-black leading-[1.02] tracking-tight mb-8 ${isDark ? 'text-white' : 'text-slate-900'}`}
           >
-            Your <span className="bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-400 bg-clip-text text-transparent">All-in-One HR Platform</span> for SMEs
+            Your <span className="bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-400 bg-clip-text text-transparent">Integrated HR Platform</span>
           </motion.h1>
           <motion.p 
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className={`text-lg md:text-xl leading-relaxed max-w-[460px] mb-10 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}
+            className={`text-lg md:text-xl xl:text-2xl leading-relaxed max-w-[500px] mb-12 font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}
           >
-            ZivoHR is the all-in-one platform built specifically for SMEs in Zimbabwe and Africa. Manage hiring, payroll, and engagement — all in one place.
+            ZivoHR is the high-integrity platform built for the Zimbabwean market. Manage payroll, hiring, and compliance — all from one dashboard.
           </motion.p>
           
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.3 }}
-            className="flex flex-wrap gap-4"
+            className="flex flex-col sm:flex-row gap-4"
           >
-            <button onClick={handleGetStarted} className="px-8 py-4 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-black shadow-indigo-500/38 shadow-lg hover:-translate-y-1 transition-all">Start Free Trial</button>
-            <button onClick={handleTalkToSales} className={`px-8 py-4 rounded-full border font-black flex items-center gap-2 hover:-translate-y-1 transition-all ${isDark ? 'bg-slate-800 border-slate-700 text-indigo-400' : 'bg-white border-indigo-500/12 text-indigo-500 shadow-sm'}`}>Book a Demo →</button>
+            <button onClick={handleGetStarted} className="px-10 py-5 rounded-3xl bg-indigo-600 text-white font-black text-lg shadow-xl shadow-indigo-600/20 hover:scale-105 transition-all">Start Free Trial</button>
+            <button onClick={handleTalkToSales} className={cn("px-10 py-5 rounded-3xl border font-black text-lg flex items-center justify-center gap-2 hover:bg-white/5 transition-all", isDark ? "border-white/10 text-white" : "border-indigo-500/10 text-indigo-600")}>Book Demo →</button>
           </motion.div>
           
           <motion.div 
@@ -378,136 +507,6 @@ export default function LandingPage({ onGetStarted, onLogin, onDocumentation, us
             </div>
           </div>
         </motion.div>
-      </section>
-
-      {/* ─── TRUSTED BY ─── */}
-      <section className={`border-y transition-colors overflow-hidden ${isDark ? 'bg-slate-950/50 border-slate-800' : 'bg-white/35 border-indigo-500/12 backdrop-blur-md'}`}>
-        <div className="max-w-[1200px] mx-auto px-10 py-10 md:py-14 text-center">
-          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-400 mb-10">Trusted by leading African organizations</p>
-          <div className="flex flex-wrap justify-center items-center gap-10 md:gap-20">
-            {['First Horizon', 'NeoX Solar', 'TEI Oils', 'Strategy Connect', 'Bafang Transport'].map(name => (
-              <div key={name} className="text-base md:text-xl font-black tracking-tight bg-gradient-to-br from-indigo-500 to-purple-500 bg-clip-text text-transparent opacity-60 hover:opacity-100 transition-opacity cursor-default">
-                {name}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ─── BUILT FOR AFRICA ─── */}
-      <section className="py-20 md:py-28 px-6 max-w-[1200px] mx-auto">
-        <div className="text-center mb-16">
-          <motion.h2 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            className={`text-3xl md:text-5xl font-black mb-4 ${isDark ? 'text-white' : 'text-slate-900'}`}
-          >
-            Built for <span className="text-indigo-500">the Way Africa Works</span>
-          </motion.h2>
-          <motion.p 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className={`text-lg max-w-[520px] mx-auto ${isDark ? 'text-slate-400' : 'text-slate-500'}`}
-          >
-            Everything small and medium-sized businesses need to simplify and scale HR — localized for the African market.
-          </motion.p>
-        </div>
-        
-        <div className="grid md:grid-cols-2 gap-6">
-          <motion.div 
-            initial={{ opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            className={`p-8 md:p-10 rounded-[2.5rem] border transition-all hover:-translate-y-1 ${isDark ? 'bg-slate-900/40 border-slate-800 hover:border-indigo-500/50' : 'bg-white/75 border-indigo-500/12 shadow-sm hover:shadow-xl'}`}
-          >
-            <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-2xl mb-6">👥</div>
-            <h3 className={`text-xl font-bold mb-4 ${isDark ? 'text-white' : 'text-slate-900'}`}>Smart Recruitment</h3>
-            <ul className="space-y-3 mb-8">
-              {['Customizable Hiring Pipelines', 'AI-Powered Candidate Screening', 'Automated Onboarding Workflows'].map(l => (
-                <li key={l} className="flex items-center gap-3 text-sm font-bold text-slate-500">
-                  <div className="w-5 h-5 rounded-full bg-indigo-500/10 flex items-center justify-center text-[10px] text-indigo-500">✓</div>
-                  {l}
-                </li>
-              ))}
-            </ul>
-            <button className="px-6 py-2.5 rounded-full bg-indigo-500 text-white font-black text-xs hover:opacity-90 transition-opacity">See More →</button>
-            
-            <div className={`mt-8 rounded-2xl border p-4 h-36 relative overflow-hidden ${isDark ? 'bg-slate-950 border-slate-800' : 'bg-white border-indigo-500/10'}`}>
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-[10px] font-black text-indigo-400">ZivoHR</span>
-                <span className="text-[8px] font-black uppercase tracking-widest text-indigo-500 bg-indigo-500/10 px-2 py-1 rounded-full">Candidate</span>
-              </div>
-              <div className="space-y-4">
-                {[
-                  { n: 'Tendai', c: '6366f1' },
-                  { n: 'Rudo', c: '059669' },
-                  { n: 'Farai', c: 'f59e0b' }
-                ].map((p, i) => (
-                  <div key={i} className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-slate-100 p-0.5 border border-indigo-500/20 overflow-hidden shadow-sm">
-                      <img 
-                        src={`https://api.dicebear.com/9.x/notionists/svg?seed=${p.n}&backgroundColor=${p.c}&scale=100`} 
-                        alt={p.n} 
-                        className="w-full h-full object-cover" 
-                      />
-                    </div>
-                    <div className={`h-2 flex-1 rounded-full ${isDark ? 'bg-slate-800' : 'bg-indigo-500/10'}`} style={{ width: i === 2 ? '50%' : '80%' }} />
-                    <div className={`h-2 w-10 rounded-full ${isDark ? 'bg-slate-900' : (i === 1 ? 'bg-indigo-500/40' : 'bg-emerald-500/20')}`} />
-                  </div>
-                ))}
-              </div>
-            </div>
-          </motion.div>
-
-          <motion.div 
-            initial={{ opacity: 0, x: 20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            className={`p-8 md:p-10 rounded-[2.5rem] border transition-all hover:-translate-y-1 ${isDark ? 'bg-slate-900/40 border-slate-800 hover:border-indigo-500/50' : 'bg-white/75 border-indigo-500/12 shadow-sm hover:shadow-xl'}`}
-          >
-            <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-2xl mb-6">💳</div>
-            <h3 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>Payroll & Expense</h3>
-            <p className="text-[11px] font-black text-indigo-400 uppercase tracking-widest mb-4">Automated Financials</p>
-            <ul className="space-y-3 mb-8">
-              {['Automated Payroll Processing', 'Expense Reimbursements', 'Tax Compliance', 'Benefits Administration'].map(l => (
-                <li key={l} className="flex items-center gap-3 text-sm font-bold text-slate-500">
-                  <div className="w-5 h-5 rounded-full bg-indigo-500/10 flex items-center justify-center text-[10px] text-indigo-500">✓</div>
-                  {l}
-                </li>
-              ))}
-            </ul>
-            <button className="px-6 py-2.5 rounded-full bg-indigo-500 text-white font-black text-xs hover:opacity-90 transition-opacity">See More →</button>
-            <div className="mt-8 flex items-end gap-1.5 h-16">
-              {[40, 75, 50, 90, 65, 80].map((h, i) => (
-                <div key={i} className={`flex-1 rounded-t-[4px] ${i === 3 ? 'bg-gradient-to-t from-indigo-500 to-purple-500' : isDark ? 'bg-indigo-500/30' : 'bg-indigo-500/20'}`} style={{ height: `${h}%` }} />
-              ))}
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* ─── COMPLIANCE BANNER ─── */}
-      <section className="px-6 pb-20 md:pb-28">
-        <div className="max-w-[1200px] mx-auto rounded-[2.5rem] bg-gradient-to-br from-[#1e1b4b] via-[#312e81] to-[#3730a3] p-10 md:p-16 grid lg:grid-cols-2 gap-12 items-center relative overflow-hidden shadow-2xl">
-          <div className="relative z-10">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-400/15 border border-slate-400/20 text-[10px] font-black uppercase tracking-widest text-[#a5b4fc] mb-6">🛡️ Secure & Compliant</div>
-            <h2 className="text-3xl md:text-5xl font-black text-white leading-tight mb-4">Secure Payroll & Compliance</h2>
-            <p className="text-slate-300 text-lg leading-relaxed mb-10">Run payroll, manage NSSA contributions, and stay compliant with local labor laws — all in one powerful, easy-to-use platform.</p>
-            <div className="flex flex-wrap gap-4">
-              <button onClick={handleGetStarted} className="px-8 py-4 rounded-[1rem] bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-black shadow-lg shadow-indigo-500/50 hover:-translate-y-0.5 transition-transform">Start Free Trial</button>
-              <button onClick={handleTalkToSales} className="px-8 py-4 rounded-[1rem] bg-white/10 border border-white/20 text-white font-black hover:bg-white/20 transition-all">Book a Demo →</button>
-            </div>
-          </div>
-          <div className="flex justify-center items-center relative">
-            <div className="w-60 h-60 md:w-80 md:h-80 border border-indigo-400/15 rounded-full flex items-center justify-center animate-[pulse_3s_infinite]">
-              <div className="w-48 h-48 md:w-64 md:h-64 border border-indigo-400/20 rounded-full flex items-center justify-center animate-[pulse_3s_infinite_0.5s]">
-                <div className="w-32 h-32 md:w-44 md:h-44 border border-indigo-400/25 rounded-full flex items-center justify-center animate-[pulse_3s_infinite_1s]">
-                  <div className="text-6xl md:text-7xl">🛡️</div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-[#a5b4fc]/15 to-transparent pointer-events-none" />
-        </div>
       </section>
 
       {/* ─── FEATURES TABS ─── */}
@@ -883,6 +882,136 @@ export default function LandingPage({ onGetStarted, onLogin, onDocumentation, us
         </div>
       </section>
 
+      {/* ─── TRUSTED BY ─── */}
+      <section className={`border-y transition-colors overflow-hidden ${isDark ? 'bg-slate-950/50 border-slate-800' : 'bg-white/35 border-indigo-500/12 backdrop-blur-md'}`}>
+        <div className="max-w-[1200px] mx-auto px-10 py-10 md:py-14 text-center">
+          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-400 mb-10">Trusted by leading African organizations</p>
+          <div className="flex flex-wrap justify-center items-center gap-10 md:gap-20">
+            {['First Horizon', 'NeoX Solar', 'TEI Oils', 'Strategy Connect', 'Bafang Transport'].map(name => (
+              <div key={name} className="text-base md:text-xl font-black tracking-tight bg-gradient-to-br from-indigo-500 to-purple-500 bg-clip-text text-transparent opacity-60 hover:opacity-100 transition-opacity cursor-default">
+                {name}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── BUILT FOR AFRICA ─── */}
+      <section className="py-20 md:py-28 px-6 max-w-[1200px] mx-auto">
+        <div className="text-center mb-16">
+          <motion.h2 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            className={`text-3xl md:text-5xl font-black mb-4 ${isDark ? 'text-white' : 'text-slate-900'}`}
+          >
+            Built for <span className="text-indigo-500">the Way Africa Works</span>
+          </motion.h2>
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className={`text-lg max-w-[520px] mx-auto ${isDark ? 'text-slate-400' : 'text-slate-500'}`}
+          >
+            Everything small and medium-sized businesses need to simplify and scale HR — localized for the African market.
+          </motion.p>
+        </div>
+        
+        <div className="grid md:grid-cols-2 gap-6">
+          <motion.div 
+            initial={{ opacity: 0, x: -20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            className={`p-8 md:p-10 rounded-[2.5rem] border transition-all hover:-translate-y-1 ${isDark ? 'bg-slate-900/40 border-slate-800 hover:border-indigo-500/50' : 'bg-white/75 border-indigo-500/12 shadow-sm hover:shadow-xl'}`}
+          >
+            <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-2xl mb-6">👥</div>
+            <h3 className={`text-xl font-bold mb-4 ${isDark ? 'text-white' : 'text-slate-900'}`}>Smart Recruitment</h3>
+            <ul className="space-y-3 mb-8">
+              {['Customizable Hiring Pipelines', 'AI-Powered Candidate Screening', 'Automated Onboarding Workflows'].map(l => (
+                <li key={l} className="flex items-center gap-3 text-sm font-bold text-slate-500">
+                  <div className="w-5 h-5 rounded-full bg-indigo-500/10 flex items-center justify-center text-[10px] text-indigo-500">✓</div>
+                  {l}
+                </li>
+              ))}
+            </ul>
+            <button className="px-6 py-2.5 rounded-full bg-indigo-500 text-white font-black text-xs hover:opacity-90 transition-opacity">See More →</button>
+            
+            <div className={`mt-8 rounded-2xl border p-4 h-36 relative overflow-hidden ${isDark ? 'bg-slate-950 border-slate-800' : 'bg-white border-indigo-500/10'}`}>
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-[10px] font-black text-indigo-400">ZivoHR</span>
+                <span className="text-[8px] font-black uppercase tracking-widest text-indigo-500 bg-indigo-500/10 px-2 py-1 rounded-full">Candidate</span>
+              </div>
+              <div className="space-y-4">
+                {[
+                  { n: 'Tendai', c: '6366f1' },
+                  { n: 'Rudo', c: '059669' },
+                  { n: 'Farai', c: 'f59e0b' }
+                ].map((p, i) => (
+                  <div key={i} className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-slate-100 p-0.5 border border-indigo-500/20 overflow-hidden shadow-sm">
+                      <img 
+                        src={`https://api.dicebear.com/9.x/notionists/svg?seed=${p.n}&backgroundColor=${p.c}&scale=100`} 
+                        alt={p.n} 
+                        className="w-full h-full object-cover" 
+                      />
+                    </div>
+                    <div className={`h-2 flex-1 rounded-full ${isDark ? 'bg-slate-800' : 'bg-indigo-500/10'}`} style={{ width: i === 2 ? '50%' : '80%' }} />
+                    <div className={`h-2 w-10 rounded-full ${isDark ? 'bg-slate-900' : (i === 1 ? 'bg-indigo-500/40' : 'bg-emerald-500/20')}`} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+
+          <motion.div 
+            initial={{ opacity: 0, x: 20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            className={`p-8 md:p-10 rounded-[2.5rem] border transition-all hover:-translate-y-1 ${isDark ? 'bg-slate-900/40 border-slate-800 hover:border-indigo-500/50' : 'bg-white/75 border-indigo-500/12 shadow-sm hover:shadow-xl'}`}
+          >
+            <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-2xl mb-6">💳</div>
+            <h3 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>Payroll & Expense</h3>
+            <p className="text-[11px] font-black text-indigo-400 uppercase tracking-widest mb-4">Automated Financials</p>
+            <ul className="space-y-3 mb-8">
+              {['Automated Payroll Processing', 'Expense Reimbursements', 'Tax Compliance', 'Benefits Administration'].map(l => (
+                <li key={l} className="flex items-center gap-3 text-sm font-bold text-slate-500">
+                  <div className="w-5 h-5 rounded-full bg-indigo-500/10 flex items-center justify-center text-[10px] text-indigo-500">✓</div>
+                  {l}
+                </li>
+              ))}
+            </ul>
+            <button className="px-6 py-2.5 rounded-full bg-indigo-500 text-white font-black text-xs hover:opacity-90 transition-opacity">See More →</button>
+            <div className="mt-8 flex items-end gap-1.5 h-16">
+              {[40, 75, 50, 90, 65, 80].map((h, i) => (
+                <div key={i} className={`flex-1 rounded-t-[4px] ${i === 3 ? 'bg-gradient-to-t from-indigo-500 to-purple-500' : isDark ? 'bg-indigo-500/30' : 'bg-indigo-500/20'}`} style={{ height: `${h}%` }} />
+              ))}
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ─── COMPLIANCE BANNER ─── */}
+      <section className="px-6 pb-20 md:pb-28">
+        <div className="max-w-[1200px] mx-auto rounded-[2.5rem] bg-gradient-to-br from-[#1e1b4b] via-[#312e81] to-[#3730a3] p-10 md:p-16 grid lg:grid-cols-2 gap-12 items-center relative overflow-hidden shadow-2xl">
+          <div className="relative z-10">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-400/15 border border-slate-400/20 text-[10px] font-black uppercase tracking-widest text-[#a5b4fc] mb-6">🛡️ Secure & Compliant</div>
+            <h2 className="text-3xl md:text-5xl font-black text-white leading-tight mb-4">Secure Payroll & Compliance</h2>
+            <p className="text-slate-300 text-lg leading-relaxed mb-10">Run payroll, manage NSSA contributions, and stay compliant with local labor laws — all in one powerful, easy-to-use platform.</p>
+            <div className="flex flex-wrap gap-4">
+              <button onClick={handleGetStarted} className="px-8 py-4 rounded-[1rem] bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-black shadow-lg shadow-indigo-500/50 hover:-translate-y-0.5 transition-transform">Start Free Trial</button>
+              <button onClick={handleTalkToSales} className="px-8 py-4 rounded-[1rem] bg-white/10 border border-white/20 text-white font-black hover:bg-white/20 transition-all">Book a Demo →</button>
+            </div>
+          </div>
+          <div className="flex justify-center items-center relative">
+            <div className="w-60 h-60 md:w-80 md:h-80 border border-indigo-400/15 rounded-full flex items-center justify-center animate-[pulse_3s_infinite]">
+              <div className="w-48 h-48 md:w-64 md:h-64 border border-indigo-400/20 rounded-full flex items-center justify-center animate-[pulse_3s_infinite_0.5s]">
+                <div className="w-32 h-32 md:w-44 md:h-44 border border-indigo-400/25 rounded-full flex items-center justify-center animate-[pulse_3s_infinite_1s]">
+                  <div className="text-6xl md:text-7xl">🛡️</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-[#a5b4fc]/15 to-transparent pointer-events-none" />
+        </div>
+      </section>
+
       {/* ─── WHATSAPP SECTION ─── */}
       <section ref={waSectionRef} className="wa-section">
         <div className="wa-banner reveal-scale">
@@ -997,85 +1126,767 @@ export default function LandingPage({ onGetStarted, onLogin, onDocumentation, us
         </div>
       </section>
 
-      {/* ─── MORE FEATURES ─── */}
-      <section className="py-20 md:py-28 px-6">
-        <div className={`max-w-[1200px] mx-auto rounded-[3rem] p-12 md:p-20 relative overflow-hidden ${isDark ? 'bg-slate-900/40 border border-slate-800' : 'bg-indigo-500/5 border border-indigo-500/10'}`}>
-          <div className="text-center mb-16">
-            <h2 className={`text-3xl font-black mb-4 ${isDark ? 'text-white' : 'text-slate-900'}`}>More Powerful Tools</h2>
-            <p className={`text-slate-500 font-bold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Everything else you need to run a modern organization.</p>
+      {/* ─── MORE POWERFUL TOOLS TABS ─── */}
+      <section className="tabs-section">
+        <div className="section-inner">
+          <div className="text-center mb-10">
+            <h2 className={cn("section-title mb-4", isDark ? "text-white" : "text-slate-900")}>
+              More Powerful <span className="text-indigo-300">Tools.</span>
+            </h2>
+            <p className={cn("text-lg", isDark ? "text-slate-400" : "text-slate-500")}>Everything else you need to run a modern, high-integrity organization.</p>
           </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[
-              { t: 'HR Automation', d: 'Custom workflows for any HR process. From leave approvals to asset requests.' },
-              { t: 'Asset & IT Shield', d: 'Track laptops, hardware, and software licenses. Lifecycle management for IT assets.' },
-              { t: 'Bank Export Engine', d: 'Ready-to-use export files for CABS, Nedbank, and many more Zimbabwean banks.' },
-              { t: 'Mobile App', d: 'Self-service portal for employees to view payslips and apply for leave on the go.' },
-              { t: 'Expert API', d: 'Connect ZivoHR with your existing ERP or accounting software seamlessly.' },
-              { t: 'Security First', d: 'Enterprise-grade encryption and secure cloud infrastructure for your sensitive data.' }
-            ].map(f => (
-              <div key={f.t} className={`p-8 rounded-3xl border transition-all hover:scale-[1.02] ${isDark ? 'bg-slate-950 border-slate-800' : 'bg-white border-indigo-500/10 shadow-sm'}`}>
-                <h3 className={`text-lg font-black mb-3 ${isDark ? 'text-white' : 'text-slate-900'}`}>{f.t}</h3>
-                <p className={`text-xs leading-relaxed font-bold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{f.d}</p>
-              </div>
+
+          <div className="tabs-nav mb-12">
+            {TOOLS_TABS.map(tab => (
+              <button 
+                key={tab.id}
+                onClick={() => { setActiveToolsTab(tab.id as any); setToolsProgress(0); }}
+                className={cn("tab-btn", activeToolsTab === tab.id && "active")}
+              >
+                {tab.icon} {tab.label}
+                {activeToolsTab === tab.id && (
+                  <div className="tab-progress" style={{ width: `${toolsProgress}%`, transition: 'none' }} />
+                )}
+              </button>
             ))}
+          </div>
+
+          <div className="tab-content">
+            {/* ══ AUTOMATION ══ */}
+            <div className={cn("tab-panel", activeToolsTab === 'automation' && "active")}>
+              <div className="tab-info">
+                <div className="tab-icon-wrap bg-indigo-500/10 text-indigo-500">⚙️</div>
+                <h2 className={isDark ? "text-white" : "text-slate-900"}>HR Automation</h2>
+                <p className={isDark ? "text-slate-400" : "text-slate-500"}>Automate repetitive tasks with custom workflows. From leave approvals to asset requests, build the process that works for you.</p>
+                <ul className="tab-list">
+                  {['Conditional Logic Gateways', 'Multi-level Approvals', 'SLA Tracking', 'Automated Notifications'].map(item => (
+                    <li key={item} className={isDark ? "text-slate-200" : "text-slate-900"}>
+                      <span className="check-icon">✓</span>{item}
+                    </li>
+                  ))}
+                </ul>
+                <button className="tab-cta">Build Your First Workflow →</button>
+              </div>
+              <div className="visual-panel !p-0 overflow-hidden relative group">
+                <div className="absolute inset-0 bg-indigo-500/[0.02] grid-bg opacity-30"></div>
+                
+                <div className="relative z-10 w-full h-full flex flex-col items-center justify-center p-8">
+                  {/* Step 1: Trigger */}
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                    className={cn(
+                      "w-full max-w-[260px] p-4 rounded-2xl border flex items-center gap-4 relative overflow-hidden backdrop-blur-md",
+                      isDark ? "bg-slate-900/80 border-indigo-500/20 shadow-2xl" : "bg-white/80 border-indigo-500/10 shadow-xl shadow-indigo-500/5 text-slate-900"
+                    )}
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/20">
+                      <Sparkles className="w-5 h-5" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-[11px] font-black tracking-tight">Onboarding Trigger</div>
+                      <div className="text-[9px] opacity-60 font-bold">New Employee: J. Doe</div>
+                    </div>
+                    <motion.div 
+                      animate={{ scale: [1, 1.3, 1], opacity: [0.5, 1, 0.5] }} 
+                      transition={{ duration: 2, repeat: Infinity }}
+                      className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]" 
+                    />
+                  </motion.div>
+
+                  {/* Connecting Pulse Line */}
+                  <div className="h-12 w-[2px] bg-indigo-500/10 relative">
+                    <motion.div 
+                      animate={{ top: ['0%', '100%'], opacity: [0, 1, 0] }}
+                      transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }}
+                      className="absolute left-1/2 -ml-[1.5px] w-[3px] h-[15px] bg-indigo-500 rounded-full shadow-[0_0_12px_rgba(99,102,241,1)]"
+                    />
+                  </div>
+
+                  {/* Step 2: Logic Block */}
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.3, duration: 0.5 }}
+                    className={cn(
+                      "w-48 p-4 rounded-2xl border flex flex-col items-center gap-3 relative backdrop-blur-md",
+                      isDark ? "bg-slate-900/60 border-indigo-500/20" : "bg-white/60 border-indigo-500/10 shadow-lg"
+                    )}
+                  >
+                    <div className="flex items-center gap-2">
+                       <Zap className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                       <span className="text-[10px] font-black uppercase tracking-widest text-indigo-500">Auto-Provision</span>
+                    </div>
+                    <div className="flex -space-x-2">
+                       {[1,2,3].map(i => (
+                         <div key={i} className="w-6 h-6 rounded-full border-2 border-white dark:border-slate-800 bg-indigo-100 dark:bg-slate-700 overflow-hidden">
+                           <img src={`https://api.dicebear.com/9.x/shapes/svg?seed=${i * 123}`} alt="" />
+                         </div>
+                       ))}
+                    </div>
+                  </motion.div>
+
+                  {/* Split Pathing (Stripe style) */}
+                  <div className="w-48 h-12 relative mt-1">
+                     <svg width="100%" height="100%" viewBox="0 0 100 40" preserveAspectRatio="none">
+                        <path d="M50 0 C50 20, 10 20, 10 40" fill="none" stroke="currentColor" strokeWidth="1" className="text-indigo-500/20" />
+                        <path d="M50 0 C50 20, 90 20, 90 40" fill="none" stroke="currentColor" strokeWidth="1" className="text-indigo-500/20" />
+                        {/* Pulse paths */}
+                        <motion.path 
+                           initial={{ pathLength: 0 }}
+                           animate={{ pathLength: 1, opacity: [0, 1, 0] }}
+                           transition={{ duration: 2, repeat: Infinity, repeatDelay: 1 }}
+                           d="M50 0 C50 20, 10 20, 10 40" 
+                           fill="none" stroke="currentColor" strokeWidth="2" className="text-indigo-500" 
+                        />
+                        <motion.path 
+                           initial={{ pathLength: 0 }}
+                           animate={{ pathLength: 1, opacity: [0, 1, 0] }}
+                           transition={{ duration: 2, repeat: Infinity, repeatDelay: 1.5 }}
+                           d="M50 0 C50 20, 90 20, 90 40" 
+                           fill="none" stroke="currentColor" strokeWidth="2" className="text-indigo-500" 
+                        />
+                     </svg>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex gap-4 w-full justify-center">
+                    <motion.div 
+                      key="act1"
+                      animate={{ y: [0, -4, 0] }}
+                      transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                      className={cn("px-4 py-2 rounded-xl border border-emerald-500/20 text-emerald-500 text-[10px] font-black flex items-center gap-1.5 backdrop-blur-md", isDark ? "bg-emerald-500/10" : "bg-emerald-50")}
+                    >
+                      <CheckCircle2 className="w-3 h-3" /> Slack Invited
+                    </motion.div>
+                    <motion.div 
+                      key="act2"
+                      animate={{ y: [0, 4, 0] }}
+                      transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
+                      className={cn("px-4 py-2 rounded-xl border border-blue-500/20 text-blue-500 text-[10px] font-black flex items-center gap-1.5 backdrop-blur-md", isDark ? "bg-blue-500/10" : "bg-blue-50")}
+                    >
+                      <CreditCard className="w-3 h-3" /> Bank Setup
+                    </motion.div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* ══ BANKING ══ */}
+            <div className={cn("tab-panel", activeToolsTab === 'bank' && "active")}>
+              <div className="tab-info">
+                <div className="tab-icon-wrap bg-indigo-500/10 text-indigo-500">🏦</div>
+                <h2 className={isDark ? "text-white" : "text-slate-900"}>Bank Export Engine</h2>
+                <p className={isDark ? "text-slate-400" : "text-slate-500"}>Export your payroll runs directly to your bank. Native support for Zimbabwean financial institutions and accounting software.</p>
+                <ul className="tab-list">
+                  {['Native CABS & Nedbank Support', 'Standard CSV/TXT Mappings', 'Direct EcoCash Business Sync', 'Xero & Sage Connectivity'].map(item => (
+                    <li key={item} className={isDark ? "text-slate-200" : "text-slate-900"}>
+                      <span className="check-icon">✓</span>{item}
+                    </li>
+                  ))}
+                </ul>
+                <button className="tab-cta">View All Integrations →</button>
+              </div>
+              <div className="visual-panel !p-0 overflow-hidden relative group flex flex-col items-center justify-center">
+                <div className="absolute inset-0 bg-grid opacity-10"></div>
+                
+                {/* Integration Grid (Documenso style) */}
+                <div className="relative z-10 w-full px-8 flex flex-col items-center gap-12">
+                   <div className="grid grid-cols-3 gap-6 w-full max-w-sm">
+                      {[
+                        { n: 'CABS', color: 'bg-blue-600', delay: 0 },
+                        { n: 'Sage', color: 'bg-emerald-600', delay: 0.1 },
+                        { n: 'Xero', color: 'bg-sky-500', delay: 0.2 },
+                        { n: 'CBZ', color: 'bg-red-600', delay: 0.3 },
+                        { n: 'EcoCash', color: 'bg-blue-500', delay: 0.4 },
+                        { n: 'Zapier', color: 'bg-orange-500', delay: 0.5 }
+                      ].map((tool, i) => (
+                        <motion.div 
+                          key={tool.n}
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          whileInView={{ opacity: 1, scale: 1 }}
+                          transition={{ delay: tool.delay, duration: 0.5 }}
+                          className={cn(
+                            "aspect-square rounded-2xl border flex items-center justify-center flex-col transition-all group/icon",
+                            isDark ? "bg-slate-900/80 border-white/5 hover:border-indigo-500/50" : "bg-white border-indigo-500/10 hover:shadow-xl hover:shadow-indigo-500/10"
+                          )}
+                        >
+                           <div className={cn("w-10 h-10 rounded-xl mb-2 flex items-center justify-center text-xs font-black text-white shadow-lg shadow-black/20", tool.color)}>
+                              {tool.n[0]}
+                           </div>
+                           <span className={cn("text-[9px] font-black uppercase tracking-widest", isDark ? "text-slate-400" : "text-slate-500")}>{tool.n}</span>
+                        </motion.div>
+                      ))}
+                   </div>
+
+                   <div className="text-center">
+                      <div className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-500 mb-2">Integrations</div>
+                      <h3 className={cn("text-xl font-black mb-4", isDark ? "text-white" : "text-slate-900")}>Your Favorite Tools Work<br/>With ZivoHR</h3>
+                      <button className="px-6 py-2.5 rounded-xl bg-white dark:bg-slate-800 border dark:border-slate-700 text-[10px] font-black shadow-xl hover:scale-105 transition-transform">
+                        Explore Marketplace
+                      </button>
+                   </div>
+                </div>
+              </div>
+            </div>
+
+            {/* ══ VAULT ══ */}
+            <div className={cn("tab-panel", activeToolsTab === 'vault' && "active")}>
+              <div className="tab-info">
+                <div className="tab-icon-wrap bg-indigo-500/10 text-indigo-500">🔒</div>
+                <h2 className={isDark ? "text-white" : "text-slate-900"}>The Document Vault</h2>
+                <p className={isDark ? "text-slate-400" : "text-slate-500"}>Centralized, encrypted storage for all sensitive personnel files. Manage contracts, compliance documents, and ID copies with ease.</p>
+                <ul className="tab-list">
+                  {['Role-Based Access Control', 'Two-Party Upload Flow', 'Automatic Expiry Alerts', 'Version History'].map(item => (
+                    <li key={item} className={isDark ? "text-slate-200" : "text-slate-900"}>
+                      <span className="check-icon">✓</span>{item}
+                    </li>
+                  ))}
+                </ul>
+                <button className="tab-cta">Secure Your Files →</button>
+              </div>
+              <div className="visual-panel !p-0 overflow-hidden relative group">
+                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/[0.04] to-transparent pointer-events-none"></div>
+                
+                <div className="relative z-10 w-full h-full flex flex-col p-8">
+                  {/* Layered Document Stack (Documenso style) */}
+                  <div className="relative h-48 w-full flex items-center justify-center perspective-[1000px] mb-8">
+                    {[1, 2, 3].map((i) => (
+                      <motion.div 
+                        key={i}
+                        animate={{ 
+                          rotateY: [i * -2, i * 2, i * -2],
+                          z: [i * -20, i * -15, i * -20],
+                          y: [i * 5, i * 2, i * 5]
+                        }}
+                        transition={{ duration: 6, repeat: Infinity, delay: i * 0.5, ease: "easeInOut" }}
+                        className={cn(
+                          "absolute w-40 h-52 rounded-2xl border p-4 shadow-2xl backdrop-blur-md",
+                          isDark ? "bg-slate-900/80 border-indigo-500/30" : "bg-white/90 border-indigo-500/10",
+                          i === 3 ? "z-30" : i === 2 ? "z-20 opacity-60 translate-x-4" : "z-10 opacity-30 translate-x-8"
+                        )}
+                        style={{ transformStyle: 'preserve-3d' }}
+                      >
+                         <div className="space-y-3">
+                            <div className="h-2 w-1/2 bg-indigo-500/20 rounded-full"></div>
+                            <div className="space-y-1.5">
+                               <div className="h-1.5 w-full bg-slate-200 dark:bg-slate-800 rounded-full"></div>
+                               <div className="h-1.5 w-5/6 bg-slate-200 dark:bg-slate-800 rounded-full"></div>
+                               <div className="h-1.5 w-full bg-slate-200 dark:bg-slate-800 rounded-full"></div>
+                            </div>
+                            {i === 3 && (
+                              <motion.div 
+                                animate={{ opacity: [0, 1, 1, 0] }}
+                                transition={{ duration: 3, repeat: Infinity }}
+                                className="mt-8 flex flex-col items-center gap-1"
+                              >
+                                 <PenTool className="w-4 h-4 text-indigo-500" />
+                                 <div className="sig-cursive text-indigo-500/60 scale-75">Contract Signed</div>
+                              </motion.div>
+                            )}
+                         </div>
+                      </motion.div>
+                    ))}
+                  </div>
+
+                  {/* Security Stats */}
+                  <div className="grid grid-cols-2 gap-4">
+                     <div className={cn("p-4 rounded-2xl border flex items-center gap-3 backdrop-blur-md", isDark ? "bg-slate-900/40 border-white/5" : "bg-white/40 border-indigo-500/5")}>
+                        <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center">
+                           <Shield className="w-4 h-4 text-emerald-500" />
+                        </div>
+                        <div className="flex-1">
+                           <div className={cn("text-[9px] font-black uppercase text-slate-500 tracking-wider")}>Verification</div>
+                           <div className={cn("text-xs font-black", isDark ? "text-white" : "text-slate-900")}>Active 2FA</div>
+                        </div>
+                     </div>
+                     <div className={cn("p-4 rounded-2xl border flex items-center gap-3 backdrop-blur-md", isDark ? "bg-slate-900/40 border-white/5" : "bg-white/40 border-indigo-500/5")}>
+                        <div className="w-8 h-8 rounded-full bg-indigo-500/10 flex items-center justify-center">
+                           <Logo className="w-4 h-4 text-indigo-500" />
+                        </div>
+                        <div className="flex-1">
+                           <div className={cn("text-[9px] font-black uppercase text-slate-500 tracking-wider")}>Redundancy</div>
+                           <div className={cn("text-xs font-black", isDark ? "text-white" : "text-slate-900")}>3-Region Sync</div>
+                        </div>
+                     </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* ══ ASSET ══ */}
+            <div className={cn("tab-panel", activeToolsTab === 'asset' && "active")}>
+              <div className="tab-info">
+                <div className="tab-icon-wrap bg-indigo-500/10 text-indigo-500">💻</div>
+                <h2 className={isDark ? "text-white" : "text-slate-900"}>Asset & IT Shield</h2>
+                <p className={isDark ? "text-slate-400" : "text-slate-500"}>Track and maintain your organization's physical and digital assets. From MacBook Pros to software licenses.</p>
+                <ul className="tab-list">
+                  {['Automated Maintenance Logs', 'Asset Assignment History', 'Barcode & QR Tracking', 'Warranty Alerts'].map(item => (
+                    <li key={item} className={isDark ? "text-slate-200" : "text-slate-900"}>
+                      <span className="check-icon">✓</span>{item}
+                    </li>
+                  ))}
+                </ul>
+                <button className="tab-cta">View Asset Inventory →</button>
+              </div>
+              <div className="visual-panel !p-0 overflow-hidden relative group">
+                <div className="absolute inset-0 bg-indigo-500/[0.02] grid-bg opacity-30"></div>
+                
+                <div className="relative z-10 w-full h-full flex flex-col p-8 items-center justify-center">
+                  <div className="relative w-64 h-64 mb-6">
+                    {/* Asset Radar Sweep (Stripe-esque technicality) */}
+                    <svg className="w-full h-full transform -rotate-90">
+                       <circle cx="50%" cy="50%" r="48%" fill="none" stroke="currentColor" strokeWidth="1" className="text-indigo-500/10" />
+                       <circle cx="50%" cy="50%" r="30%" fill="none" stroke="currentColor" strokeWidth="1" className="text-indigo-500/10" />
+                       
+                       <motion.circle 
+                          cx="50%" cy="50%" r="48%" 
+                          fill="none" stroke="#6366F1" strokeWidth="2" 
+                          strokeDasharray="1, 20"
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+                       />
+                       
+                       <motion.path 
+                          d="M128 128 L128 0" 
+                          stroke="url(#radarGradient)" 
+                          strokeWidth="20"
+                          className="origin-center"
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                       />
+                       <defs>
+                          <linearGradient id="radarGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                             <stop offset="0%" stopColor="#6366F1" stopOpacity="0.4" />
+                             <stop offset="100%" stopColor="#6366F1" stopOpacity="0" />
+                          </linearGradient>
+                       </defs>
+                    </svg>
+
+                    {/* Asset Icons pulsing on radar */}
+                    {[
+                      { x: "20%", y: "30%", icon: "💻", delay: 0 },
+                      { x: "75%", y: "25%", icon: "📱", delay: 1 },
+                      { x: "60%", y: "70%", icon: "🖥️", delay: 2 },
+                      { x: "30%", y: "75%", icon: "🏢", delay: 1.5 }
+                    ].map((asset, i) => (
+                      <motion.div 
+                        key={i}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: [0, 1, 0.4, 0] }}
+                        transition={{ duration: 3, repeat: Infinity, delay: asset.delay }}
+                        className="absolute text-xl bg-white/20 dark:bg-slate-900/20 backdrop-blur-sm p-2 rounded-lg"
+                        style={{ left: asset.x, top: asset.y }}
+                      >
+                         {asset.icon}
+                      </motion.div>
+                    ))}
+
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                       <span className={cn("text-3xl font-black", isDark ? "text-white" : "text-slate-900")}>98.4%</span>
+                       <span className="text-[10px] font-black uppercase text-indigo-500 tracking-widest">Inventory Health</span>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-4 overflow-hidden w-full px-4">
+                     {[1, 2, 3, 4, 5].map(i => (
+                       <motion.div 
+                         key={i}
+                         animate={{ y: [0, -5, 0] }}
+                         transition={{ duration: 2, repeat: Infinity, delay: i * 0.2 }}
+                         className={cn("h-1 flex-1 rounded-full", i === 1 ? "bg-rose-500" : "bg-emerald-500")}
+                       />
+                     ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* ══ API ══ */}
+            <div className={cn("tab-panel", activeToolsTab === 'api' && "active")}>
+              <div className="tab-info">
+                <div className="tab-icon-wrap bg-indigo-500/10 text-indigo-500">🔌</div>
+                <h2 className={isDark ? "text-white" : "text-slate-900"}>Expert API</h2>
+                <p className={isDark ? "text-slate-400" : "text-slate-500"}>Unleash your developers. Integrate ZivoHR data seamlessly with your accounting, ERP, or custom internal tools.</p>
+                <ul className="tab-list">
+                  {['Webhooks for Real-time Sync', 'Standard RESTful Endpoints', 'Comprehensive Documentation', 'Secure API Key Management'].map(item => (
+                    <li key={item} className={isDark ? "text-slate-200" : "text-slate-900"}>
+                      <span className="check-icon">✓</span>{item}
+                    </li>
+                  ))}
+                </ul>
+                <button className="tab-cta">Read API Docs →</button>
+              </div>
+              <div className={cn("visual-panel p-0 relative overflow-hidden group shadow-2xl min-h-[460px]", isDark ? "bg-[#0b0e14] border-white/5" : "bg-slate-50 border-indigo-500/10")}>
+                {/* Continuous Scroll Container */}
+                <div className="relative h-full w-full overflow-hidden">
+                  <motion.div 
+                    animate={{ y: ["0%", "-50%"] }}
+                    transition={{ 
+                      duration: 35,
+                      repeat: Infinity, 
+                      ease: "linear",
+                      repeatType: "loop"
+                    }}
+                    className="flex flex-col p-8 font-mono text-[11px] leading-relaxed"
+                  >
+                    {[1, 2].map((group) => (
+                      <div key={group} className="flex flex-col gap-12 pb-12">
+                        <div className={cn("space-y-4", isDark ? "text-slate-300" : "text-slate-700")}>
+                          <div>
+                            <span className="text-purple-400 font-bold">import</span> {`{`} <span className="text-sky-400">ZivoHR</span> {`}`} <span className="text-purple-400 font-bold">from</span> <span className="text-emerald-500">'@zivohr/sdk'</span>;
+                          </div>
+                          <div className="opacity-60 space-y-1">
+                            <div className="text-slate-500">// Initialize with Zimbabwean context</div>
+                            <div className="text-purple-400 font-bold">const <span className="text-sky-400">client</span> = <span className="text-sky-400">new</span> <span className="text-amber-500">ZivoHR</span>({`{`}<br/>
+                            <span className="ml-4">apiKey: <span className="text-emerald-400">process.env.ZIVO_KEY</span>,</span><br/>
+                            <span className="ml-4">region: <span className="text-emerald-400">'ZW-HRE'</span></span><br/>
+                            {`}`});</div>
+                          </div>
+                          <div className="space-y-1">
+                            <div><span className="text-purple-400 font-bold">await</span> client.<span className="text-sky-400">on</span>(<span className="text-emerald-400">'payroll.paid'</span>, <span className="text-sky-300">async</span> (event) ={`>`} {`{`}</div>
+                            <div className="ml-4 text-slate-500">// Trigger Xero/Sage sync</div>
+                            <div className="ml-4 text-purple-400 font-bold">await <span className="text-sky-400">erp</span>.<span className="text-sky-400">sync</span>(event.data);</div>
+                            <div>{`}`});</div>
+                          </div>
+                        </div>
+
+                        <div className={cn("space-y-4", isDark ? "text-slate-300" : "text-slate-700")}>
+                          <div className="space-y-1">
+                            <div className="text-slate-500">// Fetch employee contract status</div>
+                            <div className="text-purple-400 font-bold">const <span className="text-sky-400">status</span> = <span className="text-purple-400 font-bold">await</span> client.<span className="text-sky-400">employees</span>.<span className="text-sky-400">getContract</span>(<span className="text-emerald-500">'emp_772'</span>);</div>
+                            <div><span className="text-purple-400 font-bold">if</span> (status.expires_soon) {`{`}</div>
+                            <div className="ml-4">workflow.<span className="text-sky-400">trigger</span>(<span className="text-emerald-500">'renewal'</span>, status.id);</div>
+                            <div>{`}`}</div>
+                          </div>
+                          <div className="space-y-1">
+                            <div className="text-slate-500">// Sync with local banking node</div>
+                            <div className="text-purple-400 font-bold">await <span className="text-sky-400">bank</span>.<span className="text-sky-400">pushBatch</span>(client.currentPayload);</div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </motion.div>
+                </div>
+
+                {/* Floating "Check our API" Button */}
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <motion.button 
+                    whileHover={{ scale: 1.05, translateY: -2 }}
+                    whileTap={{ scale: 0.95 }}
+                    className={cn(
+                      "pointer-events-auto flex items-center gap-2 px-6 py-3 rounded-xl font-black text-xs shadow-2xl transition-all border",
+                      isDark 
+                        ? "bg-indigo-500 text-white border-indigo-400/50 shadow-indigo-500/20" 
+                        : "bg-indigo-600 text-white border-indigo-500 shadow-indigo-600/20"
+                    )}
+                  >
+                    <Book className="w-3.5 h-3.5" />
+                    Check our API
+                  </motion.button>
+                </div>
+                
+                {/* Gradient Fades for Scroll */}
+                <div className={cn("absolute top-0 left-0 right-0 h-24 pointer-events-none z-10", isDark ? "bg-gradient-to-b from-[#0b0e14] to-transparent" : "bg-gradient-to-b from-slate-50 to-transparent")}></div>
+                <div className={cn("absolute bottom-0 left-0 right-0 h-24 pointer-events-none z-10", isDark ? "bg-gradient-to-t from-[#0b0e14] to-transparent" : "bg-gradient-to-t from-slate-50 to-transparent")}></div>
+                
+                <div className="absolute inset-0 bg-grid opacity-[0.03] pointer-events-none"></div>
+              </div>
+            </div>
+
+            {/* ══ SECURITY ══ */}
+            <div className={cn("tab-panel", activeToolsTab === 'security' && "active")}>
+              <div className="tab-info">
+                <div className="tab-icon-wrap bg-indigo-500/10 text-indigo-500">🔐</div>
+                <h2 className={isDark ? "text-white" : "text-slate-900"}>Highly Compliant</h2>
+                <p className={isDark ? "text-slate-400" : "text-slate-500"}>We treat your data with bank-grade integrity. Enterprise-level encryption and full local compliance right out of the box.</p>
+                <ul className="tab-list">
+                  {['AES-256 End-to-End Encryption', 'ZIMRA & NSSA Validated', 'SOC2 Compliant Infrastructure', 'Zero-Trust Data Protection'].map(item => (
+                    <li key={item} className={isDark ? "text-slate-200" : "text-slate-900"}>
+                      <span className="check-icon">✓</span>{item}
+                    </li>
+                  ))}
+                </ul>
+                <button className="tab-cta">Explore Security Pillar →</button>
+              </div>
+              <div className="visual-panel !p-0 overflow-hidden relative flex flex-col items-center justify-center group bg-[#0f1115]">
+                <div className="absolute inset-0 bg-grid opacity-[0.05]"></div>
+                
+                {/* Compliance Card (Documenso style) */}
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  className="relative z-10 w-full max-w-[300px] p-10 rounded-[2.5rem] bg-[#1a1c23] border border-white/10 shadow-2xl flex flex-col items-center text-center"
+                >
+                   <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center mb-8">
+                      <Shield className="w-6 h-6 text-emerald-500" />
+                   </div>
+                   
+                   <h3 className="text-2xl font-black text-white mb-2 italic">ZIMRA Compliant</h3>
+                   <p className="text-[11px] font-bold text-slate-500 mb-10 leading-relaxed">
+                     ZivoHR is a certified platform that establishes the criteria for high-integrity payroll and labor law compliance...
+                   </p>
+                   
+                   {/* Glowing Status Badge */}
+                   <div className="w-full px-4 py-3 rounded-xl bg-emerald-500/5 border border-emerald-500/30 flex items-center justify-center gap-2 mb-8 shadow-[0_0_20px_rgba(16,185,129,0.1)]">
+                      <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_#10b981]"></div>
+                      <span className="text-[10px] font-black uppercase tracking-widest text-emerald-500">Status: Compliant</span>
+                   </div>
+                   
+                   <button className="w-full py-4 rounded-2xl bg-white/5 border border-white/10 text-white font-black text-xs hover:bg-white/10 transition-colors">
+                     Learn more
+                   </button>
+                </motion.div>
+
+                {/* Technical Floating Elements */}
+                <motion.div 
+                   animate={{ rotate: 360 }}
+                   transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                   className="absolute inset-0 opacity-[0.03] border-[2px] border-dashed border-indigo-500 rounded-full scale-[1.5]"
+                />
+              </div>
+            </div>
+
           </div>
         </div>
       </section>
 
-      {/* ─── HR LIBRARY ─── */}
+      {/* ─── HR LIBRARY TABS ─── */}
       <section id="library" className="py-20 md:py-28 px-6 max-w-[1200px] mx-auto scroll-mt-24">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16">
-          <div className="max-w-xl">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-[10px] font-black uppercase tracking-widest text-indigo-500 mb-6">📚 Resources</div>
-            <h2 className={`text-3xl md:text-5xl font-black mb-4 ${isDark ? 'text-white' : 'text-slate-900'}`}>ZivoHR Library</h2>
-            <p className={`text-lg ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Access a comprehensive collection of HR templates, policies, and guides tailored for the Zimbabwean legal landscape.</p>
-          </div>
-          <button className="px-8 py-3 rounded-full border border-indigo-500/20 font-black text-sm text-indigo-500 hover:bg-indigo-500/5">View All Resources →</button>
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-[10px] font-black uppercase tracking-widest text-indigo-500 mb-6">📚 Resources</div>
+          <h2 className={`text-3xl md:text-5xl font-black mb-4 ${isDark ? 'text-white' : 'text-slate-900'}`}>ZivoHR Library</h2>
+          <p className={`text-lg max-w-2xl mx-auto ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Access complete HR templates, policies, and guides tailored for Zimbabwe.</p>
         </div>
-        
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {[
-            { t: 'Typical Employment Contracts', d: 'Standard and fixed-term contract templates compliant with the Labor Act.', i: '📄' },
-            { t: 'Typical HR Policy Manual', d: 'A complete guide to workplace policies, from leave to disciplinary procedures.', i: '🛡️' },
-            { t: 'Typical Performance Review', d: 'Templates and frameworks for effective employee evaluations.', i: '📊' },
-            { t: 'Typical Disciplinary Code', d: 'Step-by-step guides for handling workplace misconduct fairly.', i: '⚖️' }
-          ].map(r => (
-            <div key={r.t} className={`p-8 rounded-[2rem] border transition-all hover:-translate-y-1 ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-indigo-500/10 shadow-sm'}`}>
-              <div className="text-3xl mb-6">{r.i}</div>
-              <h3 className={`text-lg font-black mb-3 ${isDark ? 'text-white' : 'text-slate-900'}`}>{r.t}</h3>
-              <p className="text-[11px] font-bold text-slate-500 leading-relaxed mb-8">{r.d}</p>
-              <button className="text-xs font-black text-indigo-500 flex items-center gap-2 group">View Template <span className="group-hover:translate-x-1 transition-transform">→</span></button>
+
+        <div className="tabs-nav mb-12">
+          {LIBRARY_TABS.map(tab => (
+            <button 
+              key={tab.id}
+              onClick={() => { setActiveLibraryTab(tab.id as any); setLibraryProgress(0); }}
+              className={cn("tab-btn", activeLibraryTab === tab.id && "active")}
+            >
+              {tab.icon} <span className="hidden sm:inline">{tab.label}</span>
+              {activeLibraryTab === tab.id && (
+                <div className="tab-progress" style={{ width: `${libraryProgress}%`, transition: 'none' }} />
+              )}
+            </button>
+          ))}
+        </div>
+
+        <div className="tab-content !bg-transparent !border-0 min-h-[450px]">
+          {LIBRARY_TABS.map((tab) => (
+            <div key={tab.id} className={cn("tab-panel flex-col lg:flex-row gap-10", activeLibraryTab === tab.id && "active")}>
+              <div className="tab-info flex-1">
+                <div className="tab-icon-wrap bg-gradient-to-br from-indigo-500 to-purple-500 text-white shadow-lg">{tab.icon}</div>
+                <h2 className={isDark ? "text-white" : "text-slate-900"}>{tab.title}</h2>
+                <p className={isDark ? "text-slate-400" : "text-slate-500"}>{tab.sub}</p>
+                <div className="mt-8 space-y-4">
+                  {[
+                    'Legally Vetted',
+                    'Fully Customizable',
+                    'Instant Download',
+                    'Landmark Zimbabwe Cases Included'
+                  ].map(item => (
+                    <div key={item} className="flex items-center gap-3">
+                      <div className="text-indigo-500">✓</div>
+                      <span className={cn("text-xs font-bold", isDark ? "text-slate-300" : "text-slate-600")}>{item}</span>
+                    </div>
+                  ))}
+                </div>
+                <button className="mt-10 px-8 py-4 rounded-2xl bg-indigo-500 text-white font-black text-xs shadow-lg shadow-indigo-500/20">View {tab.label} Template →</button>
+              </div>
+              <div className="visual-panel !p-0 overflow-hidden relative group">
+                <div className="absolute inset-0 bg-grid opacity-20"></div>
+                <div className="relative z-10 w-full h-full flex flex-col p-8 items-center justify-center">
+                   {/* Stacked Documents (Documenso style) */}
+                   <div className="relative h-48 w-full flex items-center justify-center perspective-[1000px] mb-8">
+                     {[1, 2, 3].map((i) => (
+                       <motion.div 
+                         key={i}
+                         animate={{ 
+                           rotateY: [i * -3, i * 3, i * -3],
+                           z: [i * -15, i * -10, i * -15],
+                           y: [i * 4, i * 1, i * 4]
+                         }}
+                         transition={{ duration: 5, repeat: Infinity, delay: i * 0.4, ease: "easeInOut" }}
+                         className={cn(
+                           "absolute w-44 h-56 rounded-2xl border p-5 shadow-2xl backdrop-blur-md",
+                           isDark ? "bg-slate-900 border-indigo-500/30" : "bg-white border-indigo-500/10",
+                           i === 3 ? "z-30" : i === 2 ? "z-20 opacity-70 translate-x-3" : "z-10 opacity-40 translate-x-6"
+                         )}
+                         style={{ transformStyle: 'preserve-3d' }}
+                       >
+                          <div className="flex justify-between items-center mb-4">
+                             <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-500">{tab.icon}</div>
+                             <div className="h-1.5 w-12 bg-indigo-500/20 rounded-full"></div>
+                          </div>
+                          <div className="space-y-3">
+                             <div className="h-2 w-3/4 bg-slate-200 dark:bg-slate-800 rounded-full"></div>
+                             <div className="space-y-1.5 opacity-60">
+                                <div className="h-1.5 w-full bg-slate-200 dark:bg-slate-800 rounded-full"></div>
+                                <div className="h-1.5 w-full bg-slate-200 dark:bg-slate-800 rounded-full"></div>
+                                <div className="h-1.5 w-4/12 bg-slate-200 dark:bg-slate-800 rounded-full"></div>
+                             </div>
+                             {i === 3 && (
+                               <motion.div 
+                                 animate={{ x: [-2, 2, -2] }}
+                                 transition={{ duration: 2, repeat: Infinity }}
+                                 className="mt-8 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between"
+                               >
+                                  <div className="flex gap-1">
+                                     <div className="w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center text-[6px] text-white">✓</div>
+                                     <span className="text-[8px] font-black uppercase text-slate-500 tracking-widest leading-none">Vetted</span>
+                                  </div>
+                                  <Download className="w-3.5 h-3.5 text-indigo-500 opacity-60" />
+                               </motion.div>
+                             )}
+                          </div>
+                       </motion.div>
+                     ))}
+                   </div>
+
+                   <button className="relative z-20 group-hover:scale-105 transition-transform px-6 py-2.5 rounded-xl bg-white dark:bg-slate-800 border dark:border-slate-700 text-[10px] font-black shadow-xl">
+                      Download Editable {tab.label}
+                   </button>
+                </div>
+              </div>
             </div>
           ))}
         </div>
       </section>
 
       {/* ─── LABOR CASES ─── */}
-      <section id="labor-cases" className="py-20 md:py-28 px-6 bg-indigo-500/[0.02] border-y border-indigo-500/5 scroll-mt-24">
-        <div className="max-w-[1200px] mx-auto">
+      <section id="labor-cases" className="py-20 md:py-32 px-4 md:px-6 bg-indigo-500/[0.02] border-y border-indigo-500/5 scroll-mt-24 overflow-hidden">
+        <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16">
             <div className="max-w-xl">
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-[10px] font-black uppercase tracking-widest text-indigo-500 mb-6">⚖️ Legal Insights</div>
-              <h2 className={`text-3xl md:text-5xl font-black mb-4 ${isDark ? 'text-white' : 'text-slate-900'}`}>Labor Case Analysis</h2>
-              <p className={`text-lg ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Stay informed with expert analysis of landmark Zimbabwean labor cases and their implications for your business.</p>
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-[10px] font-black uppercase tracking-widest text-indigo-500 mb-6 font-mono">⚖️ Legal Intelligence</div>
+              <h2 className={cn("text-3xl md:text-5xl font-black mb-4 leading-tight", isDark ? 'text-white' : 'text-slate-900')}>Zimbabwean Labor<br className="hidden md:block" /> Case Library</h2>
+              <p className={cn("text-sm md:text-lg font-bold opacity-60", isDark ? "text-slate-400" : "text-slate-600")}>Stay informed with expert analysis of landmark Zimbabwean labor cases and their implications for your business.</p>
             </div>
-            <button className="px-8 py-3 rounded-full border border-indigo-500/20 font-black text-sm text-indigo-500 hover:bg-indigo-500/5">Browse Case Laws →</button>
+            
+            <div className="flex gap-2">
+              {laborCases.map((_, i) => (
+                <button 
+                  key={i} 
+                  onClick={() => setActiveCaseIndex(i)}
+                  className={cn(
+                    "w-8 h-1 rounded-full transition-all duration-500",
+                    activeCaseIndex === i ? "bg-indigo-500 w-12" : "bg-indigo-500/20"
+                  )}
+                  aria-label={`Go to case ${i + 1}`}
+                />
+              ))}
+            </div>
           </div>
           
-          <div className="grid md:grid-cols-3 gap-6">
-            {[
-              { t: 'Retrenchment Procedures', c: 'Nyamande & Anor v Zuva Petroleum', d: 'Termination on notice and subsequent legislative changes analysis.', cat: 'Termination' },
-              { t: 'Fixed Term Contracts', c: 'Magodora & Ors v Care International', d: 'Legitimate expectation of renewal in fixed-term employment.', cat: 'Contracts' },
-              { t: 'Unfair Dismissal', c: 'Zimasco v Marikano', d: 'Procedural and substantive fairness in disciplinary hearings.', cat: 'Discipline' }
-            ].map(c => (
-              <div key={c.t} className={`p-8 rounded-[2.5rem] border transition-all hover:shadow-xl ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-indigo-500/10 shadow-sm'}`}>
-                <div className="px-3 py-1 rounded-full bg-indigo-500/10 text-indigo-500 text-[8px] font-black uppercase tracking-widest w-fit mb-6">{c.cat}</div>
-                <h3 className={`text-xl font-black mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>{c.t}</h3>
-                <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-4">{c.c}</p>
-                <p className="text-xs font-bold text-slate-500 leading-relaxed mb-10">{c.d}</p>
-                <button className="w-full py-4 rounded-xl font-black text-xs bg-indigo-500/5 text-indigo-500 hover:bg-indigo-500/10">Read Analysis</button>
-              </div>
-            ))}
+          <div className="relative">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeCaseIndex}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.5, ease: [0.2, 0, 0, 1] }}
+                className={cn(
+                  "relative p-8 md:p-14 rounded-[2.5rem] border overflow-hidden flex flex-col lg:flex-row gap-12 items-center",
+                  isDark ? 'bg-slate-900 border-white/5' : 'bg-white border-indigo-500/10 shadow-2xl shadow-indigo-500/5'
+                )}
+              >
+                <div className="flex-1 w-full order-2 lg:order-1">
+                  <div className="flex flex-wrap items-center gap-3 mb-8">
+                    <div className="px-4 py-1.5 rounded-full bg-indigo-500/10 text-indigo-500 text-[10px] font-black uppercase tracking-widest leading-none">{laborCases[activeCaseIndex].cat}</div>
+                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 leading-none">
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      <span className="text-[10px] font-black uppercase tracking-widest">Active Reference</span>
+                    </div>
+                  </div>
+                  
+                  <h3 className={cn("text-2xl md:text-4xl font-black mb-4 leading-tight tracking-tight", isDark ? 'text-white' : 'text-slate-900')}>
+                    {laborCases[activeCaseIndex].t}
+                  </h3>
+                  
+                  <div className="inline-flex items-center gap-3 px-4 py-2 rounded-xl bg-indigo-500/5 text-indigo-500 text-[11px] font-black uppercase tracking-[0.1em] mb-8 border border-indigo-500/10 font-mono">
+                    {laborCases[activeCaseIndex].c}
+                  </div>
+                  
+                  <p className={cn("text-base md:text-xl font-bold leading-relaxed mb-10 opacity-70", isDark ? "text-slate-400" : "text-slate-600")}>
+                    {laborCases[activeCaseIndex].d}
+                  </p>
+                  
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-8 pt-10 border-t border-indigo-500/10">
+                    <div className="flex items-center gap-4">
+                      <div className="relative">
+                        <img src={laborCases[activeCaseIndex].av} alt={laborCases[activeCaseIndex].judge} className="w-12 h-12 rounded-full border-2 border-indigo-500/20 bg-indigo-500/5 shadow-lg" referrerPolicy="no-referrer" />
+                        <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 border-2 border-white dark:border-slate-900 flex items-center justify-center">
+                           <Shield className="w-2.5 h-2.5 text-white" />
+                        </div>
+                      </div>
+                      <div>
+                        <div className={cn("text-sm font-black", isDark ? "text-white" : "text-slate-900")}>{laborCases[activeCaseIndex].judge}</div>
+                        <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-none">Legal Analysis Expert</div>
+                      </div>
+                    </div>
+                    <button onClick={onLogin} className={cn(
+                      "group relative px-10 py-5 rounded-2xl font-black text-xs uppercase tracking-widest transition-all text-center overflow-hidden",
+                      isDark ? "bg-white text-black hover:scale-105" : "bg-indigo-600 text-white shadow-xl shadow-indigo-500/20 hover:scale-105"
+                    )}>
+                      <span className="relative z-10">Read Full Analysis →</span>
+                      <div className="absolute inset-x-0 bottom-0 h-0.5 bg-white/20 group-hover:h-full transition-all duration-300 pointer-events-none" />
+                    </button>
+                  </div>
+                </div>
+                
+                <div className="flex-1 w-full flex justify-center order-1 lg:order-2">
+                  <div className="relative w-full max-w-[400px] aspect-[4/5] rounded-[3rem] bg-gradient-to-br from-indigo-500/10 to-purple-500/10 border border-indigo-500/15 overflow-hidden group/visual p-1">
+                    <div className={cn("w-full h-full rounded-[2.8rem] flex flex-col p-8 items-center justify-center gap-8 transition-colors", isDark ? "bg-slate-900" : "bg-white")}>
+                       <div className="relative w-24 h-24 flex items-center justify-center">
+                          <motion.div 
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                            className="absolute inset-0 rounded-full border-2 border-dashed border-indigo-500/30"
+                          />
+                          <FileText className="w-12 h-12 text-indigo-500" />
+                       </div>
+                       
+                       <div className="w-full space-y-4">
+                          {[70, 90, 80, 50].map((w, i) => (
+                             <motion.div 
+                               initial={{ width: 0 }}
+                               animate={{ width: `${w}%` }}
+                               key={i} 
+                               className="h-2 bg-indigo-500/10 rounded-full" 
+                             />
+                          ))}
+                       </div>
+                       
+                       <div className="flex gap-2">
+                          {[1,2,3].map(i => <div key={i} className="w-8 h-1 rounded-full bg-indigo-500/20" />)}
+                       </div>
+                    </div>
+                    {/* Floating elements */}
+                    <motion.div 
+                      animate={{ y: [0, -10, 0] }}
+                      transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                      className="absolute top-10 right-10 p-3 rounded-2xl bg-white dark:bg-slate-800 shadow-2xl border dark:border-slate-700"
+                    >
+                      <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+                    </motion.div>
+                    <motion.div 
+                      animate={{ y: [0, 10, 0] }}
+                      transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+                      className="absolute bottom-12 left-8 p-3 rounded-2xl bg-indigo-600 shadow-2xl text-white"
+                    >
+                      <Zap className="w-5 h-5" />
+                    </motion.div>
+                  </div>
+                </div>
+
+                <div className="absolute inset-0 bg-grid opacity-[0.03] pointer-events-none" />
+              </motion.div>
+            </AnimatePresence>
           </div>
         </div>
       </section>

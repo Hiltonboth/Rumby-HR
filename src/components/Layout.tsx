@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Bell, Command, LayoutDashboard, Users, Briefcase, TrendingUp, CreditCard, Heart, Settings, Zap, ChevronRight, Menu, X, Calendar, Clock, CheckCircle2, ArrowLeft, PartyPopper, ShieldCheck, PenTool, Upload, MessageCircle, BookOpen, Key, Shield, Monitor, Landmark, Loader2 } from 'lucide-react';
+import { Search, Bell, Command, LayoutDashboard, Users, Briefcase, TrendingUp, CreditCard, Heart, Settings, Zap, ChevronRight, Menu, X, Calendar, Clock, CheckCircle2, ArrowLeft, PartyPopper, ShieldCheck, PenTool, Upload, MessageCircle, BookOpen, Key, Shield, Monitor, Landmark, Loader2, Sun, Moon } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
 import { Company } from '../types';
@@ -21,7 +21,7 @@ interface LayoutProps {
 }
 
 export default function Layout({ children, activeTab, setActiveTab, currentCompany, userProfile, onBack, onGoHome }: LayoutProps) {
-  const { theme } = useTheme();
+  const { theme, toggleTheme } = useTheme();
   const isDark = theme === 'dark';
   const { language, setLanguage, t } = useLanguage();
   
@@ -446,6 +446,17 @@ export default function Layout({ children, activeTab, setActiveTab, currentCompa
                   )}
                 </AnimatePresence>
               </div>
+
+              <button 
+                onClick={toggleTheme}
+                className={cn(
+                  "p-2 rounded-xl transition-all",
+                  isDark ? "hover:bg-slate-800 text-slate-400 hover:text-white" : "hover:bg-slate-100 text-slate-500 hover:text-indigo-600"
+                )}
+                aria-label="Toggle theme"
+              >
+                {isDark ? <Sun className="w-5 h-5 text-amber-500" /> : <Moon className="w-5 h-5 text-indigo-500" />}
+              </button>
 
               <div className="h-6 md:h-8 w-[1px] bg-black/[0.05]" />
               
